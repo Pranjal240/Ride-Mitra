@@ -117,7 +117,7 @@ export default function Landing() {
         </header>
 
         {/* ═══════════ HERO ═══════════ */}
-        <section style={{ position:'relative', minHeight:'92vh', display:'flex', alignItems:'center', overflow:'hidden' }}>
+        <section className="mobile-align-start" style={{ position:'relative', minHeight:'92vh', display:'flex', alignItems:'center', overflow:'hidden' }}>
           {/* Deep navy background */}
           <div style={{ position:'absolute', inset:0, background:T.heroGrad, zIndex:0 }} />
           {/* Subtle geometric pattern */}

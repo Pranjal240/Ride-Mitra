@@ -351,4 +351,12 @@ input:focus, textarea:focus, select:focus {
   .mobile-grid-2 {
     grid-template-columns: 1fr 1fr !important;
   }
+  .mobile-align-start {
+    align-items: flex-start !important;
+    padding-top: 100px !important;
+    padding-bottom: 60px !important;
+  }
+  .mobile-login-right {
+    padding: 24px !important;
+  }
 }

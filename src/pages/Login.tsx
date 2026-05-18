@@ -86,7 +86,7 @@ export default function Login() {
   return (
     <div style={{ minHeight:'100vh', display:'flex', position:'relative', overflow:'hidden' }}>
       {/* Left Gradient Panel */}
-      <div style={{ flex:'1 1 50%', background:T.heroGrad,
+      <div className="mobile-hide" style={{ flex:'1 1 50%', background:T.heroGrad,
         display:'flex', flexDirection:'column', justifyContent:'center', padding:'60px 48px', position:'relative', overflow:'hidden' }}>
         {/* Animated orbs */}
         <motion.div animate={{ scale:[1,1.3,1], opacity:[0.1,0.2,0.1] }} transition={{ duration:8,repeat:Infinity }}
@@ -139,7 +139,7 @@ export default function Login() {
       </div>
 
       {/* Right — Login Card */}
-      <div style={{ flex:'1 1 50%', display:'flex', alignItems:'center', justifyContent:'center', padding:40, background:T.bg, position:'relative' }}>
+      <div className="mobile-login-right" style={{ flex:'1 1 50%', display:'flex', alignItems:'center', justifyContent:'center', padding:40, background:T.bg, position:'relative' }}>
         {/* Subtle bg blob */}
         <div style={{ position:'absolute', width:300, height:300, borderRadius:'50%', background:`radial-gradient(circle,${T.blue50},transparent 70%)`, top:'10%', right:'10%', pointerEvents:'none' }}/>
 
