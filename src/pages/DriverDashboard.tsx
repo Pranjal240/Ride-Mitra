@@ -8,6 +8,9 @@ import { supabase } from '../lib/supabase';
 import type { Ride, DriverVerification, Booking } from '../types';
 import { format } from 'date-fns';
 import SOSModal from '../components/common/SOSModal';
+import { MapView } from '../components/maps';
+import type { MapMarker } from '../components/maps';
+import { calculateRoute, getUserLocation } from '../lib/maps';
 import T, { FONT } from '../lib/theme';
 
 /* Scroll-in wrapper */
@@ -38,6 +41,8 @@ export default function DriverDashboard() {
   const [deletingRide, setDeletingRide] = useState<string | null>(null);
   const [processingBooking, setProcessingBooking] = useState<string | null>(null);
   const [isSOSOpen, setIsSOSOpen] = useState(false);
+  const [activeRoute, setActiveRoute] = useState<[number, number][]>([]);
+  const [activeMarkers, setActiveMarkers] = useState<MapMarker[]>([]);
 
   useEffect(() => {
     async function load() {
@@ -48,9 +53,29 @@ export default function DriverDashboard() {
           getVerification(user.id),
           getDriverBookingRequests(user.id),
         ]);
-        setRides(ridesData.filter((r) => r.driver_id === user.id));
+        const myRides = ridesData.filter((r) => r.driver_id === user.id);
+        setRides(myRides);
         setVerification(verif);
         setBookingRequests(bookings);
+
+        // Load route for first active ride
+        if (myRides.length > 0) {
+          const firstRide = myRides[0];
+          if (firstRide.from_location && firstRide.to_location) {
+            try {
+              const routeInfo = await calculateRoute(firstRide.from_location, firstRide.to_location);
+              if (routeInfo.geometry) setActiveRoute(routeInfo.geometry);
+              
+              const m: MapMarker[] = [
+                { id: 'start', position: [firstRide.from_location.lat, firstRide.from_location.lng], type: 'pickup', popup: 'Start' },
+                { id: 'end', position: [firstRide.to_location.lat, firstRide.to_location.lng], type: 'drop', popup: 'End' }
+              ];
+              setActiveMarkers(m);
+            } catch (e) {
+              console.warn("Failed to load map route", e);
+            }
+          }
+        }
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     }
@@ -58,7 +83,7 @@ export default function DriverDashboard() {
   }, [user]);
 
   const handleDeleteRide = async (rideId: string) => {
-    if (!confirm('Delete this ride? All bookings will be cancelled.')) return;
+    if (!window.confirm('Delete this ride? All bookings will be cancelled.')) return;
     setDeletingRide(rideId);
     try {
       await deleteRide(rideId);
@@ -99,9 +124,11 @@ export default function DriverDashboard() {
     try {
       let location = null;
       try {
-        const pos = await new Promise<GeolocationPosition>((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 5000 }));
-        location = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      } catch {}
+        const coords = await getUserLocation();
+        location = { lat: coords[0], lng: coords[1] };
+      } catch (e) {
+        console.warn('Geolocation failed in SOS', e);
+      }
       await fetch(`${SUPABASE_URL}/functions/v1/send-sos`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userName: user?.full_name, userPhone: user?.phone, location, rideId: rides[0]?.id }),
@@ -268,7 +295,22 @@ export default function DriverDashboard() {
               <p style={{ color:T.textSec, fontSize:14, marginTop:6 }}>{isVerified ? 'Create your first ride!' : 'Complete verification first.'}</p>
             </div>
           ) : (
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:16 }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+              {/* Map View for active route */}
+              {activeMarkers.length > 0 && (
+                <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.2 }}
+                  style={{ borderRadius:20, overflow:'hidden', border:`1px solid ${T.border}`, boxShadow:T.shadow1, marginBottom:10 }}>
+                  <MapView 
+                    markers={activeMarkers} 
+                    route={activeRoute.length > 0 ? activeRoute : undefined} 
+                    center={activeMarkers[0].position} 
+                    zoom={13} 
+                    height="320px" 
+                  />
+                </motion.div>
+              )}
+              
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:16 }}>
               {rides.map((ride,i)=>(
                 <motion.div key={ride.id} initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ delay:0.2+i*0.08 }}>
                   <motion.div whileHover={{ y:-6, boxShadow:'0 16px 40px rgba(20,184,166,0.1)' }}
@@ -297,6 +339,14 @@ export default function DriverDashboard() {
                       </span>
                       <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                         <span style={{ fontWeight:700, color:T.green, fontSize:16, fontFamily:FONT.heading }}>₹{ride.price_per_seat}/seat</span>
+                        
+                        <Link to={`/tracking/${ride.id}`} style={{ textDecoration:'none' }}>
+                          <motion.button whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }}
+                            style={{ padding:'6px 12px', borderRadius:8, border:'none', background:T.navy, color:'white', fontSize:12, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:4 }}>
+                            <PiMapPinBold size={14}/> Track
+                          </motion.button>
+                        </Link>
+
                         <motion.button whileHover={{ scale:1.1 }} whileTap={{ scale:0.9 }}
                           onClick={() => handleDeleteRide(ride.id)} disabled={deletingRide === ride.id}
                           style={{ width:32, height:32, borderRadius:10, border:`1px solid ${T.red}30`, background:T.redLight,
@@ -310,6 +360,7 @@ export default function DriverDashboard() {
                 </motion.div>
               ))}
             </div>
+          </div>
           )}
         </div>
         </FadeUp>

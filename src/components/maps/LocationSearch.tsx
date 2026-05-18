@@ -147,15 +147,19 @@ async function searchPlaces(query: string, userLat?: number, userLng?: number): 
         const suggestions = data.suggestedLocations || [];
         
         if (suggestions.length > 0) {
-          // Parse raw results
-          const rawResults: GeoSearchResult[] = suggestions.map((item: any) => ({
-            name: item.placeName || 'Unknown',
-            coordinates: [parseFloat(item.latitude || '0'), parseFloat(item.longitude || '0')] as [number, number],
-            address: item.placeAddress || '',
-            city: item.city || '',
-            country: 'India',
-            eLoc: item.eLoc || '',
-          }));
+          // Parse raw results safely
+          const rawResults: GeoSearchResult[] = suggestions.map((item: any) => {
+            const lat = parseFloat(item.latitude);
+            const lng = parseFloat(item.longitude);
+            return {
+              name: item.placeName || 'Unknown',
+              coordinates: [isNaN(lat) ? 0 : lat, isNaN(lng) ? 0 : lng] as [number, number],
+              address: item.placeAddress || '',
+              city: item.city || '',
+              country: 'India',
+              eLoc: item.eLoc || '',
+            };
+          });
 
           // Eagerly resolve any results with [0,0] coordinates via eLoc
           // Resolve top 4 in parallel for speed (most users click top results)
