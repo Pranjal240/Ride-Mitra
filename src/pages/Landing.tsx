@@ -148,7 +148,7 @@ export default function Landing() {
                 <span style={{ fontSize:13, color:T.gold, fontWeight:600 }}>JC Bose University (YMCA), Faridabad</span>
               </motion.div>
 
-              <h1 style={{ fontSize:'clamp(36px,5vw,56px)', fontWeight:800, color:'white', lineHeight:1.1,
+              <h1 style={{ fontSize:'clamp(36px,8vw,56px)', fontWeight:800, color:'white', lineHeight:1.1,
                 fontFamily:FONT.heading, letterSpacing:'-0.02em' }}>
                 Your Campus<br/>
                 <span style={{ color:T.gold }}>Ride Network</span>
@@ -168,7 +168,7 @@ export default function Landing() {
               </div>
 
               {/* Trust badges */}
-              <div style={{ display:'flex', gap:20, marginTop:36 }}>
+              <div style={{ display:'flex', gap:20, marginTop:36, flexWrap:'wrap' }}>
                 {[
                   { icon:<PiShieldCheckBold size={14}/>, t:'Verified Students' },
                   { icon:<PiMapPinBold size={14}/>, t:'Live Tracking' },
@@ -258,7 +258,7 @@ export default function Landing() {
           <div style={{ maxWidth:1000, margin:'0 auto' }}>
             <div className="reveal" style={{ textAlign:'center', marginBottom:48 }}>
               <span style={{ fontSize:13,fontWeight:600,color:T.gold,textTransform:'uppercase',letterSpacing:2 }}>Simple & Secure</span>
-              <h2 style={{ fontSize:36,fontWeight:800,color:T.dark,marginTop:8,fontFamily:FONT.heading }}>
+              <h2 style={{ fontSize:'clamp(28px,6vw,36px)', fontWeight:800, color:T.dark, marginTop:8, fontFamily:FONT.heading }}>
                 How It <span style={{ color:T.gold }}>Works</span>
               </h2>
               <p style={{ color:T.gray,fontSize:16,marginTop:8,maxWidth:500,margin:'8px auto 0' }}>
@@ -296,7 +296,7 @@ export default function Landing() {
           <div style={{ maxWidth:1000, margin:'0 auto' }}>
             <div className="reveal" style={{ textAlign:'center', marginBottom:48 }}>
               <span style={{ fontSize:13,fontWeight:600,color:T.gold,textTransform:'uppercase',letterSpacing:2 }}>Why Choose Us</span>
-              <h2 style={{ fontSize:36,fontWeight:800,color:T.dark,marginTop:8,fontFamily:FONT.heading }}>
+              <h2 style={{ fontSize:'clamp(28px,6vw,36px)', fontWeight:800, color:T.dark, marginTop:8, fontFamily:FONT.heading }}>
                 Built for <span style={{ color:T.navy }}>Campus Life</span>
               </h2>
             </div>
@@ -335,7 +335,7 @@ export default function Landing() {
             <div style={{ position:'absolute', width:120, height:120, borderRadius:'50%', background:'rgba(200,149,108,0.08)',
               bottom:-30, left:-20 }} />
 
-            <h2 style={{ fontSize:32, fontWeight:800, color:'white', fontFamily:FONT.heading, position:'relative', zIndex:1 }}>
+            <h2 style={{ fontSize:'clamp(24px,6vw,32px)', fontWeight:800, color:'white', fontFamily:FONT.heading, position:'relative', zIndex:1 }}>
               Ready to ride <span style={{ color:T.gold }}>smarter</span>?
             </h2>
             <p style={{ color:'rgba(255,255,255,0.6)', fontSize:16, marginTop:8, maxWidth:420, margin:'8px auto 0', position:'relative', zIndex:1 }}>

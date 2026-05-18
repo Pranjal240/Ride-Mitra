@@ -32,6 +32,7 @@ export function LogoText({ light = false }: { light?: boolean }) {
       fontWeight: 800,
       letterSpacing: '-0.02em',
       color: light ? 'white' : T.navy,
+      whiteSpace: 'nowrap'
     }}>
       Ride<span style={{ color: T.gold }}>Mitra</span>
     </span>

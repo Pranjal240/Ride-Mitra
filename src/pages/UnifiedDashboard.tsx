@@ -159,7 +159,7 @@ export default function UnifiedDashboard() {
       <div style={{ maxWidth:1200, margin:'-32px auto 0', padding:'0 24px 64px', position:'relative', zIndex:20 }}>
         
         {/* Quick Links */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))', gap:16, marginBottom:40 }}>
+        <div className="mobile-grid-stack" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))', gap:16, marginBottom:40 }}>
           {quickLinks.map((link,i)=>(
             <motion.div key={i} initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ delay:0.3+i*0.1 }}>
               <Link to={link.to} style={{ textDecoration:'none', display:'block' }}>
@@ -260,7 +260,7 @@ export default function UnifiedDashboard() {
                   <p style={{ color:T.textSec, fontSize:14 }}>You haven't offered any rides yet.</p>
                 </div>
               ) : (
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:16 }}>
+                <div className="mobile-grid-stack" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:16 }}>
                   {myRides.map((ride,i)=>(
                     <motion.div key={ride.id} initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ delay:0.2+i*0.08 }}>
                       <motion.div whileHover={{ y:-6, boxShadow:'0 16px 40px rgba(20,184,166,0.1)' }}

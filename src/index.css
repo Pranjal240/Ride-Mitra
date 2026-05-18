@@ -342,9 +342,13 @@ input:focus, textarea:focus, select:focus {
     text-align: center !important;
   }
   .mobile-reverse {
+    display: flex !important;
     flex-direction: column-reverse !important;
   }
   .mobile-grid-stack {
     grid-template-columns: 1fr !important;
+  }
+  .mobile-grid-2 {
+    grid-template-columns: 1fr 1fr !important;
   }
 }
