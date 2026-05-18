@@ -89,7 +89,7 @@ export default function Landing() {
       <div style={{ minHeight:'100vh', background:T.bg, overflow:'hidden' }}>
 
         {/* ═══════════ TOP HEADER ═══════════ */}
-        <header style={{ 
+        <header className="mobile-padding" style={{ 
           position:'absolute', top:0, left:0, right:0, padding:'20px 40px', 
           display:'flex', justifyContent:'space-between', alignItems:'center', zIndex:10,
           background: 'linear-gradient(180deg, rgba(10, 18, 40, 0.7) 0%, rgba(10, 18, 40, 0) 100%)',
@@ -135,7 +135,7 @@ export default function Landing() {
             style={{ position:'absolute', bottom:'30%', left:'15%', width:8, height:8, borderRadius:'50%', background:T.gold, opacity:0.25, zIndex:1 }} />
 
           {/* Content */}
-          <div style={{ position:'relative', zIndex:2, width:'100%', maxWidth:1200, margin:'0 auto', padding:'0 24px',
+          <div className="mobile-grid-stack mobile-reverse" style={{ position:'relative', zIndex:2, width:'100%', maxWidth:1200, margin:'0 auto', padding:'0 24px',
             display:'grid', gridTemplateColumns:'1fr 400px', gap:60, alignItems:'center' }}>
 
             {/* Left: Copy */}
@@ -227,8 +227,8 @@ export default function Landing() {
         </section>
 
         {/* ═══════════ FEATURES ═══════════ */}
-        <section style={{ padding:'80px 24px 60px', maxWidth:1000, margin:'0 auto' }}>
-          <div className="reveal" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:40 }}>
+        <section className="mobile-padding" style={{ padding:'80px 24px 60px', maxWidth:1000, margin:'0 auto' }}>
+          <div className="reveal mobile-grid-stack" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:40 }}>
             <div style={{ textAlign:'center' }}>
               <div style={{ width:64,height:64,margin:'0 auto 16px',background:T.navy50,color:T.navy,borderRadius:16,display:'flex',alignItems:'center',justifyContent:'center' }}>
                 <PiGraduationCapBold size={32}/>
@@ -254,7 +254,7 @@ export default function Landing() {
         </section>
 
         {/* ═══════════ HOW IT WORKS ═══════════ */}
-        <section style={{ padding:'60px 24px 80px', background:'white' }}>
+        <section className="mobile-padding" style={{ padding:'60px 24px 80px', background:'white' }}>
           <div style={{ maxWidth:1000, margin:'0 auto' }}>
             <div className="reveal" style={{ textAlign:'center', marginBottom:48 }}>
               <span style={{ fontSize:13,fontWeight:600,color:T.gold,textTransform:'uppercase',letterSpacing:2 }}>Simple & Secure</span>
@@ -266,7 +266,7 @@ export default function Landing() {
               </p>
             </div>
 
-            <div className="reveal-stagger" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:28 }}>
+            <div className="reveal-stagger mobile-grid-stack" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:28 }}>
               {[
                 { num:'01', title:'Sign Up', desc:'Register with your university email. Quick verification keeps the community safe.', icon:<PiGraduationCapBold size={28}/>, color:T.navy },
                 { num:'02', title:'Find or Create', desc:'Search available rides or create your own. Set your route, time, and seats.', icon:<PiNavigationArrowBold size={28}/>, color:T.gold },
@@ -292,7 +292,7 @@ export default function Landing() {
         </section>
 
         {/* ═══════════ FEATURES ═══════════ */}
-        <section style={{ padding:'80px 24px', background:T.bg }}>
+        <section className="mobile-padding" style={{ padding:'80px 24px', background:T.bg }}>
           <div style={{ maxWidth:1000, margin:'0 auto' }}>
             <div className="reveal" style={{ textAlign:'center', marginBottom:48 }}>
               <span style={{ fontSize:13,fontWeight:600,color:T.gold,textTransform:'uppercase',letterSpacing:2 }}>Why Choose Us</span>
@@ -301,7 +301,7 @@ export default function Landing() {
               </h2>
             </div>
 
-            <div className="reveal-stagger" style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:20 }}>
+            <div className="reveal-stagger mobile-grid-stack" style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:20 }}>
               {[
                 { icon:<PiLightningBold size={22}/>, title:'Instant Matching', desc:'Find rides departing within minutes. Real-time availability updates.', accent:T.gold },
                 { icon:<PiMapPinBold size={22}/>, title:'Live GPS Tracking', desc:'Track your ride in real-time. Share location with emergency contacts.', accent:T.green },
@@ -326,8 +326,8 @@ export default function Landing() {
         </section>
 
         {/* ═══════════ CTA BANNER ═══════════ */}
-        <section className="reveal-scale" style={{ padding:'0 24px', marginBottom:80 }}>
-          <div style={{ maxWidth:1000, margin:'0 auto', borderRadius:24, background:T.heroGrad, padding:'60px 48px',
+        <section className="reveal-scale mobile-padding" style={{ padding:'0 24px', marginBottom:80 }}>
+          <div className="mobile-padding" style={{ maxWidth:1000, margin:'0 auto', borderRadius:24, background:T.heroGrad, padding:'60px 48px',
             position:'relative', overflow:'hidden', textAlign:'center' }}>
             {/* Decorative shapes */}
             <div style={{ position:'absolute', width:200, height:200, borderRadius:'50%', border:'2px solid rgba(200,149,108,0.15)',

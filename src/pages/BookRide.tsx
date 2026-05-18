@@ -145,7 +145,7 @@ export default function BookRide() {
           />
         </motion.div>
 
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 360px', gap:20, alignItems:'start' }}>
+        <div className="mobile-grid-stack" style={{ display:'grid', gridTemplateColumns:'1fr 360px', gap:20, alignItems:'start' }}>
           {/* Left Column - Ride Details */}
           <div>
             {/* Driver Card */}

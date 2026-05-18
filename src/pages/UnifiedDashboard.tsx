@@ -178,7 +178,7 @@ export default function UnifiedDashboard() {
           ))}
         </div>
 
-        <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:24 }}>
+        <div className="mobile-grid-stack" style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:24 }}>
           {/* Left Column: Requests & My Rides (Driver context) */}
           <div>
             {bookingRequests.length > 0 && (

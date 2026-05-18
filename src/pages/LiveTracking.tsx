@@ -200,7 +200,7 @@ export default function LiveTracking() {
             </div>
 
             {/* Action buttons */}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
+            <div className="mobile-grid-stack" style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
               <a href={`tel:${ride?.driver?.phone || ''}`} style={{ textDecoration:'none' }}>
                 <motion.button whileTap={{ scale:0.9 }}
                   style={{ width:'100%', padding:'12px', borderRadius:12, border:`1px solid ${T.border}`, background:T.gray100,
