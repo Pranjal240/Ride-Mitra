@@ -212,7 +212,7 @@ export default function DriverDashboard() {
         )}
 
         {/* Quick Actions */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginTop: isVerified ? -28 : 0, marginBottom:24, position:'relative', zIndex:3 }}>
+        <div className="mobile-grid-stack" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginTop: isVerified ? -28 : 0, marginBottom:24, position:'relative', zIndex:3 }}>
           {quickActions.map((a,i) => (
             <motion.div key={i} initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ delay:0.1+i*0.06 }}>
               <Link to={a.path} style={{ textDecoration:'none' }}>
@@ -442,7 +442,7 @@ export default function DriverDashboard() {
         )}
 
         <FadeUp delay={0.2}>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:40 }}>
+        <div className="mobile-grid-stack" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:40 }}>
           <motion.div whileHover={{ y:-4,boxShadow:T.shadow2 }}
             style={{ background:`linear-gradient(135deg, ${T.redLight}, #FFF5F5)`, borderRadius:20, padding:24, border:`1px solid ${T.red}20`, position:'relative', overflow:'hidden', transition:'all 0.35s' }}>
             <div style={{ position:'absolute', top:-10, right:-10, opacity:0.1, color:T.red }}><PiWarningBold size={100}/></div>

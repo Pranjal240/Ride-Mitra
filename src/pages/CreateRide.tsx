@@ -171,7 +171,7 @@ export default function CreateRide() {
 
             {/* Step 0: Route */}
             {step === 0 && (
-              <div style={{ display:'grid', gridTemplateColumns:'2fr 3fr', gap:20 }}>
+              <div className="mobile-grid-stack" style={{ display:'grid', gridTemplateColumns:'2fr 3fr', gap:20 }}>
                 <div style={{ background:T.surface, borderRadius:20, padding:24, border:`1px solid ${T.border}`, boxShadow:'0 4px 16px rgba(27,43,75,0.04)' }}>
                   <h2 style={{ fontSize:17, fontWeight:700, color:T.text, marginBottom:16, fontFamily:FONT.heading }}>Select Route</h2>
                   {autoLocating && (
@@ -412,7 +412,7 @@ export default function CreateRide() {
 
             {/* Step 3: Confirm */}
             {step === 3 && (
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:18, maxWidth:800, margin:'0 auto' }}>
+              <div className="mobile-grid-stack" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:18, maxWidth:800, margin:'0 auto' }}>
                 <div style={{ background:T.surface, borderRadius:20, padding:24, border:`1px solid ${T.border}`, boxShadow:'0 4px 16px rgba(27,43,75,0.04)' }}>
                   <h2 style={{ fontSize:17, fontWeight:700, color:T.text, marginBottom:16, fontFamily:FONT.heading }}>Confirm Ride</h2>
                   <div style={{ padding:'16px 18px', borderRadius:14, background:T.gray100, display:'flex', flexDirection:'column', gap:12, fontSize:13 }}>
