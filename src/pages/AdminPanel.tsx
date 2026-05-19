@@ -11,15 +11,15 @@ interface StatCardProps { label: string; value: string | number; icon: React.Rea
 function StatCard({ label, value, icon, bg, color }: StatCardProps) {
   return (
     <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} whileHover={{ y:-4, boxShadow:'0 12px 28px rgba(27,43,75,0.08)' }}
-      style={{ background:`linear-gradient(145deg, ${T.surface}, ${T.gray100})`, borderRadius:18, padding:22, border:`1px solid ${T.border}`, transition:'all 0.3s' }}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
-        <div style={{ width:42, height:42, borderRadius:12, background:bg, display:'flex', alignItems:'center', justifyContent:'center', color }}>
+      style={{ background:`linear-gradient(145deg, ${T.surface}, ${T.gray100})`, borderRadius:16, padding:'16px 14px', border:`1px solid ${T.border}`, transition:'all 0.3s', overflow:'hidden' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+        <div style={{ width:38, height:38, borderRadius:10, background:bg, display:'flex', alignItems:'center', justifyContent:'center', color, flexShrink:0 }}>
           {icon}
         </div>
         <PiTrendUpBold size={14} color={T.muted}/>
       </div>
-      <p style={{ fontSize:24, fontWeight:800, color:T.text, fontFamily:FONT.heading }}>{value}</p>
-      <p style={{ fontSize:12, color:T.muted, marginTop:2 }}>{label}</p>
+      <p style={{ fontSize:'clamp(18px, 4vw, 24px)', fontWeight:800, color:T.text, fontFamily:FONT.heading, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{value}</p>
+      <p style={{ fontSize:11, color:T.muted, marginTop:2 }}>{label}</p>
     </motion.div>
   );
 }
