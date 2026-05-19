@@ -96,7 +96,7 @@ export default function StudentDashboard() {
   return (
     <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ minHeight:'100vh', background:T.bg, fontFamily:FONT.body }}>
       {/* ═══ HERO BANNER ═══ */}
-      <div style={{ background:T.heroGrad, padding:'44px 24px 64px', position:'relative', overflow:'hidden' }}>
+      <div className="mobile-hero" style={{ background:T.heroGrad, padding:'44px 24px 64px', position:'relative', overflow:'hidden' }}>
         {/* Background decorations */}
         <motion.div animate={{ scale:[1,1.2,1] }} transition={{ duration:12,repeat:Infinity }}
           style={{ position:'absolute',width:300,height:300,borderRadius:'50%',background:'radial-gradient(circle,rgba(200,149,108,0.1),transparent)',top:'-15%',right:'-5%' }}/>
@@ -131,7 +131,7 @@ export default function StudentDashboard() {
 
       <div style={{ maxWidth:1200,margin:'-36px auto 0',padding:'0 24px 60px',position:'relative',zIndex:2 }}>
         {/* ═══ STATS CARDS ═══ */}
-        <div className="mobile-stat-grid" style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:16,marginBottom:36 }}>
+        <div className="mobile-stat-grid" style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:14,marginBottom:36 }}>
           {stats.map((s,i) => (
             <motion.div key={i} initial={{ opacity:0,y:24 }} animate={{ opacity:1,y:0 }} transition={{ delay:0.15+i*0.08,ease:'easeOut' }}
               whileHover={{ y:-6,boxShadow:T.shadow3 }}
@@ -157,7 +157,7 @@ export default function StudentDashboard() {
         <FadeUp delay={0.05}>
           <h2 style={{ fontSize:20,fontWeight:700,color:T.dark,fontFamily:FONT.heading,marginBottom:16 }}>Quick Actions</h2>
         </FadeUp>
-        <div className="mobile-grid-2" style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:14,marginBottom:40 }}>
+        <div className="mobile-grid-2" style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:14,marginBottom:40 }}>
           {quickActions.map((a,i) => (
             <FadeUp key={i} delay={0.08+i*0.06}>
               <motion.div whileHover={{ y:-5,boxShadow:T.shadow3,borderColor:T.gold }} whileTap={{ scale:0.98 }}
@@ -265,7 +265,7 @@ export default function StudentDashboard() {
                 <p style={{ fontSize:13,color:T.textSec }}>Your live location will be shared with this number during SOS</p>
               </div>
             </div>
-            <div style={{ display:'flex',gap:12,alignItems:'center' }}>
+            <div className="mobile-emergency-row" style={{ display:'flex',gap:12,alignItems:'center' }}>
               <input value={emergencyPhone} onChange={e=>setEmergencyPhone(e.target.value)}
                 placeholder="+91 XXXXX XXXXX" type="tel"
                 style={{ flex:1,padding:'13px 16px',borderRadius:12,border:`1.5px solid ${T.border}`,background:T.gray100,
@@ -283,7 +283,7 @@ export default function StudentDashboard() {
         <FadeUp delay={0.15}>
           <div style={{ marginTop:40 }}>
             <h2 style={{ fontSize:20,fontWeight:700,color:T.dark,fontFamily:FONT.heading,marginBottom:16 }}>Platform Features</h2>
-            <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',gap:14 }}>
+            <div className="mobile-feature-grid" style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',gap:14 }}>
               {[
                 { icon:<PiShieldCheckBold size={20}/>, title:'Verified Drivers', desc:'University ID verified for safety', color:T.green, bg:T.greenLight },
                 { icon:<PiNavigationArrowBold size={20}/>, title:'Live Tracking', desc:'Real-time GPS tracking on every ride', color:T.navy, bg:T.navy50 },

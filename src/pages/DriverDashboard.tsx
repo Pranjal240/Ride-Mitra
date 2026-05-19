@@ -159,7 +159,7 @@ export default function DriverDashboard() {
   return (
     <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ minHeight:'100vh', background:T.bg }}>
       {/* Hero */}
-      <div style={{ background:T.heroGrad, padding:'40px 24px 64px', position:'relative', overflow:'hidden' }}>
+      <div className="mobile-hero" style={{ background:T.heroGrad, padding:'40px 24px 64px', position:'relative', overflow:'hidden' }}>
         <motion.div animate={{ rotate:[0,360] }} transition={{ duration:30,repeat:Infinity,ease:'linear' }}
           style={{ position:'absolute', top:-50, right:-30, width:180, height:180, borderRadius:'50%', border:'2px solid rgba(255,255,255,0.05)' }}/>
         <motion.div animate={{ y:[-8,8,-8] }} transition={{ duration:6,repeat:Infinity }}
@@ -212,7 +212,7 @@ export default function DriverDashboard() {
         )}
 
         {/* Quick Actions */}
-        <div className="mobile-grid-2" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginTop: isVerified ? -28 : 0, marginBottom:24, position:'relative', zIndex:3 }}>
+        <div className="mobile-quick-actions" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginTop: isVerified ? -28 : 0, marginBottom:24, position:'relative', zIndex:3 }}>
           {quickActions.map((a,i) => (
             <motion.div key={i} initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ delay:0.1+i*0.06 }}>
               <Link to={a.path} style={{ textDecoration:'none' }}>
@@ -229,7 +229,7 @@ export default function DriverDashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="mobile-grid-stack" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:14, marginBottom:28 }}>
+        <div className="mobile-stat-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:14, marginBottom:28 }}>
           {[
             { label:'Active Rides', value: String(rides.length), icon:<PiCarBold size={20}/>, color:T.green, bg:T.greenLight },
             { label:'Status', value:isVerified?'Verified':isPending?'Pending':'Unverified', icon:<PiCheckCircleBold size={20}/>, color:isVerified?T.green:T.orange, bg:isVerified?T.greenLight:T.orangeLight },
@@ -277,7 +277,7 @@ export default function DriverDashboard() {
             My Active Rides
           </h2>
           {loading ? (
-            <div className="mobile-grid-stack" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:16 }}>
+            <div className="mobile-ride-cards" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:16 }}>
               {[1,2].map(i=>(
                 <div key={i} style={{ background:T.surface, borderRadius:20, padding:24, border:`1px solid ${T.border}` }}>
                   <div style={{ height:16, width:'60%', background:T.blue50, borderRadius:8, marginBottom:12, animation:'pulse 1.5s infinite' }}/>
