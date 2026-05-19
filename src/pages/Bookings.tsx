@@ -78,21 +78,21 @@ export default function Bookings() {
         {/* Tabs */}
         <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
           className="mobile-tab-bar"
-          style={{ display:'flex', gap:8, marginBottom:24, padding:4, borderRadius:16, background:'rgba(255,255,255,0.6)', backdropFilter:'blur(10px)', border:`1px solid ${T.border}` }}>
+          style={{ display:'flex', gap:6, marginBottom:24, padding:4, borderRadius:16, background:'rgba(255,255,255,0.6)', backdropFilter:'blur(10px)', border:`1px solid ${T.border}`, overflowX:'auto', WebkitOverflowScrolling:'touch' }}>
           {tabs.map(t => (
             <motion.button key={t.key} whileTap={{ scale:0.97 }} onClick={() => setTab(t.key)}
               style={{
-                flex:1, padding:'10px 14px', borderRadius:12, border:'none', cursor:'pointer',
+                flex:'1 0 auto', padding:'9px 10px', borderRadius:12, border:'none', cursor:'pointer',
                 background: tab === t.key ? T.surface : 'transparent',
                 boxShadow: tab === t.key ? '0 4px 12px rgba(27,43,75,0.08)' : 'none',
-                color: tab === t.key ? t.color : T.muted, fontSize:13, fontWeight:600,
-                display:'flex', alignItems:'center', justifyContent:'center', gap:6,
-                transition:'all 0.3s cubic-bezier(0.4,0,0.2,1)',
+                color: tab === t.key ? t.color : T.muted, fontSize:12, fontWeight:600,
+                display:'flex', alignItems:'center', justifyContent:'center', gap:4,
+                transition:'all 0.3s cubic-bezier(0.4,0,0.2,1)', whiteSpace:'nowrap',
               }}>
               {t.icon}
               {t.label}
               <span style={{
-                padding:'1px 7px', borderRadius:8, fontSize:10, fontWeight:700,
+                padding:'1px 6px', borderRadius:8, fontSize:10, fontWeight:700,
                 background: tab === t.key ? `${t.color}15` : T.gray100,
                 color: tab === t.key ? t.color : T.muted,
               }}>{t.count}</span>

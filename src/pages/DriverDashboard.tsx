@@ -188,7 +188,7 @@ export default function DriverDashboard() {
         </div>
       </div>
 
-      <div style={{ maxWidth:1200, margin:'0 auto', padding:'0 24px' }}>
+      <div className="mobile-container" style={{ maxWidth:1200, margin:'0 auto', padding:'0 24px' }}>
         {/* Verification Banner */}
         {!isVerified && (
           <motion.div initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ delay:0.1 }}
@@ -212,16 +212,16 @@ export default function DriverDashboard() {
         )}
 
         {/* Quick Actions */}
-        <div className="mobile-quick-actions" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginTop: isVerified ? -28 : 0, marginBottom:24, position:'relative', zIndex:3 }}>
+        <div className="mobile-quick-actions" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginTop: isVerified ? -28 : 0, marginBottom:16, position:'relative', zIndex:3 }}>
           {quickActions.map((a,i) => (
             <motion.div key={i} initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ delay:0.1+i*0.06 }}>
               <Link to={a.path} style={{ textDecoration:'none' }}>
                 <motion.div whileHover={{ y:-4, boxShadow:'0 12px 32px rgba(0,0,0,0.08)' }}
-                  style={{ background:T.surface, borderRadius:16, padding:'20px 16px', border:`1px solid ${T.border}`,
+                  style={{ background:T.surface, borderRadius:16, padding:'16px 12px', border:`1px solid ${T.border}`,
                     textAlign:'center', cursor:'pointer', transition:'all 0.3s' }}>
-                  <div style={{ width:44, height:44, borderRadius:12, background:a.bg, color:a.color,
-                    display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 10px' }}>{a.icon}</div>
-                  <p style={{ fontSize:13, fontWeight:600, color:T.text }}>{a.label}</p>
+                  <div style={{ width:40, height:40, borderRadius:12, background:a.bg, color:a.color,
+                    display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 8px' }}>{a.icon}</div>
+                  <p style={{ fontSize:12, fontWeight:600, color:T.text, lineHeight:1.3 }}>{a.label}</p>
                 </motion.div>
               </Link>
             </motion.div>
@@ -229,7 +229,7 @@ export default function DriverDashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="mobile-stat-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:14, marginBottom:28 }}>
+        <div className="mobile-stat-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12, marginBottom:20 }}>
           {[
             { label:'Active Rides', value: String(rides.length), icon:<PiCarBold size={20}/>, color:T.green, bg:T.greenLight },
             { label:'Status', value:isVerified?'Verified':isPending?'Pending':'Unverified', icon:<PiCheckCircleBold size={20}/>, color:isVerified?T.green:T.orange, bg:isVerified?T.greenLight:T.orangeLight },
@@ -237,13 +237,13 @@ export default function DriverDashboard() {
             { label:'Rating', value:'5.0 ★', icon:<PiStarBold size={20}/>, color:T.orange, bg:T.orangeLight },
           ].map((s,i)=>(
             <motion.div key={i} initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ delay:0.2+i*0.07 }}
-              style={{ background:T.surface, borderRadius:18, padding:22, border:`1px solid ${T.border}` }}>
-              <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
-                <div>
+              style={{ background:T.surface, borderRadius:16, padding:'16px 14px', border:`1px solid ${T.border}`, overflow:'hidden' }}>
+              <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:8 }}>
+                <div style={{ flex:1, minWidth:0 }}>
                   <p style={{ fontSize:11, color:T.muted, fontWeight:500, textTransform:'uppercase', letterSpacing:0.5 }}>{s.label}</p>
-                  <p style={{ fontSize:26, fontWeight:800, color:T.text, marginTop:4, fontFamily:FONT.heading }}>{s.value}</p>
+                  <p style={{ fontSize:'clamp(18px, 4vw, 26px)', fontWeight:800, color:T.text, marginTop:4, fontFamily:FONT.heading, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{s.value}</p>
                 </div>
-                <div style={{ padding:10, borderRadius:12, background:s.bg, color:s.color }}>{s.icon}</div>
+                <div style={{ padding:8, borderRadius:10, background:s.bg, color:s.color, flexShrink:0 }}>{s.icon}</div>
               </div>
             </motion.div>
           ))}

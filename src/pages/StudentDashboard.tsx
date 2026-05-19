@@ -131,21 +131,21 @@ export default function StudentDashboard() {
 
       <div style={{ maxWidth:1200,margin:'-36px auto 0',padding:'0 24px 60px',position:'relative',zIndex:2 }}>
         {/* ═══ STATS CARDS ═══ */}
-        <div className="mobile-stat-grid" style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:14,marginBottom:36 }}>
+        <div className="mobile-stat-grid" style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:12,marginBottom:28 }}>
           {stats.map((s,i) => (
             <motion.div key={i} initial={{ opacity:0,y:24 }} animate={{ opacity:1,y:0 }} transition={{ delay:0.15+i*0.08,ease:'easeOut' }}
               whileHover={{ y:-6,boxShadow:T.shadow3 }}
-              style={{ background:'white',borderRadius:18,padding:24,boxShadow:T.shadow2,border:`1px solid ${T.border}`,
-                transition:'all 0.35s cubic-bezier(0.25,0.46,0.45,0.94)',cursor:'default' }}>
-              <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between' }}>
-                <div>
-                  <p style={{ fontSize:13,color:T.textSec,fontWeight:500,marginBottom:8 }}>{s.label}</p>
-                  <p style={{ fontSize:28,fontWeight:800,color:T.dark,fontFamily:FONT.heading }}>
+              style={{ background:'white',borderRadius:16,padding:'16px 14px',boxShadow:T.shadow2,border:`1px solid ${T.border}`,
+                transition:'all 0.35s cubic-bezier(0.25,0.46,0.45,0.94)',cursor:'default',overflow:'hidden' }}>
+              <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',gap:8 }}>
+                <div style={{ flex:1,minWidth:0 }}>
+                  <p style={{ fontSize:12,color:T.textSec,fontWeight:500,marginBottom:6 }}>{s.label}</p>
+                  <p style={{ fontSize:'clamp(20px, 4.5vw, 28px)',fontWeight:800,color:T.dark,fontFamily:FONT.heading,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>
                     {s.custom || <AnimNum value={s.value} prefix={s.prefix || ''}/>}
-                    {s.suffix && <span style={{ fontSize:16,fontWeight:500,color:T.textSec,marginLeft:2 }}>{s.suffix}</span>}
+                    {s.suffix && <span style={{ fontSize:14,fontWeight:500,color:T.textSec,marginLeft:2 }}>{s.suffix}</span>}
                   </p>
                 </div>
-                <div style={{ width:50,height:50,borderRadius:14,background:s.bg,display:'flex',alignItems:'center',justifyContent:'center',color:s.color }}>
+                <div style={{ width:42,height:42,borderRadius:12,background:s.bg,display:'flex',alignItems:'center',justifyContent:'center',color:s.color,flexShrink:0 }}>
                   {s.icon}
                 </div>
               </div>
@@ -157,21 +157,21 @@ export default function StudentDashboard() {
         <FadeUp delay={0.05}>
           <h2 style={{ fontSize:20,fontWeight:700,color:T.dark,fontFamily:FONT.heading,marginBottom:16 }}>Quick Actions</h2>
         </FadeUp>
-        <div className="mobile-grid-2" style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:14,marginBottom:40 }}>
+        <div className="mobile-grid-2" style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:12,marginBottom:32 }}>
           {quickActions.map((a,i) => (
             <FadeUp key={i} delay={0.08+i*0.06}>
               <motion.div whileHover={{ y:-5,boxShadow:T.shadow3,borderColor:T.gold }} whileTap={{ scale:0.98 }}
                 onClick={() => navigate(a.to)}
-                style={{ background:'white',borderRadius:18,padding:22,boxShadow:T.shadow1,border:`1.5px solid ${T.border}`,
-                  cursor:'pointer',transition:'all 0.35s',display:'flex',alignItems:'center',gap:14 }}>
-                <div style={{ width:50,height:50,borderRadius:14,background:a.bg,display:'flex',alignItems:'center',justifyContent:'center',color:a.color,flexShrink:0 }}>
+                style={{ background:'white',borderRadius:16,padding:'16px 14px',boxShadow:T.shadow1,border:`1.5px solid ${T.border}`,
+                  cursor:'pointer',transition:'all 0.35s',display:'flex',alignItems:'center',gap:12,overflow:'hidden' }}>
+                <div style={{ width:44,height:44,borderRadius:12,background:a.bg,display:'flex',alignItems:'center',justifyContent:'center',color:a.color,flexShrink:0 }}>
                   {a.icon}
                 </div>
-                <div style={{ flex:1 }}>
-                  <h3 style={{ fontSize:15,fontWeight:700,color:T.dark,fontFamily:FONT.heading }}>{a.label}</h3>
-                  <p style={{ fontSize:12,color:T.textSec,marginTop:3 }}>{a.desc}</p>
+                <div style={{ flex:1,minWidth:0 }}>
+                  <h3 style={{ fontSize:14,fontWeight:700,color:T.dark,fontFamily:FONT.heading }}>{a.label}</h3>
+                  <p style={{ fontSize:11,color:T.textSec,marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{a.desc}</p>
                 </div>
-                <PiArrowRightBold size={16} color={T.grayLight} style={{ flexShrink:0 }}/>
+                <PiArrowRightBold size={14} color={T.grayLight} style={{ flexShrink:0 }}/>
               </motion.div>
             </FadeUp>
           ))}
