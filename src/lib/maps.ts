@@ -314,30 +314,7 @@ export async function searchLocations(query: string): Promise<GeoSearchResult[]>
 }
 
 export async function reverseGeocode(lat: number, lng: number): Promise<string> {
-  // 1. Mappls REST key reverse geocode (best Indian addresses — sectors, roads, pins)
-  try {
-    const response = await fetch(
-      `https://apis.mappls.com/advancedmaps/v1/${MAPPLS_KEY}/rev_geocode?lat=${lat}&lng=${lng}`,
-      { headers: { Accept: 'application/json' } }
-    );
-    if (response.ok) {
-      const data = await response.json();
-      const r = data.results?.[0];
-      if (r) {
-        const parts = [
-          r.street && r.street !== 'Unnamed Road' ? r.street : '',
-          r.subLocality || r.locality || '',
-          r.city || r.district || '',
-          r.state || '',
-          r.pincode ? `Pin-${r.pincode}` : '',
-        ].filter(Boolean);
-        if (parts.length >= 2) return parts.slice(0, 4).join(', ');
-        if (r.formatted_address) return r.formatted_address.split('(')[0].trim();
-      }
-    }
-  } catch {}
-
-  // 2. Nominatim fallback
+  // 1. Nominatim primary (better street-level precision, use zoom=18)
   try {
     const response = await fetch(
       `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&zoom=18`,
@@ -348,12 +325,35 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string> 
       if (data.display_name) {
         const addr = data.address || {};
         const parts = [
+          addr.house_number || '',
           addr.road || addr.amenity || addr.building || '',
-          addr.suburb || addr.neighbourhood || '',
-          addr.city || addr.town || addr.county || '',
-          addr.postcode ? `Pin-${addr.postcode}` : '',
+          addr.neighbourhood || addr.suburb || addr.quarter || '',
+          addr.city || addr.town || addr.village || addr.county || '',
         ].filter(Boolean);
-        return parts.slice(0, 3).join(', ') || data.display_name.split(',').slice(0, 3).join(',');
+        if (parts.length >= 2) return parts.slice(0, 3).join(', ');
+        return data.display_name.split(',').slice(0, 3).join(',').trim();
+      }
+    }
+  } catch {}
+
+  // 2. Mappls REST key reverse geocode (best Indian addresses — sectors, roads, pins)
+  try {
+    const response = await fetch(
+      `https://apis.mappls.com/advancedmaps/v1/${MAPPLS_KEY}/rev_geocode?lat=${lat}&lng=${lng}`,
+      { headers: { Accept: 'application/json' } }
+    );
+    if (response.ok) {
+      const data = await response.json();
+      const r = data.results?.[0];
+      if (r) {
+        const parts = [
+          r.houseNumber || '',
+          r.street && r.street !== 'Unnamed Road' ? r.street : '',
+          r.subSubLocality || r.subLocality || r.locality || '',
+          r.city || r.district || '',
+        ].filter(Boolean);
+        if (parts.length >= 2) return parts.slice(0, 3).join(', ');
+        if (r.formatted_address) return r.formatted_address.split('(')[0].trim();
       }
     }
   } catch {}

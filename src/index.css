@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   Ride Mitra V4 — "Campus Prestige" Design System
+   Ride Mitra V5 — "Campus Prestige" Design System
    Deep Navy · Warm Gold · Soft Ivory
    ═══════════════════════════════════════════════ */
 
@@ -135,6 +135,17 @@ a { color: var(--navy-light); text-decoration: none; }
   50% { background-position: 100% 50%; }
 }
 
+@keyframes press-bounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(200,149,108,0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(200,149,108,0); }
+}
+
 /* ——— Scroll-Based Reveal Animations ——— */
 .reveal {
   opacity: 0;
@@ -186,7 +197,7 @@ a { color: var(--navy-light); text-decoration: none; }
 }
 .reveal-stagger.visible > *:nth-child(1) { transition-delay: 0.05s; opacity: 1; transform: translateY(0); }
 .reveal-stagger.visible > *:nth-child(2) { transition-delay: 0.12s; opacity: 1; transform: translateY(0); }
-.reveal-stagger.visible > *:nth-child(3) { transition-delay: 0.19s; opacity: 1; transform: translateY(0); }
+.reveal-stagger.visible > *:nth-child(3) { transition-delay: 0.12s; opacity: 1; transform: translateY(0); }
 .reveal-stagger.visible > *:nth-child(4) { transition-delay: 0.26s; opacity: 1; transform: translateY(0); }
 .reveal-stagger.visible > *:nth-child(5) { transition-delay: 0.33s; opacity: 1; transform: translateY(0); }
 .reveal-stagger.visible > *:nth-child(6) { transition-delay: 0.40s; opacity: 1; transform: translateY(0); }
@@ -212,6 +223,16 @@ a { color: var(--navy-light); text-decoration: none; }
 .card-hover:hover {
   transform: translateY(-6px);
   box-shadow: var(--shadow-lg);
+}
+
+/* ——— Micro-interaction: Active press ——— */
+.press-effect:active {
+  animation: press-bounce 0.2s ease-out;
+}
+
+/* ——— CTA Glow ——— */
+.glow-gold {
+  animation: glow-pulse 2s infinite;
 }
 
 /* ——— Gold Accent Underline ——— */
@@ -325,16 +346,19 @@ input:focus, textarea:focus, select:focus {
 .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
 .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
 
-/* ——— Responsive Utilities ——— */
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — MOBILE FIRST (≤768px)
+   ═══════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  /* Layout stacking */
+
+  /* ── Layout stacking ── */
   .mobile-stack {
     display: flex !important;
     flex-direction: column !important;
     height: auto !important;
   }
   .mobile-padding {
-    padding: 32px 16px !important;
+    padding: 24px 14px !important;
   }
   .mobile-hide {
     display: none !important;
@@ -347,12 +371,13 @@ input:focus, textarea:focus, select:focus {
     flex-direction: column-reverse !important;
   }
 
-  /* Grid overrides */
+  /* ── Grid overrides — properly constrained ── */
   .mobile-grid-stack {
     grid-template-columns: 1fr !important;
   }
   .mobile-grid-2 {
     grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
   }
   .mobile-align-start {
     align-items: flex-start !important;
@@ -360,7 +385,38 @@ input:focus, textarea:focus, select:focus {
     padding-bottom: 60px !important;
   }
 
-  /* Login page */
+  /* ── Dashboard stat grids — 2 col on mobile ── */
+  .mobile-stat-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+  .mobile-stat-grid > div {
+    padding: 16px !important;
+    border-radius: 14px !important;
+  }
+  .mobile-stat-grid p:first-child {
+    font-size: 11px !important;
+  }
+
+  /* ── Section grids — single column ── */
+  .mobile-section-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* ── Feature grids — single column on mobile ── */
+  .mobile-feature-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* ── Admin panel ── */
+  .mobile-admin-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* ── Login page ── */
   .mobile-login-right {
     padding: 16px !important;
     flex: 1 1 100% !important;
@@ -388,7 +444,7 @@ input:focus, textarea:focus, select:focus {
     border-radius: 10px !important;
   }
 
-  /* Ride Search */
+  /* ── Ride Search ── */
   .mobile-search-layout {
     flex-direction: column-reverse !important;
     height: auto !important;
@@ -403,34 +459,18 @@ input:focus, textarea:focus, select:focus {
   }
   .mobile-search-map {
     flex: none !important;
-    height: 50vh !important;
+    height: 45vh !important;
     width: 100% !important;
     position: relative !important;
   }
 
-  /* Dashboard stat grids */
-  .mobile-stat-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 10px !important;
-  }
-  .mobile-section-grid {
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
-  }
-
-  /* Admin panel */
-  .mobile-admin-grid {
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
-  }
-
-  /* Chat page */
+  /* ── Chat page ── */
   .mobile-chat-container {
     height: calc(100vh - 64px) !important;
     height: calc(100dvh - 64px) !important;
   }
 
-  /* Tracking page */
+  /* ── Tracking page ── */
   .mobile-tracking-layout {
     flex-direction: column !important;
     height: auto !important;
@@ -445,7 +485,7 @@ input:focus, textarea:focus, select:focus {
     position: relative !important;
   }
 
-  /* CreateRide page */
+  /* ── CreateRide page ── */
   .mobile-create-layout {
     flex-direction: column !important;
     height: auto !important;
@@ -460,7 +500,7 @@ input:focus, textarea:focus, select:focus {
     width: 100% !important;
   }
 
-  /* Bookings tabs */
+  /* ── Bookings tabs ── */
   .mobile-tab-bar {
     gap: 4px !important;
     padding: 3px !important;
@@ -470,7 +510,7 @@ input:focus, textarea:focus, select:focus {
     font-size: 12px !important;
   }
 
-  /* BookRide page */
+  /* ── BookRide page ── */
   .mobile-book-layout {
     flex-direction: column !important;
   }
@@ -479,8 +519,58 @@ input:focus, textarea:focus, select:focus {
     width: 100% !important;
   }
 
-  /* General content */
+  /* ── General content ── */
   .mobile-container {
     padding: 20px 14px 40px !important;
+  }
+
+  /* ── Emergency contact row — stack on very small ── */
+  .mobile-emergency-row {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+  .mobile-emergency-row input {
+    width: 100% !important;
+  }
+  .mobile-emergency-row button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* ── Hero padding reduction ── */
+  .mobile-hero {
+    padding: 32px 16px 52px !important;
+  }
+
+  /* ── Quick actions on driver dashboard — 2 col ── */
+  .mobile-quick-actions {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+  .mobile-quick-actions > div {
+    padding: 14px 10px !important;
+  }
+
+  /* ── Ride cards — full width ── */
+  .mobile-ride-cards {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — SMALL PHONES (≤400px)
+   ═══════════════════════════════════════════════ */
+@media (max-width: 400px) {
+  .mobile-stat-grid {
+    gap: 8px !important;
+  }
+  .mobile-stat-grid > div {
+    padding: 14px 12px !important;
+  }
+  .mobile-grid-2 {
+    gap: 8px !important;
+  }
+  .mobile-quick-actions {
+    gap: 8px !important;
   }
 }
