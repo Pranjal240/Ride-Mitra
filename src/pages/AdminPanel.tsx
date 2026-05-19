@@ -114,7 +114,7 @@ export default function AdminPanel() {
         )}
 
         {/* Stats Grid */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))', gap:14, marginBottom:28 }}>
+        <div className="mobile-stat-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))', gap:14, marginBottom:28 }}>
           {loading ? (
             [1,2,3,4].map(i => (
               <div key={i} style={{ background:T.surface, borderRadius:18, padding:22, border:`1px solid ${T.border}` }}>
@@ -134,7 +134,7 @@ export default function AdminPanel() {
         </div>
 
         {/* Two-column layout */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(360px, 1fr))', gap:16 }}>
+        <div className="mobile-admin-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(360px, 1fr))', gap:16 }}>
           {/* Pending Verifications */}
           <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
             style={{ background:T.surface, borderRadius:20, padding:24, border:`1px solid ${T.border}`, boxShadow:'0 4px 16px rgba(27,43,75,0.04)' }}>

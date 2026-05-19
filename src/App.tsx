@@ -56,7 +56,7 @@ export default function App() {
   useRealtimeNotifications(user?.id);
 
   return (
-    <div className="min-h-screen bg-beige-50 font-sans">
+    <div style={{ minHeight: '100vh', background: T.bg, fontFamily: "'Inter', sans-serif" }}>
       {user && <Header />}
       <ToastContainer />
       <AnimatePresence mode="wait">

@@ -62,7 +62,7 @@ export default function BookRide() {
     try {
       const total = seats * (ride.price_per_seat || 0);
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY || 'rzp_test_xxxxxx',
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxxxx',
         amount: total * 100,
         currency: "INR",
         name: "Ride Mitra",

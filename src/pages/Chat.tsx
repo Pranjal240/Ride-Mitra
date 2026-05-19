@@ -57,7 +57,7 @@ export default function Chat() {
 
   return (
     <div style={{ minHeight:'100vh', background:T.bg, fontFamily:"'Inter', sans-serif" }}>
-      <div style={{ display:'flex', flexDirection:'column', height:'100vh' }}>
+      <div className="mobile-chat-container" style={{ display:'flex', flexDirection:'column', height:'calc(100vh - 64px)' }}>
         {/* Header */}
         <div style={{
           padding:'12px 20px', background:'rgba(253,251,247,0.9)', backdropFilter:'blur(16px)',

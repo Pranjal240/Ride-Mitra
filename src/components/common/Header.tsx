@@ -30,7 +30,7 @@ export default function Header() {
         ? [
             { label: 'Dashboard', path: '/driver', icon: <PiHouseBold size={18}/> },
             { label: 'Create Ride', path: '/rides/create', icon: <PiPlusBold size={18}/> },
-            { label: 'My Rides', path: '/rides/my', icon: <PiCarBold size={18}/> },
+            { label: 'My Rides', path: '/driver', icon: <PiCarBold size={18}/> },
           ]
         : [
             { label: 'Dashboard', path: '/student', icon: <PiHouseBold size={18}/> },

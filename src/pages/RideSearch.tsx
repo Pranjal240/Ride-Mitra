@@ -201,9 +201,9 @@ export default function RideSearch() {
 
   return (
     <div style={{ minHeight:'100vh', background:T.bg }}>
-      <div style={{ display:'flex', height:containerHeight, overflow:'hidden' }}>
+      <div className="mobile-search-layout" style={{ display:'flex', height:containerHeight, overflow:'hidden' }}>
         {/* Sidebar */}
-        <div style={{ width:440, minWidth:360, flexShrink:0, overflowY:'auto', background:`linear-gradient(180deg,${T.gray100},${T.gray100})`, borderRight:`1px solid ${T.border}`, padding:'24px 20px' }}>
+        <div className="mobile-search-sidebar" style={{ width:440, minWidth:360, flexShrink:0, overflowY:'auto', background:`linear-gradient(180deg,${T.gray100},${T.gray100})`, borderRight:`1px solid ${T.border}`, padding:'24px 20px' }}>
           {/* Title */}
           <div style={{ marginBottom:20 }}>
             <h1 style={{ fontSize:22, fontWeight:800, color:T.text, fontFamily:FONT.heading, display:'flex', alignItems:'center', gap:10 }}>
@@ -368,7 +368,7 @@ export default function RideSearch() {
         </div>
 
         {/* Map */}
-        <div style={{ flex:1, position:'relative' }}>
+        <div className="mobile-search-map" style={{ flex:1, position:'relative' }}>
           <MapView
             markers={markers}
             route={primaryRoute}

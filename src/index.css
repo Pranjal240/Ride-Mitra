@@ -1,11 +1,11 @@
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Ride Mitra V4 â€” "Campus Prestige" Design System
-   Deep Navy Â· Warm Gold Â· Soft Ivory
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ═══════════════════════════════════════════════
+   Ride Mitra V4 — "Campus Prestige" Design System
+   Deep Navy · Warm Gold · Soft Ivory
+   ═══════════════════════════════════════════════ */
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* â”€â”€â”€ CSS Variables â”€â”€â”€ */
+/* ——— CSS Variables ——— */
 :root {
   --navy:       #1B2B4B;
   --navy-light: #2C4A7C;
@@ -40,7 +40,7 @@
   --shadow-xl:  0 24px 56px rgba(27,43,75,0.18);
 }
 
-/* â”€â”€â”€ Reset & Base â”€â”€â”€ */
+/* ——— Reset & Base ——— */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
@@ -62,7 +62,7 @@ body {
   color: white;
 }
 
-/* â”€â”€â”€ Scrollbar â”€â”€â”€ */
+/* ——— Scrollbar ——— */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb {
@@ -71,7 +71,7 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
 
-/* â”€â”€â”€ Typography â”€â”€â”€ */
+/* ——— Typography ——— */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-h);
   color: var(--dark);
@@ -80,7 +80,7 @@ h1, h2, h3, h4, h5, h6 {
 
 a { color: var(--navy-light); text-decoration: none; }
 
-/* â”€â”€â”€ Keyframes â”€â”€â”€ */
+/* ——— Keyframes ——— */
 @keyframes spin-slow {
   to { transform: rotate(360deg); }
 }
@@ -135,7 +135,7 @@ a { color: var(--navy-light); text-decoration: none; }
   50% { background-position: 100% 50%; }
 }
 
-/* â”€â”€â”€ Scroll-Based Reveal Animations â”€â”€â”€ */
+/* ——— Scroll-Based Reveal Animations ——— */
 .reveal {
   opacity: 0;
   transform: translateY(40px);
@@ -191,7 +191,7 @@ a { color: var(--navy-light); text-decoration: none; }
 .reveal-stagger.visible > *:nth-child(5) { transition-delay: 0.33s; opacity: 1; transform: translateY(0); }
 .reveal-stagger.visible > *:nth-child(6) { transition-delay: 0.40s; opacity: 1; transform: translateY(0); }
 
-/* â”€â”€â”€ Utility Classes â”€â”€â”€ */
+/* ——— Utility Classes ——— */
 .skeleton {
   background: linear-gradient(90deg, var(--gray-100), var(--gray-200), var(--gray-100));
   background-size: 200% 100%;
@@ -214,7 +214,7 @@ a { color: var(--navy-light); text-decoration: none; }
   box-shadow: var(--shadow-lg);
 }
 
-/* â”€â”€â”€ Gold Accent Underline â”€â”€â”€ */
+/* ——— Gold Accent Underline ——— */
 .gold-underline {
   position: relative;
   display: inline-block;
@@ -236,7 +236,7 @@ a { color: var(--navy-light); text-decoration: none; }
   transform: scaleX(1);
 }
 
-/* â”€â”€â”€ Buttons â”€â”€â”€ */
+/* ——— Buttons ——— */
 .btn-navy {
   background: linear-gradient(135deg, var(--navy), var(--navy-light));
   color: white;
@@ -271,13 +271,13 @@ a { color: var(--navy-light); text-decoration: none; }
   box-shadow: 0 8px 24px rgba(200,149,108,0.35);
 }
 
-/* â”€â”€â”€ Parallax sections â”€â”€â”€ */
+/* ——— Parallax sections ——— */
 .parallax-section {
   transform: translateZ(0);
   will-change: transform;
 }
 
-/* â”€â”€â”€ Wave Separator â”€â”€â”€ */
+/* ——— Wave Separator ——— */
 .wave-separator {
   position: relative;
   overflow: hidden;
@@ -291,12 +291,12 @@ a { color: var(--navy-light); text-decoration: none; }
   animation: wave-move 12s linear infinite;
 }
 
-/* â”€â”€â”€ Counter animation â”€â”€â”€ */
+/* ——— Counter animation ——— */
 .animate-count {
   animation: count-up 0.6s ease-out both;
 }
 
-/* â”€â”€â”€ Gradient text â”€â”€â”€ */
+/* ——— Gradient text ——— */
 .gradient-text-navy {
   background: linear-gradient(135deg, var(--navy), var(--navy-light));
   -webkit-background-clip: text;
@@ -311,22 +311,23 @@ a { color: var(--navy-light); text-decoration: none; }
   background-clip: text;
 }
 
-/* â”€â”€â”€ Input focus â”€â”€â”€ */
+/* ——— Input focus ——— */
 input:focus, textarea:focus, select:focus {
   border-color: var(--navy) !important;
   box-shadow: 0 0 0 3px rgba(27,43,75,0.12) !important;
   outline: none;
 }
 
-/* â”€â”€â”€ Loading dot animation â”€â”€â”€ */
+/* ——— Loading dot animation ——— */
 .loading-dots span {
   animation: pulse-soft 1.4s infinite;
 }
 .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
 .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
 
-/* â”€â”€â”€ Responsive Utilities â”€â”€â”€ */
+/* ——— Responsive Utilities ——— */
 @media (max-width: 768px) {
+  /* Layout stacking */
   .mobile-stack {
     display: flex !important;
     flex-direction: column !important;
@@ -345,6 +346,8 @@ input:focus, textarea:focus, select:focus {
     display: flex !important;
     flex-direction: column-reverse !important;
   }
+
+  /* Grid overrides */
   .mobile-grid-stack {
     grid-template-columns: 1fr !important;
   }
@@ -356,7 +359,128 @@ input:focus, textarea:focus, select:focus {
     padding-top: 100px !important;
     padding-bottom: 60px !important;
   }
+
+  /* Login page */
   .mobile-login-right {
-    padding: 24px !important;
+    padding: 16px !important;
+    flex: 1 1 100% !important;
+  }
+  .mobile-login-card {
+    max-width: 100% !important;
+    border-radius: 20px !important;
+  }
+  .mobile-login-header {
+    padding: 20px 20px !important;
+  }
+  .mobile-login-tabs {
+    padding: 0 16px !important;
+  }
+  .mobile-login-body {
+    padding: 20px 16px 24px !important;
+  }
+  .mobile-otp-row {
+    gap: 6px !important;
+  }
+  .mobile-otp-input {
+    width: 40px !important;
+    height: 46px !important;
+    font-size: 18px !important;
+    border-radius: 10px !important;
+  }
+
+  /* Ride Search */
+  .mobile-search-layout {
+    flex-direction: column-reverse !important;
+    height: auto !important;
+    min-height: calc(100vh - 64px) !important;
+    overflow: visible !important;
+  }
+  .mobile-search-sidebar {
+    width: 100% !important;
+    min-width: 0 !important;
+    border-right: none !important;
+    padding: 16px !important;
+  }
+  .mobile-search-map {
+    flex: none !important;
+    height: 50vh !important;
+    width: 100% !important;
+    position: relative !important;
+  }
+
+  /* Dashboard stat grids */
+  .mobile-stat-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+  .mobile-section-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Admin panel */
+  .mobile-admin-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Chat page */
+  .mobile-chat-container {
+    height: calc(100vh - 64px) !important;
+    height: calc(100dvh - 64px) !important;
+  }
+
+  /* Tracking page */
+  .mobile-tracking-layout {
+    flex-direction: column !important;
+    height: auto !important;
+  }
+  .mobile-tracking-map {
+    height: 50vh !important;
+    width: 100% !important;
+  }
+  .mobile-tracking-panel {
+    width: 100% !important;
+    height: auto !important;
+    position: relative !important;
+  }
+
+  /* CreateRide page */
+  .mobile-create-layout {
+    flex-direction: column !important;
+    height: auto !important;
+  }
+  .mobile-create-sidebar {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 16px !important;
+  }
+  .mobile-create-map {
+    height: 40vh !important;
+    width: 100% !important;
+  }
+
+  /* Bookings tabs */
+  .mobile-tab-bar {
+    gap: 4px !important;
+    padding: 3px !important;
+  }
+  .mobile-tab-bar button {
+    padding: 8px 6px !important;
+    font-size: 12px !important;
+  }
+
+  /* BookRide page */
+  .mobile-book-layout {
+    flex-direction: column !important;
+  }
+  .mobile-book-map {
+    height: 35vh !important;
+    width: 100% !important;
+  }
+
+  /* General content */
+  .mobile-container {
+    padding: 20px 14px 40px !important;
   }
 }

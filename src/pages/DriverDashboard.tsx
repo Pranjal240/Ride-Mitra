@@ -131,7 +131,7 @@ export default function DriverDashboard() {
       }
       await fetch(`${SUPABASE_URL}/functions/v1/send-sos`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userName: user?.full_name, userPhone: user?.phone, location, rideId: rides[0]?.id }),
+        body: JSON.stringify({ userName: user?.full_name, userPhone: user?.phone, emergencyContact: user?.emergency_contact_phone, location: location ? `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}` : 'Location unavailable', rideId: rides[0]?.id }),
       });
       // Also log to DB
       await supabase.from('sos_alerts').insert({ user_id: user?.id, ride_id: rides[0]?.id || null, location });
@@ -151,7 +151,7 @@ export default function DriverDashboard() {
 
   const quickActions = [
     { icon: <PiPlusBold size={20}/>, label: 'Create Ride', path: '/rides/create', color: T.green, bg: T.greenLight },
-    { icon: <PiCarBold size={20}/>, label: 'My Rides', path: '/rides/my', color: T.navy, bg: T.blue50 },
+    { icon: <PiCarBold size={20}/>, label: 'My Rides', path: '/driver', color: T.navy, bg: T.blue50 },
     { icon: <PiShieldCheckBold size={20}/>, label: 'Verification', path: '/verification', color: T.orange, bg: T.orangeLight },
     { icon: <PiHouseBold size={20}/>, label: 'Home', path: '/', color: T.navy, bg: T.blueLight },
   ];
