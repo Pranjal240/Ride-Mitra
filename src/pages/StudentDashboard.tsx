@@ -131,7 +131,7 @@ export default function StudentDashboard() {
 
       <div style={{ maxWidth:1200,margin:'-36px auto 0',padding:'0 24px 60px',position:'relative',zIndex:2 }}>
         {/* ═══ STATS CARDS ═══ */}
-        <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:16,marginBottom:36 }}>
+        <div className="mobile-stat-grid" style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:16,marginBottom:36 }}>
           {stats.map((s,i) => (
             <motion.div key={i} initial={{ opacity:0,y:24 }} animate={{ opacity:1,y:0 }} transition={{ delay:0.15+i*0.08,ease:'easeOut' }}
               whileHover={{ y:-6,boxShadow:T.shadow3 }}
@@ -157,7 +157,7 @@ export default function StudentDashboard() {
         <FadeUp delay={0.05}>
           <h2 style={{ fontSize:20,fontWeight:700,color:T.dark,fontFamily:FONT.heading,marginBottom:16 }}>Quick Actions</h2>
         </FadeUp>
-        <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:14,marginBottom:40 }}>
+        <div className="mobile-grid-2" style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:14,marginBottom:40 }}>
           {quickActions.map((a,i) => (
             <FadeUp key={i} delay={0.08+i*0.06}>
               <motion.div whileHover={{ y:-5,boxShadow:T.shadow3,borderColor:T.gold }} whileTap={{ scale:0.98 }}

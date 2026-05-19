@@ -77,6 +77,7 @@ export default function Bookings() {
 
         {/* Tabs */}
         <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
+          className="mobile-tab-bar"
           style={{ display:'flex', gap:8, marginBottom:24, padding:4, borderRadius:16, background:'rgba(255,255,255,0.6)', backdropFilter:'blur(10px)', border:`1px solid ${T.border}` }}>
           {tabs.map(t => (
             <motion.button key={t.key} whileTap={{ scale:0.97 }} onClick={() => setTab(t.key)}

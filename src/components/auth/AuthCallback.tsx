@@ -98,11 +98,11 @@ export default function AuthCallback() {
   }, [navigate, setUser, setLoading]);
 
   return (
-    <div className="min-h-screen gradient-hero flex items-center justify-center">
-      <div className="text-center">
-        <div className="w-16 h-16 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
-        <h2 className="text-2xl font-bold font-display text-gray-900">Signing you in...</h2>
-        <p className="text-gray-500 mt-2">Just a moment while we set things up</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #F8F6F1, #EEF2F7)', fontFamily: "'Inter', sans-serif" }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ width: 56, height: 56, border: '4px solid #1B2B4B', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin-slow 0.8s linear infinite', margin: '0 auto 20px' }} />
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: '#2B2D42', fontFamily: "'Poppins', sans-serif" }}>Signing you in...</h2>
+        <p style={{ fontSize: 14, color: '#9CA0AD', marginTop: 8 }}>Just a moment while we set things up</p>
       </div>
     </div>
   );

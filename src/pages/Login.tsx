@@ -84,7 +84,7 @@ export default function Login() {
   ];
 
   return (
-    <div style={{ minHeight:'100vh', display:'flex', position:'relative', overflow:'hidden' }}>
+    <div style={{ minHeight:'100vh', display:'flex', position:'relative', overflow:'hidden', overflowX:'hidden' }}>
       {/* Left Gradient Panel */}
       <div className="mobile-hide" style={{ flex:'1 1 50%', background:T.heroGrad,
         display:'flex', flexDirection:'column', justifyContent:'center', padding:'60px 48px', position:'relative', overflow:'hidden' }}>
@@ -139,16 +139,17 @@ export default function Login() {
       </div>
 
       {/* Right — Login Card */}
-      <div className="mobile-login-right" style={{ flex:'1 1 50%', display:'flex', alignItems:'center', justifyContent:'center', padding:40, background:T.bg, position:'relative' }}>
+      <div className="mobile-login-right" style={{ flex:'1 1 50%', display:'flex', alignItems:'center', justifyContent:'center', padding:40, background:T.bg, position:'relative', overflowX:'hidden' }}>
         {/* Subtle bg blob */}
         <div style={{ position:'absolute', width:300, height:300, borderRadius:'50%', background:`radial-gradient(circle,${T.blue50},transparent 70%)`, top:'10%', right:'10%', pointerEvents:'none' }}/>
 
         <motion.div initial={{ opacity:0,scale:0.95,y:20 }} animate={{ opacity:1,scale:1,y:0 }} transition={{ duration:0.6,delay:0.2 }}
+          className="mobile-login-card"
           style={{ width:'100%', maxWidth:420, background:T.surface, borderRadius:24, overflow:'hidden',
             boxShadow:`0 20px 60px rgba(27,43,75,0.08)`, border:`1px solid ${T.border}`, position:'relative', zIndex:2 }}>
 
           {/* Card header */}
-          <div style={{ background:T.heroGrad, padding:'28px 32px', textAlign:'center', position:'relative', overflow:'hidden' }}>
+          <div className="mobile-login-header" style={{ background:T.heroGrad, padding:'28px 32px', textAlign:'center', position:'relative', overflow:'hidden' }}>
             <div style={{ position:'absolute', width:100, height:100, borderRadius:'50%', background:'rgba(27,43,75,0.08)', top:-30, right:-30 }}/>
             <div style={{ position:'absolute', width:60, height:60, borderRadius:'50%', background:'rgba(27,43,75,0.06)', bottom:-20, left:30 }}/>
             <motion.div initial={{ scale:0.8,opacity:0 }} animate={{ scale:1,opacity:1 }} transition={{ delay:0.3 }}>
@@ -161,7 +162,7 @@ export default function Login() {
           </div>
 
           {/* Role tabs */}
-          <div style={{ display:'flex', padding:'0 32px', borderBottom:`1px solid ${T.border}` }}>
+          <div className="mobile-login-tabs" style={{ display:'flex', padding:'0 32px', borderBottom:`1px solid ${T.border}` }}>
             {tabs.map(t=>(
               <motion.button key={t.key} whileTap={{ scale:0.95 }} onClick={()=>setRole(t.key)}
                 style={{ flex:1, padding:'14px 0', fontSize:13, fontWeight:600, cursor:'pointer', border:'none',
@@ -175,6 +176,7 @@ export default function Login() {
 
           <AnimatePresence mode="wait">
             <motion.div key={step} initial={{ opacity:0,x:step==='otp'?20:-20 }} animate={{ opacity:1,x:0 }} exit={{ opacity:0,x:step==='otp'?-20:20 }}
+              className="mobile-login-body"
               style={{ padding:'24px 32px 32px' }}>
 
               {step === 'choose' ? (<>
@@ -220,11 +222,12 @@ export default function Login() {
                 </button>
                 <p style={{ fontSize:14, color:T.textSec, marginBottom:4 }}>OTP sent to <strong style={{color:T.text}}>+91 {phone}</strong></p>
                 <p style={{ fontSize:12, color:T.muted, marginBottom:16 }}>Enter the 6-digit verification code</p>
-                <div style={{ display:'flex', gap:8, justifyContent:'center', marginBottom:16 }}>
+                <div className="mobile-otp-row" style={{ display:'flex', gap:8, justifyContent:'center', marginBottom:16 }}>
                   {otp.map((d,i)=>(
                     <motion.input key={i} id={`otp-${i}`} value={d} onChange={e=>handleOtpInput(i,e.target.value)}
                       onKeyDown={e=>handleOtpKey(i,e)} maxLength={1}
                       initial={{ opacity:0,y:10 }} animate={{ opacity:1,y:0 }} transition={{ delay:i*0.06 }}
+                      className="mobile-otp-input"
                       style={{ width:48, height:54, textAlign:'center', fontSize:22, fontWeight:700, borderRadius:14,
                         border:`1.5px solid ${T.border}`, background:T.bg, outline:'none', color:T.text, fontFamily:'inherit', transition:'all 0.3s' }}
                       onFocus={e=>{e.currentTarget.style.borderColor=T.navy;e.currentTarget.style.boxShadow=`0 0 0 3px ${T.navy}18`;}}
