@@ -1,8 +1,8 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
-const CLIENT_ID = 'MAPPLS_CLIENT_ID';
-const CLIENT_SECRET = 'lrFxI-iSEg_Qx8X588nh0i04Ob6YsseTZEy-i_MOlGKCjOvJwGRWJ-6sNTI1PGgmcYrd0osGXKodxNoKXpMxNoGpmQMJINNCLTxVEEd40_U=';
-const REST_KEY = 'MAPPLS_REST_KEY';
+const CLIENT_ID = Deno.env.get('MAPPLS_CLIENT_ID') || '';
+const CLIENT_SECRET = Deno.env.get('MAPPLS_CLIENT_SECRET') || '';
+const REST_KEY = Deno.env.get('MAPPLS_REST_KEY') || '';
 
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
