@@ -91,10 +91,26 @@ function Splash({ onDone }: { onDone: () => void }) {
   );
 }
 
-/* ══════════════ MAGNETIC BUTTON ══════════════ */
+/* ══════════════ MAGNETIC BUTTON ══════════════
+   Cursor-follow magnetism (desktop) — flat colours, no gradient/glow.
+   On touch devices there's no pointer, so it simply rests in place. */
 function MagneticButton({ children, onClick, variant = 'primary', style: extraStyle }: {
   children: React.ReactNode; onClick?: () => void; variant?: 'primary' | 'ghost'; style?: React.CSSProperties;
 }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 260, damping: 18, mass: 0.6 });
+  const sy = useSpring(y, { stiffness: 260, damping: 18, mass: 0.6 });
+
+  const onMove = (e: React.MouseEvent) => {
+    const r = ref.current?.getBoundingClientRect();
+    if (!r) return;
+    x.set((e.clientX - r.left - r.width / 2) * 0.35);
+    y.set((e.clientY - r.top - r.height / 2) * 0.35);
+  };
+  const onLeave = () => { x.set(0); y.set(0); };
+
   const base: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', gap: 10, padding: '15px 30px',
     borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: 'pointer',
@@ -109,9 +125,16 @@ function MagneticButton({ children, onClick, variant = 'primary', style: extraSt
   };
 
   return (
-    <button onClick={onClick} style={{ ...base, ...variants[variant], ...extraStyle }}>
+    <motion.button
+      ref={ref}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+      onClick={onClick}
+      whileTap={{ scale: 0.96 }}
+      style={{ ...base, ...variants[variant], x: sx, y: sy, ...extraStyle }}
+    >
       {children}
-    </button>
+    </motion.button>
   );
 }
 
@@ -753,6 +776,30 @@ export default function Landing() {
                   </div>
                 ))
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════ SEE IT IN MOTION ═══════════ */}
+        <section id="motion" style={{ padding: '80px 24px 20px' }} className="mobile-padding">
+          <div style={{ maxWidth: 960, margin: '0 auto', textAlign: 'center' }}>
+            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, color: T.gold, textTransform: 'uppercase', marginBottom: 12 }}>
+              See it in motion
+            </div>
+            <h2 style={{ fontSize: 'clamp(28px, 5vw, 44px)', fontWeight: 900, color: '#fff', letterSpacing: '-0.03em', marginBottom: 28, fontFamily: FONT.heading, lineHeight: 1.08 }}>
+              Campus rides, in twenty seconds.
+            </h2>
+            <div style={{ borderRadius: 24, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.12)', background: '#0F1A33' }}>
+              <video
+                src="/launch.mp4"
+                poster="/launch-poster.jpg"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                style={{ width: '100%', display: 'block', aspectRatio: '16 / 9', objectFit: 'cover' }}
+              />
             </div>
           </div>
         </section>

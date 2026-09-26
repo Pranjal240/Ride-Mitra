@@ -12,32 +12,69 @@ import {
   useState,
   type ReactNode,
   type CSSProperties,
+  type MouseEvent,
 } from 'react';
-import { motion, useInView, AnimatePresence } from 'framer-motion';
+import { motion, useInView, useMotionValue, useSpring, AnimatePresence } from 'framer-motion';
 import T from '../../lib/theme';
 
-/* Card — plain surface (no tilt / glare). */
+/* Card — gentle cursor tilt (no glare / shine). Rests flat with no pointer. */
 export function TiltCard({
-  children, style, className, radius = 16,
+  children, style, className, max = 8, radius = 16,
 }: {
   children: ReactNode; style?: CSSProperties; className?: string;
   max?: number; glare?: boolean; layers?: boolean; radius?: number;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const rx = useMotionValue(0);
+  const ry = useMotionValue(0);
+  const sx = useSpring(rx, { stiffness: 220, damping: 20, mass: 0.6 });
+  const sy = useSpring(ry, { stiffness: 220, damping: 20, mass: 0.6 });
+  const onMove = (e: MouseEvent<HTMLDivElement>) => {
+    const el = ref.current; if (!el) return;
+    const r = el.getBoundingClientRect();
+    ry.set(((e.clientX - r.left) / r.width - 0.5) * max);
+    rx.set(-((e.clientY - r.top) / r.height - 0.5) * max);
+  };
+  const onLeave = () => { rx.set(0); ry.set(0); };
   return (
-    <div className={className} style={{ ...style, borderRadius: radius, position: 'relative' }}>
+    <motion.div
+      ref={ref}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+      className={className}
+      style={{
+        ...style, borderRadius: radius, position: 'relative',
+        rotateX: sx, rotateY: sy, transformPerspective: 1000,
+      }}
+    >
       {children}
-    </div>
+    </motion.div>
   );
 }
 
-/* Magnetic — no-op wrapper (no cursor pull). */
+/* Magnetic — cursor-follow pull (desktop); rests in place on touch. */
 export function Magnetic({
-  children, className, style,
+  children, strength = 0.3, className, style,
 }: { children: ReactNode; strength?: number; className?: string; style?: CSSProperties }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 260, damping: 18, mass: 0.6 });
+  const sy = useSpring(y, { stiffness: 260, damping: 18, mass: 0.6 });
+  const onMove = (e: MouseEvent<HTMLDivElement>) => {
+    const el = ref.current; if (!el) return;
+    const r = el.getBoundingClientRect();
+    x.set((e.clientX - r.left - r.width / 2) * strength);
+    y.set((e.clientY - r.top - r.height / 2) * strength);
+  };
+  const onLeave = () => { x.set(0); y.set(0); };
   return (
-    <div className={className} style={{ ...style, display: 'inline-block' }}>
+    <motion.div
+      ref={ref} onMouseMove={onMove} onMouseLeave={onLeave}
+      className={className} style={{ ...style, x: sx, y: sy, display: 'inline-block' }}
+    >
       {children}
-    </div>
+    </motion.div>
   );
 }
 
