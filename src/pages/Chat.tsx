@@ -56,7 +56,7 @@ export default function Chat() {
   };
 
   return (
-    <div style={{ minHeight:'100vh', background:T.bg, fontFamily:"'Inter', sans-serif" }}>
+    <div style={{ minHeight:'100vh', background:T.bg, fontFamily:"-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}>
       <div className="mobile-chat-container" style={{ display:'flex', flexDirection:'column', height:'calc(100vh - 64px)' }}>
         {/* Header */}
         <div style={{

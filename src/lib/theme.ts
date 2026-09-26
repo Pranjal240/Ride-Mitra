@@ -78,10 +78,10 @@ export const T = {
   beige50: '#FDF6EF',
 } as const;
 
-/** Font families */
+/** Font families — Poppins for headings, a neutral system stack for body. */
 export const FONT = {
   heading: "'Poppins', sans-serif",
-  body: "'Inter', sans-serif",
+  body: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
 } as const;
 
 export default T;

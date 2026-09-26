@@ -259,7 +259,7 @@ export default function MapView({
         if (marker.popup) {
           try {
             const popup = new mappls.InfoWindow({
-              content: `<div style="padding:8px 14px;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:#0F172A;max-width:200px">${marker.popup}</div>`,
+              content: `<div style="padding:8px 14px;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;font-size:13px;font-weight:500;color:#0F172A;max-width:200px">${marker.popup}</div>`,
             });
             mapMarker.addListener?.('click', () => popup.open(mapInstanceRef.current, mapMarker));
           } catch (e) { console.warn('Popup error:', e); }

@@ -148,7 +148,7 @@ export default function App() {
   const cursorTrail = useCursorTrail();
 
   return (
-    <div style={{ minHeight: '100vh', background: T.bg, fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: T.bg, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}>
       <CursorSpotlight />
       <ScrollProgress />
       {cursorTrail}

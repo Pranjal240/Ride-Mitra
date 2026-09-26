@@ -91,7 +91,7 @@ export default function LiveTracking() {
   );
 
   return (
-    <div style={{ minHeight:'100vh', background:T.bg, fontFamily:"'Inter', sans-serif" }}>
+    <div style={{ minHeight:'100vh', background:T.bg, fontFamily:"-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}>
       <div className="mobile-tracking-layout" style={{ display:'flex', flexDirection:'column', height:'100vh' }}>
         {/* Header bar */}
         <div style={{

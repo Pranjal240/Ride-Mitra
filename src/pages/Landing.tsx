@@ -38,23 +38,9 @@ const JCB_UST: [number, number] = [28.3762, 77.3149];
 const APK_URL = 'https://github.com/Pranjal240/Ride-Mitra/releases/latest/download/RideMitra.apk';
 
 /* ══════════════ AURORA BACKGROUND ══════════════ */
+// Aurora (radial orbs + starfield) removed for a clean, flat background.
 function Aurora() {
-  return (
-    <div className="aurora-wrap">
-      <div className="aurora-blob aurora-1" />
-      <div className="aurora-blob aurora-2" />
-      <div className="aurora-blob aurora-3" />
-      <div className="noise-overlay" />
-      {Array.from({ length: 30 }).map((_, i) => (
-        <div key={i} className="star" style={{
-          left: `${Math.random() * 100}%`,
-          top: `${Math.random() * 100}%`,
-          animationDelay: `${Math.random() * 3}s`,
-          opacity: Math.random() * 0.5 + 0.2,
-        }} />
-      ))}
-    </div>
-  );
+  return null;
 }
 
 /* ══════════════ SPLASH ══════════════ */
@@ -98,47 +84,23 @@ function Splash({ onDone }: { onDone: () => void }) {
 function MagneticButton({ children, onClick, variant = 'primary', style: extraStyle }: {
   children: React.ReactNode; onClick?: () => void; variant?: 'primary' | 'ghost'; style?: React.CSSProperties;
 }) {
-  const ref = useRef<HTMLButtonElement>(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const springX = useSpring(x, { stiffness: 200, damping: 15 });
-  const springY = useSpring(y, { stiffness: 200, damping: 15 });
-
-  const handleMove = (e: React.MouseEvent) => {
-    const rect = ref.current?.getBoundingClientRect();
-    if (!rect) return;
-    const px = e.clientX - rect.left - rect.width / 2;
-    const py = e.clientY - rect.top - rect.height / 2;
-    x.set(px * 0.3);
-    y.set(py * 0.3);
-  };
-  const handleLeave = () => { x.set(0); y.set(0); };
-
   const base: React.CSSProperties = {
-    display: 'inline-flex', alignItems: 'center', gap: 10, padding: '15px 32px',
-    borderRadius: 100, fontSize: 15, fontWeight: 700, cursor: 'pointer',
+    display: 'inline-flex', alignItems: 'center', gap: 10, padding: '15px 30px',
+    borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: 'pointer',
     fontFamily: FONT.body, border: 'none', letterSpacing: '-0.01em',
-    position: 'relative', overflow: 'hidden',
   };
   const variants: Record<string, React.CSSProperties> = {
-    primary: {
-      background: `linear-gradient(135deg, ${T.gold} 0%, ${T.goldDark} 100%)`,
-      color: 'white', boxShadow: `0 10px 30px rgba(200,149,108,0.4), inset 0 1px 0 rgba(255,255,255,0.3)`,
-    },
+    primary: { background: T.gold, color: '#20130A' },
     ghost: {
-      background: 'rgba(255,255,255,0.06)', color: 'white',
-      border: '1px solid rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)',
+      background: 'transparent', color: 'white',
+      border: '1px solid rgba(255,255,255,0.28)',
     },
   };
 
   return (
-    <motion.button ref={ref} onClick={onClick} onMouseMove={handleMove} onMouseLeave={handleLeave}
-      style={{ ...base, ...variants[variant], x: springX, y: springY, ...extraStyle }}
-      whileTap={{ scale: 0.95 }} className="shine-hover">
-      <span style={{ position: 'relative', zIndex: 1, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-        {children}
-      </span>
-    </motion.button>
+    <button onClick={onClick} style={{ ...base, ...variants[variant], ...extraStyle }}>
+      {children}
+    </button>
   );
 }
 
@@ -508,7 +470,7 @@ export default function Landing() {
           </nav>
           <button onClick={goPortal} style={{
             padding: '10px 22px', borderRadius: 100, fontSize: 14, fontWeight: 700, cursor: 'pointer',
-            background: `linear-gradient(135deg, ${T.gold}, ${T.goldDark})`, color: 'white', border: 'none',
+            background: T.gold, color: 'white', border: 'none',
             boxShadow: '0 6px 20px rgba(200,149,108,0.35)', display: 'flex', alignItems: 'center', gap: 6,
           }}>
             Sign In <PiArrowRightBold size={12} />
@@ -545,7 +507,7 @@ export default function Landing() {
                   borderRadius: 100, background: 'rgba(200,149,108,0.12)',
                   border: '1px solid rgba(200,149,108,0.25)', marginBottom: 28,
                 }}>
-                <PiSparkleBold size={13} color={T.gold} />
+                <PiShieldCheckBold size={13} color={T.gold} />
                 <span style={{ fontSize: 12, color: T.gold, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>
                   Built for JC Bose UST
                 </span>
@@ -558,11 +520,7 @@ export default function Landing() {
                 {!splash && <>
                   <WordReveal text="Every trip." delay={0.1} />
                   <br />
-                  <WordReveal text="Shared." delay={0.35} style={{
-                    background: `linear-gradient(135deg, ${T.gold} 0%, #F5C99B 60%, ${T.gold} 100%)`,
-                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                    backgroundSize: '200% auto', animation: 'gradient-shift 6s ease infinite',
-                  }} />
+                  <WordReveal text="Shared." delay={0.35} style={{ color: T.gold }} />
                   {' '}
                   <WordReveal text="Safer." delay={0.5} />
                 </>}
@@ -580,7 +538,7 @@ export default function Landing() {
                 style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 40 }}>
                 <MagneticButton
                   onClick={downloadApp}
-                  style={{ background: '#FFFFFF', color: T.navy, boxShadow: '0 14px 36px rgba(255,255,255,0.28)', padding: '17px 34px', fontSize: 16 }}
+                  style={{ background: '#FFFFFF', color: T.navy, padding: '17px 34px', fontSize: 16 }}
                 >
                   <PiAndroidLogoBold size={20} /> Download the app
                 </MagneticButton>
@@ -602,7 +560,7 @@ export default function Landing() {
                   { c: T.blue, t: 'No commission, no surge' },
                 ].map((b, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: 'rgba(255,255,255,0.65)' }}>
-                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: b.c, boxShadow: `0 0 8px ${b.c}` }} />
+                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: b.c }} />
                     {b.t}
                   </div>
                 ))}
@@ -680,8 +638,7 @@ export default function Landing() {
               </div>
               <h2 style={{ fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 900, color: 'white', fontFamily: FONT.heading, letterSpacing: '-0.03em' }}>
                 Your first ride is <span style={{
-                  background: `linear-gradient(135deg, ${T.gold}, #F5C99B)`,
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                  color: T.gold,
                 }}>minutes away.</span>
               </h2>
             </div>
@@ -707,8 +664,7 @@ export default function Landing() {
                 </div>
                 <h2 style={{ fontSize: 'clamp(28px, 5vw, 44px)', fontWeight: 900, color: 'white', fontFamily: FONT.heading, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
                   Every safeguard, <Scramble text="verified." style={{
-                    background: `linear-gradient(135deg, ${T.gold}, #F5C99B)`,
-                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                    color: T.gold,
                   }} />
                 </h2>
               </div>
@@ -812,7 +768,7 @@ export default function Landing() {
                   fontFamily: FONT.heading, letterSpacing: '-0.03em', lineHeight: 1.08, marginBottom: 14,
                 }}>
                   Take Ride Mitra<br />
-                  <span style={{ background: `linear-gradient(135deg, ${T.gold}, #F5C99B)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  <span style={{ color: T.gold,}}>
                     with you.
                   </span>
                 </h2>
@@ -823,7 +779,7 @@ export default function Landing() {
                   <a href={APK_URL} download style={{ textDecoration: 'none' }}>
                     <span style={{
                       display: 'inline-flex', alignItems: 'center', gap: 10, padding: '16px 30px', borderRadius: 100,
-                      background: `linear-gradient(135deg, ${T.gold} 0%, ${T.goldDark} 100%)`, color: 'white',
+                      background: T.gold, color: 'white',
                       fontSize: 16, fontWeight: 800, fontFamily: FONT.body,
                       boxShadow: '0 14px 36px rgba(200,149,108,0.4), inset 0 1px 0 rgba(255,255,255,0.3)',
                     }}>
@@ -870,8 +826,7 @@ export default function Landing() {
                 }}>
                   Your ride is<br />
                   <span style={{
-                    background: `linear-gradient(135deg, ${T.gold}, #F5C99B)`,
-                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                    color: T.gold,
                   }}>waiting.</span>
                 </h2>
                 <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.65)', maxWidth: 500, margin: '0 auto 36px', lineHeight: 1.6 }}>

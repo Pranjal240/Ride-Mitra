@@ -277,7 +277,7 @@ export default function LocationSearch({
             width:'100%', padding:'14px 42px 14px 38px', borderRadius:14,
             border:`1.5px solid ${focused ? T.gold : 'rgba(255,255,255,0.12)'}`,
             background: 'rgba(0,0,0,0.28)',
-            color:'white', fontSize:14, outline:'none', fontFamily:"'Inter', sans-serif",
+            color:'white', fontSize:14, outline:'none', fontFamily:"-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
             transition:'all 0.3s cubic-bezier(0.4,0,0.2,1)',
             boxShadow: focused ? `0 0 0 3px ${T.gold}22, 0 4px 16px rgba(0,0,0,0.35)` : '0 1px 3px rgba(0,0,0,0.2)',
             opacity: disabled ? 0.5 : 1, cursor: disabled ? 'not-allowed' : 'text',

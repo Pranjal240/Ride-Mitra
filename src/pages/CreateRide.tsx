@@ -130,7 +130,7 @@ export default function CreateRide() {
   const canNext = step === 0 ? from && to : step === 1 ? date && time : step === 2 ? seats > 0 && price > 0 : true;
 
   return (
-    <div style={{ minHeight:'100vh', background:`linear-gradient(180deg, ${T.bg}, ${T.gray100})`, fontFamily:"'Inter', sans-serif" }}>
+    <div style={{ minHeight:'100vh', background:`linear-gradient(180deg, ${T.bg}, ${T.gray100})`, fontFamily:"-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}>
       <div style={{ maxWidth:1100, margin:'0 auto', padding:'28px 20px 48px' }}>
         {/* Header */}
         <motion.div initial={{ opacity:0, y:-16 }} animate={{ opacity:1, y:0 }} style={{ marginBottom:24 }}>

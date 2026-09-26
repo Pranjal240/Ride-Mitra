@@ -101,7 +101,7 @@ export default function AuthCallback() {
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
       background: 'radial-gradient(ellipse at top, #152240 0%, #0A1128 60%, #050914 100%)',
-      color: 'white', fontFamily: "'Inter', sans-serif", position: 'relative', overflow: 'hidden',
+      color: 'white', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif", position: 'relative', overflow: 'hidden',
     }}>
       <div className="aurora-wrap">
         <div className="aurora-blob aurora-1" />

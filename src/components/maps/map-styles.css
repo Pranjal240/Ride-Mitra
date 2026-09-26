@@ -170,7 +170,7 @@
   border-radius: 14px !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
   padding: 0 !important;
-  font-family: 'Inter', sans-serif !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
 }
 
 .mappls-popup-content {

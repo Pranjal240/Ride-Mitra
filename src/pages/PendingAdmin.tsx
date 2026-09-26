@@ -18,7 +18,7 @@ export default function PendingAdmin() {
   }
 
   return (
-    <div style={{ minHeight:'100vh', background:`linear-gradient(180deg, ${T.bg}, ${T.gray100})`, display:'flex', alignItems:'center', justifyContent:'center', padding:20, fontFamily:"'Inter', sans-serif" }}>
+    <div style={{ minHeight:'100vh', background:`linear-gradient(180deg, ${T.bg}, ${T.gray100})`, display:'flex', alignItems:'center', justifyContent:'center', padding:20, fontFamily:"-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}>
       <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }}
         style={{ background:T.surface, borderRadius:24, padding:40, maxWidth:480, width:'100%', textAlign:'center', border:`1px solid ${T.border}`, boxShadow:'0 24px 48px rgba(0,0,0,0.04)' }}>
         
