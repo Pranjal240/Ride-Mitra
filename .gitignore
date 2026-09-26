@@ -28,5 +28,9 @@ dist-ssr
 
 # Mobile app (separate build) and local tooling
 app/
-.claude/
+.claude/*
+!.claude/skills/
 *.apk
+
+brag-output/
+brag-output-*/
