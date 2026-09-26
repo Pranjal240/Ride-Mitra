@@ -45,36 +45,47 @@ function Aurora() {
 
 /* ══════════════ SPLASH ══════════════ */
 function Splash({ onDone }: { onDone: () => void }) {
-  useEffect(() => { const t = setTimeout(onDone, 1800); return () => clearTimeout(t); }, [onDone]);
+  useEffect(() => { const t = setTimeout(onDone, 1700); return () => clearTimeout(t); }, [onDone]);
   return (
-    <motion.div exit={{ opacity: 0, scale: 1.05 }} transition={{ duration: 0.5 }}
+    <motion.div
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.45, ease: 'easeInOut' }}
       style={{
         position: 'fixed', inset: 0, zIndex: 9999,
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        background: 'radial-gradient(ellipse at center, #152240 0%, #050914 100%)',
-      }}>
-      <Aurora />
-      <motion.div initial={{ scale: 0.5, opacity: 0, rotateY: -180 }} animate={{ scale: 1, opacity: 1, rotateY: 0 }}
-        transition={{ duration: 0.8, ease: [0.25, 1, 0.3, 1] }} style={{ position: 'relative', zIndex: 2 }}>
-        <div style={{
-          padding: 24, borderRadius: 32, background: 'rgba(255,255,255,0.05)',
-          backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)',
-          boxShadow: '0 30px 80px rgba(200,149,108,0.2)',
-        }}>
-          <Logo size={80} light />
-        </div>
+        background: '#0F1A33', padding: '24px',
+        // safe-area padding so it sits right on notched phones
+        paddingTop: 'max(24px, env(safe-area-inset-top))',
+        paddingBottom: 'max(24px, env(safe-area-inset-bottom))',
+        textAlign: 'center',
+      }}
+    >
+      <motion.div
+        initial={{ scale: 0.86, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <Logo size={72} light />
       </motion.div>
-      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
-        style={{ marginTop: 18, position: 'relative', zIndex: 2 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.4 }}
+        style={{ marginTop: 16 }}
+      >
         <LogoText light />
       </motion.div>
-      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 0.7 }} transition={{ delay: 0.9 }}
-        style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 8, letterSpacing: 3, textTransform: 'uppercase', position: 'relative', zIndex: 2 }}>
+      <motion.p
+        initial={{ opacity: 0 }} animate={{ opacity: 0.6 }} transition={{ delay: 0.45 }}
+        style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 8, letterSpacing: 3, textTransform: 'uppercase' }}
+      >
         Campus Ride Network
       </motion.p>
-      <div style={{ width: 200, height: 2, background: 'rgba(255,255,255,0.1)', borderRadius: 10, marginTop: 32, overflow: 'hidden', position: 'relative', zIndex: 2 }}>
-        <motion.div initial={{ x: '-100%' }} animate={{ x: '250%' }} transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ height: '100%', width: '40%', background: `linear-gradient(90deg, transparent, ${T.gold}, transparent)`, borderRadius: 10 }} />
+      <div style={{ width: 'min(200px, 62vw)', height: 3, background: 'rgba(255,255,255,0.12)', borderRadius: 10, marginTop: 28, overflow: 'hidden' }}>
+        <motion.div
+          initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
+          transition={{ duration: 1.5, ease: 'easeInOut' }}
+          style={{ height: '100%', width: '100%', background: T.gold, borderRadius: 10, transformOrigin: 'left' }}
+        />
       </div>
     </motion.div>
   );

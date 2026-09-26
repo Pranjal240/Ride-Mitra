@@ -13,15 +13,48 @@
     <title>Ride Mitra - Campus Carpooling</title>
     <style>
       :root { color-scheme: light; }
+      html { background: #0F1A33; }
       body { background: #F8F6F1; color: #2B2D42; margin: 0; padding: 0; }
       ::-webkit-scrollbar { width: 6px; }
       ::-webkit-scrollbar-track { background: #F8F6F1; }
       ::-webkit-scrollbar-thumb { background: #E4E5E9; border-radius: 10px; }
       ::-webkit-scrollbar-thumb:hover { background: #C8956C; }
+
+      /* Instant pre-React loader (no white flash on mobile). React replaces
+         #root's children on mount, so this is removed the moment the app is ready. */
+      .rm-boot {
+        position: fixed; inset: 0; z-index: 99999; background: #0F1A33;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+        font-family: 'Poppins', system-ui, -apple-system, sans-serif; text-align: center;
+      }
+      .rm-boot .logo { width: 72px; height: 72px; animation: rm-pop .5s cubic-bezier(.22,1,.36,1) both; }
+      .rm-boot .wm { margin-top: 16px; font-size: 22px; font-weight: 800; letter-spacing: -.02em; color: #fff; }
+      .rm-boot .wm b { color: #C8956C; }
+      .rm-boot .kick { margin-top: 8px; font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,.55); }
+      .rm-boot .bar { margin-top: 28px; width: min(200px, 62vw); height: 3px; border-radius: 10px; background: rgba(255,255,255,.12); overflow: hidden; }
+      .rm-boot .bar i { display: block; height: 100%; width: 40%; border-radius: 10px; background: #C8956C; animation: rm-slide 1.2s ease-in-out infinite; }
+      @keyframes rm-pop { from { opacity: 0; transform: scale(.86); } to { opacity: 1; transform: scale(1); } }
+      @keyframes rm-slide { 0% { transform: translateX(-120%); } 100% { transform: translateX(320%); } }
     </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="rm-boot" aria-hidden="true">
+        <svg class="logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="24" r="23" fill="rgba(255,255,255,0.95)" stroke="#C8956C" stroke-width="2"/>
+          <path d="M12 28h24v4c0 1.1-.9 2-2 2H14c-1.1 0-2-.9-2-2v-4z" fill="#1B2B4B"/>
+          <path d="M14 28l3-8h14l3 8" fill="rgba(255,255,255,0.95)" stroke="#1B2B4B" stroke-width="1.5"/>
+          <circle cx="17" cy="32" r="2.5" fill="rgba(255,255,255,0.95)" stroke="#C8956C" stroke-width="1.5"/>
+          <circle cx="31" cy="32" r="2.5" fill="rgba(255,255,255,0.95)" stroke="#C8956C" stroke-width="1.5"/>
+          <path d="M24 8c-2.8 0-5 2.2-5 5 0 3.5 5 8 5 8s5-4.5 5-8c0-2.8-2.2-5-5-5z" fill="#C8956C"/>
+          <circle cx="24" cy="13" r="2" fill="rgba(255,255,255,0.95)"/>
+        </svg>
+        <div class="wm">Ride<b>Mitra</b></div>
+        <div class="kick">Campus Ride Network</div>
+        <div class="bar"><i></i></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
