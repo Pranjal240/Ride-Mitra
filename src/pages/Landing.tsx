@@ -45,7 +45,7 @@ function Aurora() {
 
 /* ══════════════ SPLASH ══════════════ */
 function Splash({ onDone }: { onDone: () => void }) {
-  useEffect(() => { const t = setTimeout(onDone, 1700); return () => clearTimeout(t); }, [onDone]);
+  useEffect(() => { const t = setTimeout(onDone, 1900); return () => clearTimeout(t); }, [onDone]);
   return (
     <motion.div
       exit={{ opacity: 0 }}
@@ -64,29 +64,32 @@ function Splash({ onDone }: { onDone: () => void }) {
         initial={{ scale: 0.86, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        style={{ position: 'relative', width: 116, height: 116, display: 'grid', placeItems: 'center' }}
       >
-        <Logo size={72} light />
+        {/* liquid gold blob morphing behind the mark */}
+        <div style={{
+          position: 'absolute', width: '100%', height: '100%',
+          background: T.gold, opacity: 0.92,
+          borderRadius: '42% 58% 63% 37% / 41% 44% 56% 59%',
+          animation: 'rm-morph 3.2s ease-in-out infinite',
+        }} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <Logo size={64} light />
+        </div>
       </motion.div>
       <motion.div
         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.4 }}
-        style={{ marginTop: 16 }}
+        transition={{ delay: 0.35, duration: 0.4 }}
+        style={{ marginTop: 22 }}
       >
         <LogoText light />
       </motion.div>
       <motion.p
-        initial={{ opacity: 0 }} animate={{ opacity: 0.6 }} transition={{ delay: 0.45 }}
+        initial={{ opacity: 0 }} animate={{ opacity: 0.6 }} transition={{ delay: 0.5 }}
         style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 8, letterSpacing: 3, textTransform: 'uppercase' }}
       >
         Campus Ride Network
       </motion.p>
-      <div style={{ width: 'min(200px, 62vw)', height: 3, background: 'rgba(255,255,255,0.12)', borderRadius: 10, marginTop: 28, overflow: 'hidden' }}>
-        <motion.div
-          initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
-          transition={{ duration: 1.5, ease: 'easeInOut' }}
-          style={{ height: '100%', width: '100%', background: T.gold, borderRadius: 10, transformOrigin: 'left' }}
-        />
-      </div>
     </motion.div>
   );
 }
@@ -797,7 +800,9 @@ export default function Landing() {
                 muted
                 loop
                 playsInline
-                preload="metadata"
+                preload="auto"
+                onCanPlay={(e) => { e.currentTarget.play().catch(() => {}); }}
+                onLoadedData={(e) => { e.currentTarget.play().catch(() => {}); }}
                 style={{ width: '100%', display: 'block', aspectRatio: '16 / 9', objectFit: 'cover' }}
               />
             </div>

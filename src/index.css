@@ -691,6 +691,14 @@ input:focus, textarea:focus, select:focus {
   text-shadow: none;
 }
 
+/* Morph loader — liquid gold blob that morphs shape (loading animation). */
+@keyframes rm-morph {
+  0%, 100% { border-radius: 42% 58% 63% 37% / 41% 44% 56% 59%; transform: rotate(0deg) scale(1); }
+  25%      { border-radius: 58% 42% 45% 55% / 55% 55% 45% 45%; }
+  50%      { border-radius: 63% 37% 58% 42% / 56% 41% 59% 44%; transform: rotate(180deg) scale(1.05); }
+  75%      { border-radius: 40% 60% 42% 58% / 59% 44% 56% 41%; }
+}
+
 /* Aurora dark hero preset */
 .hero-aurora {
   background: radial-gradient(ellipse at top, #152240 0%, #0A1128 60%, #050914 100%);
