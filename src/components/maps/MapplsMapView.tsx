@@ -36,7 +36,6 @@ function loadMapplsScript(apiKey: string): Promise<void> {
 
     // Set global callback
     (window as any).initMapplsMap = () => {
-      console.log('✅ Mappls SDK loaded via callback');
       mapplsScriptLoaded = true;
       mapplsScriptLoading = false;
       resolve();
@@ -64,7 +63,6 @@ function loadMapplsScript(apiKey: string): Promise<void> {
     // Timeout fallback — poll for window.mappls
     setTimeout(() => {
       if (!mapplsScriptLoaded && (window as any).mappls) {
-        console.log('✅ Mappls SDK detected via polling fallback');
         mapplsScriptLoaded = true;
         resolve();
       }
@@ -96,8 +94,6 @@ export default function MapplsMapView({
       return;
     }
 
-    console.log('🗺️ Loading Mappls with key:', apiKey.substring(0, 8) + '...');
-
     loadMapplsScript(apiKey)
       .then(() => {
         if (!mounted) return;
@@ -121,7 +117,6 @@ export default function MapplsMapView({
 
           const onReady = () => {
             if (!mounted) return;
-            console.log('✅ Map initialized successfully');
             mapRef.current = map;
             setLoaded(true);
 
@@ -131,17 +126,14 @@ export default function MapplsMapView({
                   const ll = e?.lngLat || e?.latlng;
                   if (ll) onMapClick({ lat: ll.lat, lng: ll.lng });
                 });
-              } catch (err) {
-                console.warn('Click listener error:', err);
-              }
+              } catch {}
             }
           };
 
           try { map.addListener('load', onReady); } catch { /* fallback */ }
           // Safety fallback
           setTimeout(() => { if (mounted && !loaded) onReady(); }, 4000);
-        } catch (err) {
-          console.error('Map init error:', err);
+        } catch {
           setError('Failed to initialize map');
         }
       })
@@ -185,9 +177,7 @@ export default function MapplsMapView({
           element: el,
         });
         markersRef.current.push(m);
-      } catch (err) {
-        console.warn('Marker error:', err);
-      }
+      } catch {}
     });
 
     // Draw route if we have exactly pickup and drop
@@ -214,12 +204,10 @@ export default function MapplsMapView({
                 fitbounds: true
               });
               (mapRef.current as any).currentPolyline = polyline;
-            } catch(e) {
-              console.warn('Failed to draw polyline', e);
-            }
+            } catch {}
           }
         })
-        .catch(err => console.warn('Routing fetch failed', err));
+        .catch(() => {});
     }
   }, [markers, loaded]);
 

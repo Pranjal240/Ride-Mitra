@@ -25,3 +25,8 @@ dist-ssr
 .env
 .env.*
 .vercel
+
+# Mobile app (separate build) and local tooling
+app/
+.claude/
+*.apk

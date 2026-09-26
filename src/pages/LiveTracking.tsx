@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -48,8 +48,11 @@ export default function LiveTracking() {
   const driverLat = realtimeLocation?.lat || fromLat;
   const driverLng = realtimeLocation?.lng || fromLng;
 
+  const routeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => {
-    async function updateRoute() {
+    if (!ride) return;
+    clearTimeout(routeTimerRef.current);
+    routeTimerRef.current = setTimeout(async () => {
       try {
         const result = await calculateRoute([driverLat, driverLng], [toLat, toLng]);
         setRouteCoords(result.geometry);
@@ -57,8 +60,8 @@ export default function LiveTracking() {
       } catch {
         setRouteCoords([[driverLat, driverLng], [toLat, toLng]]);
       }
-    }
-    if (ride) updateRoute();
+    }, 2000);
+    return () => clearTimeout(routeTimerRef.current);
   }, [driverLat, driverLng, toLat, toLng, ride]);
 
   const markers = useMemo<MapMarker[]>(() => {
@@ -74,7 +77,7 @@ export default function LiveTracking() {
     setSosing(true);
     try {
       await createSOSAlert({ user_id: user.id, ride_id: rideId, location: { lat: driverLat, lng: driverLng }, message: 'Emergency SOS' });
-    } catch { console.error('SOS failed'); }
+    } catch {}
     finally { setSosing(false); }
   };
 

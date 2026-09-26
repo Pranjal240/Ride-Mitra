@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   PiMagnifyingGlassBold, PiCalendarCheckBold, PiCarBold, PiTrendUpBold,
-  PiLeafBold, PiStarBold, PiWarningBold, PiArrowRightBold, PiClockBold,
-  PiUsersBold, PiShieldCheckBold, PiMapPinBold, PiLightningBold,
+  PiWarningBold, PiArrowRightBold, PiClockBold,
+  PiUsersBold, PiShieldCheckBold, PiMapPinBold,
   PiNavigationArrowBold, PiChatCircleBold, PiPlusBold, PiGlobeBold,
   PiBellBold, PiTrashBold, PiCheckBold, PiXBold
 } from 'react-icons/pi';
@@ -100,7 +100,7 @@ export default function UnifiedDashboard() {
   const timeStr = format(time, 'h:mm a');
 
   const stats = [
-    { label:'Booked', value: myBookings.length, icon:<PiCarBold size={20}/>, grad:'linear-gradient(135deg,#6C3CE1,#8B5CF6)' },
+    { label:'Booked', value: myBookings.length, icon:<PiCarBold size={20}/>, grad:`linear-gradient(135deg,${T.navy},${T.navyLight})` },
     { label:'Offered', value: myRides.length, icon:<PiTrendUpBold size={20}/>, grad:'linear-gradient(135deg,#14B8A6,#06B6D4)' },
     { label:'Requests', value: bookingRequests.filter(b=>b.status==='pending').length, icon:<PiBellBold size={20}/>, grad:'linear-gradient(135deg,#F59E0B,#FBBF24)' },
   ];
@@ -119,10 +119,10 @@ export default function UnifiedDashboard() {
         padding:'48px 24px 64px', position:'relative', overflow:'hidden',
       }}>
         <motion.div animate={{ scale:[1,1.3,1], opacity:[0.08,0.15,0.08] }} transition={{ duration:6,repeat:Infinity }}
-          style={{ position:'absolute', top:'-20%', right:'-10%', width:500, height:500, borderRadius:'50%', background:'radial-gradient(circle, #8B5CF6 0%, transparent 70%)', filter:'blur(40px)' }}/>
+          style={{ position:'absolute', top:'-20%', right:'-10%', width:500, height:500, borderRadius:'50%', background:`radial-gradient(circle, ${T.navyLight} 0%, transparent 70%)`, filter:'blur(40px)' }}/>
         
         <div style={{ maxWidth:1200, margin:'0 auto', position:'relative', zIndex:10 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end' }}>
+          <div className="mobile-grid-stack" style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:20 }}>
             <div>
               <motion.div initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }}
                 style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(27,43,75,0.08)', padding:'6px 14px', borderRadius:20, backdropFilter:'blur(10px)', border:'1px solid rgba(255,255,255,0.1)', color:'rgba(255,255,255,0.9)', fontSize:13, fontWeight:600, marginBottom:16 }}>
@@ -138,10 +138,10 @@ export default function UnifiedDashboard() {
               </motion.p>
             </div>
             
-            <div style={{ display:'flex', gap:12 }}>
+            <div className="mobile-grid-stack" style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
               {stats.map((s,i) => (
                 <motion.div key={i} initial={{ opacity:0, scale:0.9 }} animate={{ opacity:1, scale:1 }} transition={{ delay:0.2+i*0.1 }}
-                  style={{ background:'rgba(255,255,255,0.05)', backdropFilter:'blur(10px)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:16, padding:'16px 20px', minWidth:120 }}>
+                  style={{ background:'rgba(255,255,255,0.05)', backdropFilter:'blur(10px)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:16, padding:'16px 20px', minWidth:100, flex:'1 1 auto' }}>
                   <div style={{ display:'flex', alignItems:'center', gap:8, color:'rgba(255,255,255,0.6)', fontSize:12, fontWeight:600, textTransform:'uppercase', letterSpacing:1, marginBottom:8 }}>
                     <div style={{ background:s.grad, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>{s.icon}</div>
                     {s.label}

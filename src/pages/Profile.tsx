@@ -49,7 +49,12 @@ export default function Profile() {
     if (!user) return;
     setSaving(true);
     try {
-      const updated = await updateProfile(user.id, { full_name: fullName, phone, emergency_contact_phone: emergencyContact, profile_complete: 50 });
+      let pct = 20;
+      if (fullName.trim()) pct += 20;
+      if (phone.trim()) pct += 20;
+      if (emergencyContact.trim()) pct += 20;
+      if (user.profile_photo) pct += 20;
+      const updated = await updateProfile(user.id, { full_name: fullName, phone, emergency_contact_phone: emergencyContact, profile_complete: pct });
       setUser(updated);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);

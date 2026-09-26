@@ -102,7 +102,6 @@ export async function calculateRoute(
     setCachedRoute(cacheKey, result);
     return result;
   } catch (e) {
-    console.warn('Mappls routing failed, falling back to ORS:', e);
   }
 
   // Fallback to ORS
@@ -123,7 +122,6 @@ async function calculateRouteMappls(
   const endParam = `${end[1]},${end[0]}`;
   const url = `${SUPABASE_URL}/functions/v1/mappls-route?start=${startParam}&end=${endParam}&profile=${profile}`;
 
-  console.log('🛣️ Calculating route via proxy:', url);
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Route proxy error: ${response.status}`);
 
@@ -131,7 +129,6 @@ async function calculateRouteMappls(
   const route = data.routes?.[0];
   if (!route) throw new Error('No route found');
 
-  console.log('✅ Route found: distance=', route.distance, 'duration=', route.duration);
   const geometry = decodePolyline(route.geometry);
   const instructions: RouteInstruction[] = [];
 
@@ -513,7 +510,6 @@ export async function resolveELocClientSide(eLoc: string, name: string): Promise
         }
         
         // Fallback: If mappls.search fails, try mappls.pinMarker with a dummy map or just try another text strategy
-        console.warn('mappls.search returned no valid data for:', name);
         clearTimeout(timeout);
         resolve(null);
       });

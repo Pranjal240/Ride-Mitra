@@ -46,9 +46,7 @@ export default function CreateRide() {
         const address = await reverseGeocode(coords[0], coords[1]);
         if (cancelled) return;
         setFrom({ name: address, coords });
-        console.log('📍 Auto-detected location:', address, coords);
-      } catch (e) {
-        console.warn('Auto-location failed:', e);
+      } catch {
       } finally {
         if (!cancelled) setAutoLocating(false);
       }

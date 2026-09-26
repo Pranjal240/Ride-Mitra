@@ -11,10 +11,9 @@ export async function cleanupPastRides(): Promise<number> {
     .eq('status', 'active')
     .lt('departure_time', now)
     .select('id');
-  if (error) { console.warn('Cleanup failed:', error.message); return 0; }
+  if (error) return 0;
   const count = data?.length || 0;
   if (count > 0) {
-    console.log(`🧹 Auto-cleaned ${count} past rides`);
     // Also mark their pending bookings as completed
     const rideIds = data!.map(r => r.id);
     await supabase.from('bookings').update({ status: 'completed' }).in('ride_id', rideIds).eq('status', 'confirmed');
@@ -393,4 +392,166 @@ export async function getAdminStats() {
     pendingVerifications: pendingRes.count || 0,
     activeAlerts: sosRes.count || 0,
   };
+}
+
+// ============= ADVANCED ADMIN ANALYTICS =============
+export interface AdminAnalytics {
+  kpi: {
+    total_users: number; students: number; drivers: number; admins: number;
+    active_rides: number; completed_rides: number; cancelled_rides: number;
+    total_bookings: number; paid_bookings: number; total_revenue: number;
+    pending_verifications: number; active_alerts: number; open_reports: number;
+    open_support: number; banned: number; avg_rating: number; total_reviews: number;
+  };
+  series: { day: string; rides: number; bookings: number; users: number; revenue: number }[];
+  top_routes: { from_label: string; to_label: string; ride_count: number }[];
+}
+
+export async function getAdminAnalytics(): Promise<AdminAnalytics | null> {
+  const { data, error } = await supabase.rpc('admin_analytics');
+  if (error) { console.error('admin_analytics rpc', error); return null; }
+  return data as AdminAnalytics;
+}
+
+export interface UserStats {
+  total_bookings: number; total_rides_offered: number;
+  total_spent: number; total_earned: number;
+  avg_rating: number; ratings_count: number;
+  last_ride_at: string | null; last_booking_at: string | null;
+}
+export async function getUserStats(userId: string): Promise<UserStats | null> {
+  const { data, error } = await supabase.rpc('user_stats', { target: userId });
+  if (error) return null;
+  return data as UserStats;
+}
+
+// ============= SAVED ROUTES =============
+export interface SavedRoute {
+  id: string; user_id: string; label: string | null;
+  from_location: GeoLocation; to_location: GeoLocation; created_at: string;
+}
+export async function getSavedRoutes(userId: string): Promise<SavedRoute[]> {
+  const { data, error } = await supabase.from('saved_routes')
+    .select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(10);
+  if (error) return [];
+  return data || [];
+}
+export async function saveRoute(userId: string, from: GeoLocation, to: GeoLocation, label?: string) {
+  const { error } = await supabase.from('saved_routes').insert({ user_id: userId, from_location: from, to_location: to, label });
+  if (error) throw error;
+}
+export async function deleteSavedRoute(id: string) {
+  await supabase.from('saved_routes').delete().eq('id', id);
+}
+
+// ============= ANNOUNCEMENTS =============
+export interface Announcement {
+  id: string; title: string; body: string;
+  severity: 'info' | 'warning' | 'critical' | 'success';
+  audience: 'all' | 'students' | 'drivers' | 'admins';
+  created_at: string; active: boolean;
+}
+export async function getAnnouncements(): Promise<Announcement[]> {
+  const { data, error } = await supabase.from('announcements')
+    .select('*').eq('active', true).order('created_at', { ascending: false }).limit(20);
+  if (error) return [];
+  return data || [];
+}
+export async function createAnnouncement(a: { title: string; body: string; severity?: string; audience?: string; }, adminId: string) {
+  const { error } = await supabase.from('announcements').insert({ ...a, created_by: adminId });
+  if (error) throw error;
+  await supabase.from('admin_logs').insert({ admin_id: adminId, action: 'create_announcement', target_user_id: null, details: a });
+}
+export async function deactivateAnnouncement(id: string, adminId: string) {
+  await supabase.from('announcements').update({ active: false }).eq('id', id);
+  await supabase.from('admin_logs').insert({ admin_id: adminId, action: 'deactivate_announcement', target_user_id: null, details: { id } });
+}
+
+// ============= RIDE REPORTS =============
+export async function reportRide(payload: { ride_id: string; reporter_id: string; reported_user_id?: string; reason: string }) {
+  const { error } = await supabase.from('ride_reports').insert(payload);
+  if (error) throw error;
+}
+export async function getOpenReports() {
+  const { data, error } = await supabase.from('ride_reports')
+    .select('*, reporter:users!reporter_id(id, full_name, email), reported:users!reported_user_id(id, full_name, email), ride:rides(id, from_location, to_location, departure_time)')
+    .eq('status', 'open').order('created_at', { ascending: false });
+  if (error) return [];
+  return data || [];
+}
+export async function resolveReport(id: string, adminId: string, status: 'reviewed' | 'dismissed' | 'action_taken') {
+  await supabase.from('ride_reports').update({ status }).eq('id', id);
+  await supabase.from('admin_logs').insert({ admin_id: adminId, action: `report_${status}`, target_user_id: null, details: { id } });
+}
+
+// ============= SUPPORT INBOX (Admin) =============
+export async function getSupportThreads() {
+  const { data, error } = await supabase.from('support_messages')
+    .select('*, user:users!user_id(id, full_name, email, profile_photo)')
+    .order('created_at', { ascending: false }).limit(200);
+  if (error) return [];
+  return data || [];
+}
+export async function replySupport(userId: string, adminId: string, message: string) {
+  const { error } = await supabase.from('support_messages').insert({
+    user_id: userId, admin_id: adminId, message, sender_type: 'admin', is_read: false,
+  });
+  if (error) throw error;
+}
+export async function markSupportRead(userId: string) {
+  await supabase.from('support_messages').update({ is_read: true }).eq('user_id', userId).eq('is_read', false);
+}
+export async function sendSupportMessage(userId: string, message: string) {
+  const { error } = await supabase.from('support_messages').insert({
+    user_id: userId, message, sender_type: 'user', is_read: false,
+  });
+  if (error) throw error;
+}
+export async function getSupportForUser(userId: string) {
+  const { data, error } = await supabase.from('support_messages')
+    .select('*').eq('user_id', userId).order('created_at', { ascending: true });
+  if (error) return [];
+  return data || [];
+}
+
+// ============= USERS (Admin) =============
+export async function searchUsers(q: string) {
+  let query = supabase.from('users').select('*').order('created_at', { ascending: false }).limit(100);
+  if (q) query = query.or(`full_name.ilike.%${q}%,email.ilike.%${q}%,phone.ilike.%${q}%`);
+  const { data, error } = await query;
+  if (error) return [];
+  return data || [];
+}
+export async function getBannedUsers() {
+  const { data, error } = await supabase.from('banned_users')
+    .select('*, user:users!user_id(id, full_name, email, profile_photo)')
+    .order('banned_at', { ascending: false });
+  if (error) return [];
+  return data || [];
+}
+
+// ============= AUDIT LOGS =============
+export async function getAdminLogs(limit = 100) {
+  const { data, error } = await supabase.from('admin_logs')
+    .select('*, admin:users!admin_id(id, full_name, email)')
+    .order('created_at', { ascending: false }).limit(limit);
+  if (error) return [];
+  return data || [];
+}
+
+// ============= ALL RIDES (Admin) =============
+export async function getAllRidesAdmin(status?: string, limit = 100) {
+  let q = supabase.from('rides')
+    .select('*, driver:users!driver_id(id, full_name, email, profile_photo)')
+    .order('departure_time', { ascending: false }).limit(limit);
+  if (status) q = q.eq('status', status);
+  const { data, error } = await q;
+  if (error) return [];
+  return data || [];
+}
+
+export async function forceCancelRide(rideId: string, adminId: string, reason: string) {
+  await supabase.from('bookings').update({ status: 'cancelled' }).eq('ride_id', rideId);
+  await supabase.from('rides').update({ status: 'cancelled' }).eq('id', rideId);
+  await supabase.from('admin_logs').insert({ admin_id: adminId, action: 'force_cancel_ride', target_user_id: null, details: { ride_id: rideId, reason } });
 }

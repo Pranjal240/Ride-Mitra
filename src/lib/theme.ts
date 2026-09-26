@@ -66,10 +66,12 @@ export const T = {
   rXl: '24px',
   rFull: '9999px',
 
+  // ── Functional tints ──
+  blue50: '#EEF2F7',
+
   // ── LEGACY COMPAT (blue → navy mapping) ──
   blueDark: '#1B2B4B',
   blueDeep: '#1B2B4B',
-  blue50: '#EEF2F7',
   beige: '#F5E6D3',
   beigeLight: '#FDF6EF',
   beigeDark: '#C8956C',

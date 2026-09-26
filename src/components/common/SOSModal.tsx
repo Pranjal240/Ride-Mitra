@@ -62,7 +62,8 @@ export default function SOSModal({ isOpen, onClose, rideId }: Props) {
       });
 
       // Call Twilio edge function
-      const res = await fetch(`https://hcmasdaadvlrbpxexucs.supabase.co/functions/v1/send-sos`, {
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-sos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -86,7 +87,7 @@ export default function SOSModal({ isOpen, onClose, rideId }: Props) {
 
   return (
     <AnimatePresence>
-      <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:999, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:10001, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
         <motion.div initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }} exit={{ opacity:0, scale:0.95 }}
           style={{ background:T.surface, borderRadius:24, width:'100%', maxWidth:400, overflow:'hidden', display:'flex', flexDirection:'column', maxHeight:'80vh', boxShadow:'0 24px 48px rgba(0,0,0,0.2)' }}>
           

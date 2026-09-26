@@ -50,10 +50,8 @@ export function loadMapplsSDK(): Promise<void> {
     const apiKey = MAPPLS_REST_KEY;
     if (!apiKey) { reject(new Error('VITE_MAPPLS_API_KEY missing')); return; }
 
-    console.log('🗺️ Loading Mappls SDK with key:', apiKey.substring(0, 8) + '...');
 
     (window as any).initMapplsMap = () => {
-      console.log('✅ Mappls SDK loaded via callback');
       sdkLoaded = true;
       sdkLoading = false;
       resolve();
@@ -77,7 +75,6 @@ export function loadMapplsSDK(): Promise<void> {
     // Polling fallback
     setTimeout(() => {
       if (!sdkLoaded && (window as any).mappls) {
-        console.log('✅ Mappls detected via polling fallback');
         sdkLoaded = true; sdkLoading = false;
         resolve();
         sdkCallbacks.forEach(cb => cb());
@@ -99,7 +96,7 @@ function getMarkerHTML(type: MapMarker['type'], vehicleType?: string): string {
     case 'vehicle':
       return `<div style="width:36px;height:36px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.15);font-size:20px">${vehicleType === 'bike' ? '🏍️' : '🚗'}</div>`;
     default:
-      return `<div style="width:12px;height:12px;border-radius:50%;background:#6C3CE1;border:2px solid white;box-shadow:0 2px 8px rgba(27,43,75,0.3)"></div>`;
+      return `<div style="width:12px;height:12px;border-radius:50%;background:${T.navy};border:2px solid white;box-shadow:0 2px 8px rgba(27,43,75,0.3)"></div>`;
   }
 }
 
@@ -238,7 +235,6 @@ export default function MapView({
   useEffect(() => {
     if (!mapReady || !mapInstanceRef.current) return;
     const mappls = (window as any).mappls;
-    console.log('🔷 Updating markers:', markers.length, 'mappls available:', !!mappls);
 
     markersRef.current.forEach(m => { try { m.remove?.(); m.setMap?.(null); } catch {} });
     markersRef.current = [];
@@ -251,7 +247,6 @@ export default function MapView({
         if (marker.type === 'current') { mWidth = 18; mHeight = 18; }
         else if (marker.type === 'vehicle') { mWidth = 36; mHeight = 36; }
         
-        console.log('📍 Adding marker:', marker.type, marker.position);
         const mapMarker = new mappls.Marker({
           map: mapInstanceRef.current,
           position: { lat: marker.position[0], lng: marker.position[1] },
@@ -293,8 +288,7 @@ export default function MapView({
         const sw = { lat: Math.min(...lats) - 0.01, lng: Math.min(...lngs) - 0.01 };
         const ne = { lat: Math.max(...lats) + 0.01, lng: Math.max(...lngs) + 0.01 };
         mapInstanceRef.current.fitBounds([[sw.lng, sw.lat], [ne.lng, ne.lat]], { padding: 80, maxZoom: 16 });
-        console.log('📐 fitBounds:', sw, ne);
-      } catch (e) { console.warn('fitBounds error:', e); }
+      } catch (e) { /* fitBounds not available */ }
     } else if (markers.length === 1) {
       try {
         if (mapInstanceRef.current.setCenter) {
@@ -316,7 +310,6 @@ export default function MapView({
     polylineRef.current = null;
 
     if (route && route.length >= 2) {
-      console.log('🛣️ Drawing route polyline with', route.length, 'points');
       try {
         const path = route.map(p => ({ lat: p[0], lng: p[1] }));
         polylineRef.current = new mappls.Polyline({
@@ -328,9 +321,7 @@ export default function MapView({
           fitbounds: true,
           fitboundOptions: { padding: 80, maxZoom: 16 },
         });
-        console.log('✅ Polyline drawn successfully');
       } catch (e) {
-        console.warn('Polyline error:', e);
         // Fallback: draw as basic line using L.polyline if available
         try {
           const path = route.map(p => [p[0], p[1]]);
@@ -350,7 +341,7 @@ export default function MapView({
       setUserCenter(loc);
       if (mapInstanceRef.current) {
         try {
-          mapInstanceRef.current.setCenter?.([loc[0], loc[1]]);
+          mapInstanceRef.current.setCenter?.({ lat: loc[0], lng: loc[1] });
           mapInstanceRef.current.setZoom?.(15);
         } catch {}
       }

@@ -49,12 +49,16 @@ export default function Verification() {
   useEffect(() => {
     async function load() {
       if (!user) return;
-      const v = await getVerification(user.id);
-      if (v) {
-        setVerification(v);
-        setLicenseNumber(v.license_number);
-        setVehicleType(v.vehicle_type || 'car');
-        setVehicleNumber(v.vehicle_number || '');
+      try {
+        const v = await getVerification(user.id);
+        if (v) {
+          setVerification(v);
+          setLicenseNumber(v.license_number);
+          setVehicleType(v.vehicle_type || 'car');
+          setVehicleNumber(v.vehicle_number || '');
+        }
+      } catch (e) {
+        console.error('Failed to load verification:', e);
       }
       setLoading(false);
     }

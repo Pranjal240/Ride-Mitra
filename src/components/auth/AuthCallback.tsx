@@ -98,11 +98,23 @@ export default function AuthCallback() {
   }, [navigate, setUser, setLoading]);
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #F8F6F1, #EEF2F7)', fontFamily: "'Inter', sans-serif" }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ width: 56, height: 56, border: '4px solid #1B2B4B', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin-slow 0.8s linear infinite', margin: '0 auto 20px' }} />
-        <h2 style={{ fontSize: 22, fontWeight: 700, color: '#2B2D42', fontFamily: "'Poppins', sans-serif" }}>Signing you in...</h2>
-        <p style={{ fontSize: 14, color: '#9CA0AD', marginTop: 8 }}>Just a moment while we set things up</p>
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'radial-gradient(ellipse at top, #152240 0%, #0A1128 60%, #050914 100%)',
+      color: 'white', fontFamily: "'Inter', sans-serif", position: 'relative', overflow: 'hidden',
+    }}>
+      <div className="aurora-wrap">
+        <div className="aurora-blob aurora-1" />
+        <div className="aurora-blob aurora-2" />
+        <div className="noise-overlay" />
+      </div>
+      <div style={{ textAlign: 'center', position: 'relative', zIndex: 2 }}>
+        <div style={{ position: 'relative', width: 72, height: 72, margin: '0 auto 24px' }}>
+          <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'radial-gradient(circle, rgba(200,149,108,0.35), transparent 70%)', filter: 'blur(20px)' }} />
+          <div style={{ position: 'absolute', inset: 8, border: '3px solid rgba(200,149,108,0.15)', borderTopColor: '#C8956C', borderRadius: '50%', animation: 'spin-slow 0.9s linear infinite' }} />
+        </div>
+        <h2 style={{ fontSize: 22, fontWeight: 800, color: 'white', fontFamily: "'Poppins', sans-serif", letterSpacing: '-0.02em' }}>Signing you in…</h2>
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 8, letterSpacing: 1.5, textTransform: 'uppercase' }}>Preparing your portal</p>
       </div>
     </div>
   );

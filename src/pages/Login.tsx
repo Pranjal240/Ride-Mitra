@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PiShieldCheckBold, PiMapPinBold, PiCheckCircleBold, PiArrowLeftBold, PiGoogleLogoBold, PiPhoneBold, PiEnvelopeBold, PiUserBold } from 'react-icons/pi';
 import { RiAdminLine, RiCarLine, RiUserSmileLine } from 'react-icons/ri';
@@ -13,7 +13,16 @@ import T, { FONT } from '../lib/theme';
 type Role = 'student' | 'driver' | 'admin';
 
 export default function Login() {
-  const [role, setRole] = useState<Role>('student');
+  const [searchParams] = useSearchParams();
+  const initialRole = (searchParams.get('role') as Role) || 'student';
+  const [role, setRole] = useState<Role>(
+    ['student', 'driver', 'admin'].includes(initialRole) ? initialRole : 'student'
+  );
+  useEffect(() => {
+    const r = searchParams.get('role') as Role;
+    if (r && ['student', 'driver', 'admin'].includes(r)) setRole(r);
+  }, [searchParams]);
+  useEffect(() => { window.scrollTo(0, 0); }, []);
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState(['','','','','','']);
   const [otpHash, setOtpHash] = useState('');
@@ -37,7 +46,8 @@ export default function Login() {
     if (!phone || phone.length < 10) return alert('Enter a valid 10-digit phone number');
     setLoading(true);
     try {
-      const res = await fetch(`https://hcmasdaadvlrbpxexucs.supabase.co/functions/v1/send-otp`, {
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone }),
@@ -83,6 +93,40 @@ export default function Login() {
     { key:'admin', label:'Admin', icon:<RiAdminLine size={16}/>, color:T.red },
   ];
 
+  const roleTheme: Record<Role, { title: string; accent: string; sub: string; badges: { t: string; color: string; icon: React.ReactNode }[] }> = {
+    student: {
+      title: 'Sign in as a Rider',
+      accent: T.blue,
+      sub: 'Search verified drivers, split fares, and track every trip live from your JC Bose UST portal.',
+      badges: [
+        { t:'Verified campus email only', color:T.green, icon:<PiShieldCheckBold size={16}/> },
+        { t:'Live ride tracking + SOS', color:T.blue, icon:<PiMapPinBold size={16}/> },
+        { t:'Split fares at the pump', color:T.green, icon:<PiCheckCircleBold size={16}/> },
+      ],
+    },
+    driver: {
+      title: 'Sign in as a Driver',
+      accent: T.green,
+      sub: 'Offer seats on trips you\'re already making. Cover fuel, meet peers, and get paid instantly.',
+      badges: [
+        { t:'Vehicle & licence verification', color:T.green, icon:<PiShieldCheckBold size={16}/> },
+        { t:'Post rides in under a minute', color:T.blue, icon:<PiMapPinBold size={16}/> },
+        { t:'Instant in-app payouts', color:T.green, icon:<PiCheckCircleBold size={16}/> },
+      ],
+    },
+    admin: {
+      title: 'Sign in as Admin',
+      accent: T.red,
+      sub: 'University staff dashboard — driver verification, SOS command centre, and community reports.',
+      badges: [
+        { t:'Verify new driver documents', color:T.red, icon:<PiShieldCheckBold size={16}/> },
+        { t:'Respond to live SOS alerts', color:T.red, icon:<PiMapPinBold size={16}/> },
+        { t:'Community & ride audit logs', color:T.red, icon:<PiCheckCircleBold size={16}/> },
+      ],
+    },
+  };
+  const rt = roleTheme[role];
+
   return (
     <div style={{ minHeight:'100vh', display:'flex', position:'relative', overflow:'hidden', overflowX:'hidden' }}>
       {/* Left Gradient Panel */}
@@ -108,25 +152,30 @@ export default function Login() {
             onMouseEnter={e=>{e.currentTarget.style.color='white';}} onMouseLeave={e=>{e.currentTarget.style.color='rgba(255,255,255,0.6)';}}>
             <PiArrowLeftBold size={14}/> Back to Home
           </Link>
-          <h1 style={{ fontSize:'clamp(28px,4vw,44px)', fontWeight:800, color:'white', lineHeight:1.15, fontFamily:FONT.heading }}>
-            Welcome to<br/>
-            <span style={{ color:T.gold }}>
-              RideMitra
+          <div style={{
+            display:'inline-flex', alignItems:'center', gap:7, padding:'5px 12px', borderRadius:100,
+            background: `${rt.accent}22`, border: `1px solid ${rt.accent}55`, marginBottom:20,
+          }}>
+            <div style={{ width:6, height:6, borderRadius:'50%', background: rt.accent, boxShadow:`0 0 8px ${rt.accent}` }}/>
+            <span style={{ fontSize:11, color:'white', fontWeight:700, letterSpacing:1.5, textTransform:'uppercase' }}>
+              JC Bose UST · {role === 'student' ? 'Rider' : role === 'driver' ? 'Driver' : 'Admin'} Portal
+            </span>
+          </div>
+          <h1 key={role} style={{ fontSize:'clamp(28px,4vw,44px)', fontWeight:800, color:'white', lineHeight:1.15, fontFamily:FONT.heading, animation: 'slideUp 0.5s cubic-bezier(0.2, 0.9, 0.25, 1)' }}>
+            {rt.title.split(' as ')[0]} as<br/>
+            <span style={{ color: rt.accent }}>
+              a {rt.title.split(' as ')[1] || 'user'}
             </span>
           </h1>
-          <p style={{ color:'rgba(255,255,255,0.65)', fontSize:15, marginTop:14, maxWidth:340, lineHeight:1.7 }}>
-            Campus carpooling reimagined. Secure, sustainable, and strictly for the JC Bose UST community.
+          <p key={`sub-${role}`} style={{ color:'rgba(255,255,255,0.65)', fontSize:15, marginTop:14, maxWidth:340, lineHeight:1.7, animation: 'slideUp 0.6s cubic-bezier(0.2, 0.9, 0.25, 1)' }}>
+            {rt.sub}
           </p>
         </motion.div>
 
         {/* Feature badges */}
-        <motion.div initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ delay:0.5 }}
+        <motion.div key={`badges-${role}`} initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ delay:0.2 }}
           style={{ display:'flex', flexDirection:'column', gap:10, marginTop:36, position:'relative', zIndex:2 }}>
-          {[
-            { icon:<PiShieldCheckBold size={16}/>, t:'Verified university emails only', color:T.green },
-            { icon:<PiMapPinBold size={16}/>, t:'Real-time ride tracking', color:T.blue },
-            { icon:<PiCheckCircleBold size={16}/>, t:'Document verified drivers', color:T.green },
-          ].map((f,i)=>(
+          {rt.badges.map((f,i)=>(
             <motion.div key={i} initial={{ opacity:0,x:-20 }} animate={{ opacity:1,x:0 }} transition={{ delay:0.6+i*0.1 }}
               whileHover={{ x:6, background:'rgba(27,43,75,0.08)' }}
               style={{ display:'inline-flex', alignItems:'center', gap:10, padding:'10px 16px', borderRadius:12, width:'fit-content',
@@ -148,17 +197,23 @@ export default function Login() {
           style={{ width:'100%', maxWidth:420, background:T.surface, borderRadius:24, overflow:'hidden',
             boxShadow:`0 20px 60px rgba(27,43,75,0.08)`, border:`1px solid ${T.border}`, position:'relative', zIndex:2 }}>
 
-          {/* Card header */}
-          <div className="mobile-login-header" style={{ background:T.heroGrad, padding:'28px 32px', textAlign:'center', position:'relative', overflow:'hidden' }}>
-            <div style={{ position:'absolute', width:100, height:100, borderRadius:'50%', background:'rgba(27,43,75,0.08)', top:-30, right:-30 }}/>
-            <div style={{ position:'absolute', width:60, height:60, borderRadius:'50%', background:'rgba(27,43,75,0.06)', bottom:-20, left:30 }}/>
+          {/* Card header — role-accent gradient */}
+          <div className="mobile-login-header" style={{
+            background: `linear-gradient(135deg, ${T.navy} 0%, ${rt.accent} 140%)`,
+            padding:'28px 32px', textAlign:'center', position:'relative', overflow:'hidden',
+            transition: 'background 0.4s',
+          }}>
+            <div style={{ position:'absolute', width:120, height:120, borderRadius:'50%', background:`${rt.accent}22`, top:-40, right:-30, filter:'blur(20px)' }}/>
+            <div style={{ position:'absolute', width:80, height:80, borderRadius:'50%', background:'rgba(255,255,255,0.06)', bottom:-24, left:20, filter:'blur(16px)' }}/>
             <motion.div initial={{ scale:0.8,opacity:0 }} animate={{ scale:1,opacity:1 }} transition={{ delay:0.3 }}>
               <Logo size={44} light/>
             </motion.div>
-            <motion.h2 initial={{ opacity:0,y:8 }} animate={{ opacity:1,y:0 }} transition={{ delay:0.4 }}
-              style={{ color:'white', fontSize:22, fontWeight:700, marginTop:8, fontFamily:FONT.heading }}>Welcome Back</motion.h2>
+            <motion.h2 key={`h2-${role}`} initial={{ opacity:0,y:8 }} animate={{ opacity:1,y:0 }} transition={{ delay:0.15 }}
+              style={{ color:'white', fontSize:22, fontWeight:700, marginTop:8, fontFamily:FONT.heading }}>
+              {role === 'student' ? 'Rider Sign In' : role === 'driver' ? 'Driver Sign In' : 'Admin Sign In'}
+            </motion.h2>
             <motion.p initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.5 }}
-              style={{ color:'rgba(255,255,255,0.6)', fontSize:12, marginTop:2 }}>JC BOSE UNIVERSITY (YMCA)</motion.p>
+              style={{ color:'rgba(255,255,255,0.6)', fontSize:12, marginTop:2, letterSpacing:1.5 }}>JC BOSE UNIVERSITY · YMCA</motion.p>
           </div>
 
           {/* Role tabs */}
@@ -200,7 +255,7 @@ export default function Login() {
                 {/* Phone input */}
                 <div style={{ display:'flex', gap:8 }}>
                   <div style={{ padding:'12px 10px', borderRadius:12, background:T.bg, fontSize:14, fontWeight:600, color:T.text, border:`1px solid ${T.border}`, whiteSpace:'nowrap' }}>+91</div>
-                  <input value={phone} onChange={e=>setPhone(e.target.value.replace(/\D/g,'').slice(0,10))} placeholder="Phone Number" maxLength={10}
+                  <input value={phone} onChange={e=>setPhone(e.target.value.replace(/\D/g,'').slice(0,10))} placeholder="Phone Number" maxLength={10} aria-label="Phone number"
                     style={{ flex:1, padding:'12px 14px', borderRadius:12, border:`1px solid ${T.border}`, background:T.bg, fontSize:14, outline:'none', color:T.text, fontFamily:'inherit', transition:'all 0.3s' }}
                     onFocus={e=>{e.currentTarget.style.borderColor=T.navy;e.currentTarget.style.boxShadow=`0 0 0 3px ${T.navy}18`;}}
                     onBlur={e=>{e.currentTarget.style.borderColor=T.border;e.currentTarget.style.boxShadow='none';}}/>
@@ -209,7 +264,7 @@ export default function Login() {
                 <motion.button whileHover={{ scale:1.02, boxShadow:`0 8px 24px ${T.navy}30` }} whileTap={{ scale:0.97 }}
                   onClick={handleSendOtp} disabled={loading||phone.length<10}
                   style={{ width:'100%', padding:'14px', borderRadius:14, border:'none',
-                    background: phone.length>=10 ? `linear-gradient(135deg,${T.blue},${T.blue})` : T.border,
+                    background: phone.length>=10 ? `linear-gradient(135deg, ${rt.accent}, ${T.navy})` : T.border,
                     cursor: phone.length>=10?'pointer':'not-allowed', fontSize:14, fontWeight:700, color:'white', marginTop:12, fontFamily:'inherit',
                     transition:'all 0.3s', opacity: phone.length>=10?1:0.5 }}>
                   {loading ? <Spin light/> : <>Send OTP <PiPhoneBold size={14} style={{marginLeft:4}}/></>}
@@ -225,7 +280,7 @@ export default function Login() {
                 <div className="mobile-otp-row" style={{ display:'flex', gap:8, justifyContent:'center', marginBottom:16 }}>
                   {otp.map((d,i)=>(
                     <motion.input key={i} id={`otp-${i}`} value={d} onChange={e=>handleOtpInput(i,e.target.value)}
-                      onKeyDown={e=>handleOtpKey(i,e)} maxLength={1}
+                      onKeyDown={e=>handleOtpKey(i,e)} maxLength={1} aria-label={`OTP digit ${i+1}`}
                       initial={{ opacity:0,y:10 }} animate={{ opacity:1,y:0 }} transition={{ delay:i*0.06 }}
                       className="mobile-otp-input"
                       style={{ width:48, height:54, textAlign:'center', fontSize:22, fontWeight:700, borderRadius:14,
@@ -236,7 +291,8 @@ export default function Login() {
                 </div>
                 <motion.button whileHover={{ scale:1.02, boxShadow:`0 8px 28px ${T.dark}25` }} whileTap={{ scale:0.97 }}
                   onClick={handleVerifyOtp} disabled={loading||otp.join('').length<6}
-                  style={{ width:'100%', padding:'14px', borderRadius:14, border:'none', background:T.navy,
+                  style={{ width:'100%', padding:'14px', borderRadius:14, border:'none',
+                    background:`linear-gradient(135deg, ${rt.accent}, ${T.navy})`,
                     cursor:'pointer', fontSize:15, fontWeight:700, color:'white', fontFamily:'inherit', transition:'all 0.3s' }}>
                   {loading ? <Spin light/> : 'Verify & Login'}
                 </motion.button>

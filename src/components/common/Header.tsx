@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PiHouseBold, PiMagnifyingGlassBold, PiCarBold, PiBellBold, PiUserBold, PiSignOutBold, PiListBold, PiXBold, PiShieldCheckBold, PiCaretDownBold, PiMapPinBold, PiPlusBold } from 'react-icons/pi';
@@ -14,6 +14,8 @@ export default function Header() {
   const { unreadCount } = useNotificationStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [avatarBroken, setAvatarBroken] = useState(false);
+  useEffect(() => { setAvatarBroken(false); }, [user?.profile_photo]);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -47,12 +49,20 @@ export default function Header() {
     ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : '?';
 
+  const roleAccent = user.user_type === 'admin' ? T.red
+    : user.user_type === 'driver' ? T.green
+    : T.blue;
+
   return (
     <header style={{
       position:'sticky', top:0, zIndex:40,
-      background:'rgba(255,255,255,0.82)', backdropFilter:'blur(16px)',
+      background:'rgba(255,255,255,0.85)', backdropFilter:'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
       borderBottom:`1px solid ${T.border}`,
+      boxShadow: '0 1px 0 rgba(255,255,255,0.6) inset, 0 4px 20px rgba(27,43,75,0.04)',
     }}>
+      {/* Role accent bar */}
+      <div style={{ height:2, background:`linear-gradient(90deg, ${T.gold}, ${roleAccent}, ${T.gold})` }} />
       <div style={{ maxWidth:1200, margin:'0 auto', padding:'0 24px' }}>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', height:64 }}>
           {/* Logo */}
@@ -69,7 +79,7 @@ export default function Header() {
                   fontSize:13, fontWeight:600, textDecoration:'none', transition:'all 0.3s',
                   fontFamily:'inherit',
                   ...(isActive(item.path)
-                    ? { background:T.navy, color:'white', boxShadow:'0 4px 14px rgba(27,43,75,0.25)' }
+                    ? { background:`linear-gradient(135deg, ${T.navy}, ${roleAccent})`, color:'white', boxShadow:`0 4px 14px ${roleAccent}40` }
                     : { color:T.textSec }),
                 }}
                 onMouseEnter={e => {
@@ -114,11 +124,19 @@ export default function Header() {
                   background:'transparent', cursor:'pointer', transition:'all 0.3s' }}
                 onMouseEnter={e=>{e.currentTarget.style.background=T.navy50;}}
                 onMouseLeave={e=>{e.currentTarget.style.background='transparent';}}>
-                {user.profile_photo ? (
-                  <img src={user.profile_photo} alt="" style={{ width:34, height:34, borderRadius:'50%', objectFit:'cover', border:`2px solid ${T.gold}` }}/>
+                {user.profile_photo && !avatarBroken ? (
+                  <img src={user.profile_photo} alt={user.full_name || 'Profile'}
+                    referrerPolicy="no-referrer"
+                    onError={() => setAvatarBroken(true)}
+                    style={{ width:36, height:36, borderRadius:'50%', objectFit:'cover', border:`2px solid ${roleAccent}`, boxShadow:`0 0 0 3px ${roleAccent}22` }}/>
                 ) : (
-                  <div style={{ width:34, height:34, borderRadius:'50%', background:T.heroGrad,
-                    display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontSize:13, fontWeight:700 }}>
+                  <div style={{
+                    width:36, height:36, borderRadius:'50%',
+                    background:`linear-gradient(135deg, ${T.gold}, ${T.goldDark})`,
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    color:'white', fontSize:13, fontWeight:800, fontFamily:"'Poppins',sans-serif",
+                    border:`2px solid ${roleAccent}`, boxShadow:`0 4px 12px ${T.gold}44, 0 0 0 3px ${roleAccent}22`,
+                  }}>
                     {initials}
                   </div>
                 )}
@@ -184,7 +202,7 @@ export default function Header() {
                     display:'flex', alignItems:'center', gap:12, padding:'12px 16px', borderRadius:12,
                     fontSize:14, fontWeight:600, textDecoration:'none', transition:'all 0.3s',
                     ...(isActive(item.path)
-                      ? { background:T.navy, color:'white' }
+                      ? { background:`linear-gradient(135deg, ${T.navy}, ${roleAccent})`, color:'white' }
                       : { color:T.textSec }),
                   }}>
                   {item.icon} {item.label}

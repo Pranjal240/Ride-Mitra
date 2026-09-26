@@ -33,8 +33,8 @@ export default function Chat() {
   }, [rideId]);
 
   useEffect(() => {
-    if (newMsg && !messages.find((m) => m.id === newMsg.id)) {
-      setMessages((prev) => [...prev, newMsg]);
+    if (newMsg) {
+      setMessages((prev) => prev.some((m) => m.id === newMsg.id) ? prev : [...prev, newMsg]);
     }
   }, [newMsg]);
 
@@ -121,7 +121,7 @@ export default function Chat() {
         }}>
           <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={handleKeyDown}
             onFocus={() => setInputFocused(true)} onBlur={() => setInputFocused(false)}
-            placeholder="Type a message..."
+            placeholder="Type a message..." aria-label="Chat message"
             style={{
               flex:1, padding:'12px 16px', borderRadius:14,
               border:`1.5px solid ${inputFocused ? T.blue : T.border}`,
@@ -130,7 +130,7 @@ export default function Chat() {
               boxShadow: inputFocused ? `0 0 0 3px rgba(27,43,75,0.08)` : 'none',
             }}/>
           <motion.button whileHover={{ scale:1.05 }} whileTap={{ scale:0.9 }}
-            onClick={handleSend} disabled={!text.trim() || sending}
+            onClick={handleSend} disabled={!text.trim() || sending} aria-label="Send message"
             style={{
               width:44, height:44, borderRadius:14, border:'none',
               background: text.trim() ? `linear-gradient(135deg, ${T.blue}, ${T.blue})` : T.gray200,
