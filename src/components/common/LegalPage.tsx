@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 
 import Logo from "./Logo";
 import { Container } from "@/components/ui/primitives";
-import { Reveal } from "@/components/ui/scroll-reveal";
+import { Reveal, RevealGroup, RevealItem } from "@/components/ui/scroll-reveal";
 
 export function LegalPage({
   title,
@@ -33,15 +33,15 @@ export function LegalPage({
         <Reveal>
           <h1 className="font-display text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">{title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">Last updated: {updated}</p>
-          <div className="mt-10 space-y-8">
-            {sections.map((s) => (
-              <section key={s.t}>
-                <h2 className="font-display text-lg font-bold text-foreground">{s.t}</h2>
-                <p className="mt-2 leading-relaxed text-muted-foreground">{s.body}</p>
-              </section>
-            ))}
-          </div>
         </Reveal>
+        <RevealGroup className="mt-10 space-y-8" stagger={0.06}>
+          {sections.map((s) => (
+            <RevealItem key={s.t} as="section">
+              <h2 className="font-display text-lg font-bold text-foreground">{s.t}</h2>
+              <p className="mt-2 leading-relaxed text-muted-foreground">{s.body}</p>
+            </RevealItem>
+          ))}
+        </RevealGroup>
       </Container>
     </div>
   );
