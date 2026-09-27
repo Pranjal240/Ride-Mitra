@@ -72,6 +72,47 @@ export function MagneticButton({ strength, ...props }: ButtonProps & { strength?
   );
 }
 
+/**
+ * MouseParallax — drifts its children a few px toward the cursor as it moves
+ * across the region, giving the hero a tactile, cursor-responsive feel without
+ * hurting readability. Disabled on touch / reduced-motion.
+ */
+export function MouseParallax({
+  children,
+  intensity = 14,
+  className,
+}: {
+  children: React.ReactNode;
+  intensity?: number;
+  className?: string;
+}) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 140, damping: 22, mass: 0.6 });
+  const sy = useSpring(y, { stiffness: 140, damping: 22, mass: 0.6 });
+  const reduce = useReducedMotion();
+  const enabled = !reduce && useFinePointer();
+
+  const onMove = (e: React.MouseEvent) => {
+    if (!enabled) return;
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const nx = (e.clientX - r.left) / r.width - 0.5;
+    const ny = (e.clientY - r.top) / r.height - 0.5;
+    x.set(nx * intensity);
+    y.set(ny * intensity);
+  };
+  const reset = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <div onMouseMove={onMove} onMouseLeave={reset} className={className}>
+      <motion.div style={{ x: sx, y: sy }}>{children}</motion.div>
+    </div>
+  );
+}
+
 /** Soft spotlight that follows the cursor inside its (relatively-positioned) parent. */
 export function CursorGlow({
   className,

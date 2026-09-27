@@ -61,7 +61,18 @@ export function LiveMap({ className }: { className?: string }) {
         : "Campus view";
 
   return (
-    <div className={cn("relative overflow-hidden bg-muted", className)}>
+    <div className={cn("relative overflow-hidden bg-[#ECE6DC]", className)}>
+      {/* stylized light-map placeholder — shown until (or if) tiles load, so the
+          strip always reads as a clean editorial map rather than a blank band */}
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(#ECE6DC,#ECE6DC), repeating-linear-gradient(0deg,transparent 0 78px,#DDD5C6 78px 80px), repeating-linear-gradient(90deg,transparent 0 118px,#DDD5C6 118px 120px)",
+          backgroundBlendMode: "normal",
+        }}
+      />
       <MapContainer
         center={center as [number, number]}
         zoom={zoom}
@@ -70,7 +81,7 @@ export function LiveMap({ className }: { className?: string }) {
         doubleClickZoom={false}
         zoomControl={false}
         attributionControl={false}
-        style={{ width: "100%", height: "100%", background: "var(--rm-muted)" }}
+        style={{ width: "100%", height: "100%", background: "transparent" }}
       >
         <TileLayer
           url="https://{s}.basemap.cartocdn.com/light_all/{z}/{x}/{y}.png"

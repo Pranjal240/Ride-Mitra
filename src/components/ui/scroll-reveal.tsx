@@ -82,13 +82,15 @@ export function ScrollReveal({
   );
 
   const words = text.split(" ");
-  const cells: CharCell[] = [];
-  words.forEach((word, wi) => {
+  // Group characters by word (each word is a non-breaking inline-block) so the
+  // per-character animation never splits a word across two lines.
+  let gi = 0;
+  const wordGroups = words.map((word) => {
     const isAccent = accentSet.has(word.toLowerCase());
-    for (const ch of word) cells.push({ char: ch, accent: isAccent, space: false });
-    if (wi < words.length - 1) cells.push({ char: " ", accent: false, space: true });
+    return [...word].map((ch) => ({ char: ch, accent: isAccent, space: false, index: gi++ }));
   });
-  const centerIndex = Math.floor(cells.length / 2);
+  const totalChars = gi;
+  const centerIndex = Math.floor(totalChars / 2);
 
   const Tag = motion[as];
 
@@ -115,14 +117,21 @@ export function ScrollReveal({
         aria-label={text}
         style={{ transformStyle: "preserve-3d" }}
       >
-        {cells.map((cell, index) => (
-          <RevealChar
-            key={index}
-            cell={cell}
-            index={index}
-            centerIndex={centerIndex}
-            progress={scrollYProgress}
-          />
+        {wordGroups.map((chars, wi) => (
+          <React.Fragment key={wi}>
+            <span className="inline-block whitespace-nowrap">
+              {chars.map((cell) => (
+                <RevealChar
+                  key={cell.index}
+                  cell={cell}
+                  index={cell.index}
+                  centerIndex={centerIndex}
+                  progress={scrollYProgress}
+                />
+              ))}
+            </span>
+            {wi < wordGroups.length - 1 && <span className="inline-block w-[0.3em]"> </span>}
+          </React.Fragment>
         ))}
       </Tag>
     </div>

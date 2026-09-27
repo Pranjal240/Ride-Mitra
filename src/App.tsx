@@ -36,14 +36,9 @@ import { dashboardPath } from './lib/roles';
 function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
   const { user, loading } = useAuthStore();
   if (loading) return (
-    <div style={{
-      minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center',
-      background: '#0F1A33',
-    }}>
-      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16 }}>
-        <div style={{ width: 48, height: 48, border: `3px solid rgba(200,149,108,0.2)`, borderTopColor: T.gold, borderRadius: '50%', animation: 'spin-slow 0.8s linear infinite' }} />
-        <p style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: 12, fontFamily: "'Poppins',sans-serif", letterSpacing: 2, textTransform: 'uppercase' }}>Loading</p>
-      </div>
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background">
+      <span className="size-12 animate-spin rounded-full border-[3px] border-accent/25 border-t-accent" />
+      <p className="font-sans text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Loading</p>
     </div>
   );
   if (!user) return <Navigate to="/" replace />;
@@ -55,10 +50,10 @@ function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?
 function AnimatedPage({ children }: { children: React.ReactNode }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -16 }}
-      transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+      initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
+      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      exit={{ opacity: 0, y: -16, filter: "blur(6px)" }}
+      transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </motion.div>

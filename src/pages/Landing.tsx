@@ -38,7 +38,7 @@ import {
   SectionHeading,
   type BadgeTone,
 } from "@/components/ui/primitives";
-import { CursorGlow, Magnetic, MagneticButton } from "@/components/ui/cursor";
+import { CursorGlow, Magnetic, MagneticButton, MouseParallax } from "@/components/ui/cursor";
 import LiveMap from "@/components/landing/LiveMap";
 import IntroFilm from "@/components/landing/IntroFilm";
 import LandingHeader from "@/components/landing/LandingHeader";
@@ -218,51 +218,57 @@ export default function Landing() {
       <LandingHeader />
 
       <main className="overflow-x-hidden bg-background text-foreground">
-        {/* ── HERO ─────────────────────────────────────────── */}
-        <section className="relative overflow-hidden pt-32 sm:pt-40">
-          <div className="relative">
-            <CursorGlow />
+        {/* ── HERO — name anchored to the corner, full-bleed map below ── */}
+        <section className="relative overflow-hidden">
+          {/* name block, pulled to the top-left corner */}
+          <div className="relative pt-24 pb-10 sm:pt-28">
+            <CursorGlow size={520} />
             <Container size="7xl" className="relative z-10">
-              <motion.div
-                initial={reduce ? undefined : { opacity: 0, y: 12 }}
-                animate={reduce ? undefined : { opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.5 }}
-                className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 shadow-sm"
-              >
-                <ShieldCheck className="size-3.5 text-accent" />
-                <span className="font-sans text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  JC Bose University · YMCA Faridabad
-                </span>
-              </motion.div>
+              <MouseParallax intensity={16} className="max-w-5xl">
+                <motion.div
+                  initial={reduce ? undefined : { opacity: 0, y: 12 }}
+                  animate={reduce ? undefined : { opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1, duration: 0.5 }}
+                  className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 shadow-sm"
+                >
+                  <ShieldCheck className="size-3.5 text-accent" />
+                  <span className="font-sans text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    JC Bose University · YMCA Faridabad
+                  </span>
+                </motion.div>
 
-              <div className="mt-7 max-w-5xl">
-                <HeroTitle />
+                <div className="mt-6">
+                  <HeroTitle />
+                </div>
+              </MouseParallax>
+
+              {/* compact supporting row, left-aligned under the name */}
+              <div className="mt-7 flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
+                <motion.p
+                  initial={reduce ? undefined : { opacity: 0, y: 16 }}
+                  animate={reduce ? undefined : { opacity: 1, y: 0 }}
+                  transition={{ delay: 0.95, duration: 0.6 }}
+                  className="max-w-xl text-lg leading-relaxed text-muted-foreground"
+                >
+                  The closed carpool network built only for JC Bose University students and
+                  staff — verified faces, live-tracked trips, fares split at the pump.
+                  <span className="font-semibold text-foreground"> No surge. No strangers.</span>
+                </motion.p>
+
+                <motion.div
+                  initial={reduce ? undefined : { opacity: 0, y: 16 }}
+                  animate={reduce ? undefined : { opacity: 1, y: 0 }}
+                  transition={{ delay: 1.05, duration: 0.6 }}
+                  className="flex shrink-0 flex-wrap items-center gap-3"
+                >
+                  <MagneticButton size="lg" onClick={() => navigate("/portal")} icon={<Car className="size-4" />}>
+                    Find a ride
+                  </MagneticButton>
+                  <MagneticButton size="lg" variant="secondary" onClick={() => navigate("/portal")}>
+                    Offer a ride <ArrowRight className="size-4" />
+                  </MagneticButton>
+                </motion.div>
               </div>
-
-              <motion.p
-                initial={reduce ? undefined : { opacity: 0, y: 16 }}
-                animate={reduce ? undefined : { opacity: 1, y: 0 }}
-                transition={{ delay: 0.95, duration: 0.6 }}
-                className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl"
-              >
-                The closed carpool network built only for JC Bose University students and
-                staff — verified faces, live-tracked trips, fares split at the pump.
-                <span className="font-semibold text-foreground"> No surge. No strangers.</span>
-              </motion.p>
-
-              <motion.div
-                initial={reduce ? undefined : { opacity: 0, y: 16 }}
-                animate={reduce ? undefined : { opacity: 1, y: 0 }}
-                transition={{ delay: 1.05, duration: 0.6 }}
-                className="mt-8 flex flex-wrap items-center gap-3"
-              >
-                <MagneticButton size="lg" onClick={() => navigate("/portal")} icon={<Car className="size-4" />}>
-                  Find a ride
-                </MagneticButton>
-                <MagneticButton size="lg" variant="secondary" onClick={() => navigate("/portal")}>
-                  Offer a ride <ArrowRight className="size-4" />
-                </MagneticButton>
-              </motion.div>
 
               <motion.div
                 initial={reduce ? undefined : { opacity: 0 }}
@@ -286,21 +292,21 @@ export default function Landing() {
                 initial={reduce ? undefined : { opacity: 0, y: 16 }}
                 animate={reduce ? undefined : { opacity: 1, y: 0 }}
                 transition={{ delay: 1.25, duration: 0.6 }}
-                className="mt-9"
+                className="mt-8"
               >
                 <HeroSearch />
               </motion.div>
             </Container>
           </div>
 
-          {/* full-bleed live map, edge to edge under the headline */}
+          {/* full-bleed live map, edge to edge under the name */}
           <motion.div
-            initial={reduce ? undefined : { opacity: 0 }}
-            animate={reduce ? undefined : { opacity: 1 }}
-            transition={{ delay: 0.7, duration: 0.8 }}
-            className="relative mt-12 w-screen"
+            initial={reduce ? undefined : { opacity: 0, y: 24 }}
+            animate={reduce ? undefined : { opacity: 1, y: 0 }}
+            transition={{ delay: 0.55, duration: 0.8 }}
+            className="relative w-screen"
           >
-            <LiveMap className="h-[54vh] min-h-[380px] w-full border-y border-border" />
+            <LiveMap className="h-[62vh] min-h-[460px] w-full border-y border-border" />
           </motion.div>
         </section>
 
