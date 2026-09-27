@@ -9,4 +9,7 @@ export default defineConfig({
       '@': '/src',
     },
   },
+  server: {
+    port: Number(process.env.PORT) || 5173,
+  },
 })
