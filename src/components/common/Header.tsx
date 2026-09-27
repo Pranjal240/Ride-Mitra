@@ -1,13 +1,41 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { PiHouseBold, PiMagnifyingGlassBold, PiCarBold, PiBellBold, PiUserBold, PiSignOutBold, PiListBold, PiXBold, PiShieldCheckBold, PiCaretDownBold, PiMapPinBold, PiPlusBold } from 'react-icons/pi';
-import { useAuthStore, useNotificationStore } from '../../hooks/useStore';
-import Logo, { LogoText } from './Logo';
-import T, { FONT } from '../../lib/theme';
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Bell,
+  Car,
+  ChevronDown,
+  Home,
+  LogOut,
+  Menu,
+  Plus,
+  Search,
+  ShieldCheck,
+  User,
+  X,
+} from "lucide-react";
 
-/* Brand Tokens */
-// Theme imported from shared file
+import { useAuthStore, useNotificationStore } from "../../hooks/useStore";
+import Logo from "./Logo";
+import { cn } from "@/lib/utils";
+import type { BadgeTone } from "@/components/ui/primitives";
+
+const ROLE_TONE: Record<string, BadgeTone> = {
+  admin: "danger",
+  driver: "success",
+  both: "accent",
+  student: "info",
+  pending_admin: "warning",
+};
+
+const TONE_BADGE: Record<BadgeTone, string> = {
+  neutral: "bg-muted text-muted-foreground",
+  accent: "bg-accent-soft text-accent-strong",
+  success: "bg-success-soft text-success",
+  warning: "bg-warning-soft text-warning",
+  danger: "bg-danger-soft text-danger",
+  info: "bg-info-soft text-info",
+};
 
 export default function Header() {
   const { user, logout } = useAuthStore();
@@ -15,210 +43,195 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [avatarBroken, setAvatarBroken] = useState(false);
-  useEffect(() => { setAvatarBroken(false); }, [user?.profile_photo]);
+  useEffect(() => {
+    setAvatarBroken(false);
+  }, [user?.profile_photo]);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = async () => { await logout(); navigate('/'); };
-
-  const navItems = user
-    ? user.user_type === 'admin'
-      ? [
-          { label: 'Dashboard', path: '/admin', icon: <PiHouseBold size={18}/> },
-          { label: 'Users', path: '/admin/users', icon: <PiUserBold size={18}/> },
-          { label: 'Verification', path: '/admin/verification', icon: <PiShieldCheckBold size={18}/> },
-        ]
-      : user.user_type === 'driver'
-        ? [
-            { label: 'Dashboard', path: '/driver', icon: <PiHouseBold size={18}/> },
-            { label: 'Create Ride', path: '/rides/create', icon: <PiPlusBold size={18}/> },
-            { label: 'My Rides', path: '/driver', icon: <PiCarBold size={18}/> },
-          ]
-        : [
-            { label: 'Dashboard', path: '/student', icon: <PiHouseBold size={18}/> },
-            { label: 'Find Ride', path: '/rides/search', icon: <PiMagnifyingGlassBold size={18}/> },
-            { label: 'My Bookings', path: '/bookings', icon: <PiCarBold size={18}/> },
-          ]
-    : [];
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
 
   if (!user) return null;
 
+  const navItems =
+    user.user_type === "admin"
+      ? [
+          { label: "Dashboard", path: "/admin", icon: <Home className="size-[18px]" /> },
+          { label: "Verification", path: "/verification", icon: <ShieldCheck className="size-[18px]" /> },
+        ]
+      : user.user_type === "driver"
+        ? [
+            { label: "Dashboard", path: "/driver", icon: <Home className="size-[18px]" /> },
+            { label: "Create ride", path: "/rides/create", icon: <Plus className="size-[18px]" /> },
+            { label: "My rides", path: "/driver", icon: <Car className="size-[18px]" /> },
+          ]
+        : [
+            { label: "Dashboard", path: user.user_type === "both" ? "/unified" : "/student", icon: <Home className="size-[18px]" /> },
+            { label: "Find ride", path: "/rides/search", icon: <Search className="size-[18px]" /> },
+            { label: "My bookings", path: "/bookings", icon: <Car className="size-[18px]" /> },
+          ];
+
   const isActive = (path: string) => location.pathname === path;
-
   const initials = user.full_name
-    ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-    : '?';
-
-  const roleAccent = user.user_type === 'admin' ? T.red
-    : user.user_type === 'driver' ? T.green
-    : T.blue;
+    ? user.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    : "?";
+  const tone = ROLE_TONE[user.user_type ?? "student"] ?? "info";
 
   return (
-    <header style={{
-      position:'sticky', top:0, zIndex:40,
-      background:'rgba(255,255,255,0.85)', backdropFilter:'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
-      borderBottom:`1px solid ${T.border}`,
-      boxShadow: '0 1px 0 rgba(255,255,255,0.6) inset, 0 4px 20px rgba(27,43,75,0.04)',
-    }}>
-      {/* Role accent bar */}
-      <div style={{ height:2, background:`linear-gradient(90deg, ${T.gold}, ${roleAccent}, ${T.gold})` }} />
-      <div style={{ maxWidth:1200, margin:'0 auto', padding:'0 24px' }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', height:64 }}>
-          {/* Logo */}
-          <Link to="/" style={{ display:'flex', alignItems:'center', gap:10, textDecoration:'none' }}>
-            <Logo size={32}/><LogoText/>
+    <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-lg">
+      <div className="h-0.5 bg-gradient-to-r from-accent via-primary to-accent" />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="flex h-16 items-center justify-between">
+          <Link to="/" className="flex items-center gap-2.5">
+            <Logo size={32} />
+            <span className="font-display text-lg font-extrabold tracking-tight text-foreground">
+              Ride<span className="text-accent">Mitra</span>
+            </span>
           </Link>
 
-          {/* Desktop Nav */}
-          <nav style={{ display:'flex', alignItems:'center', gap:4 }} className="desktop-nav">
-            {navItems.map(item => (
-              <Link key={item.path} to={item.path}
-                style={{
-                  display:'flex', alignItems:'center', gap:8, padding:'8px 16px', borderRadius:12,
-                  fontSize:13, fontWeight:600, textDecoration:'none', transition:'all 0.3s',
-                  fontFamily:'inherit',
-                  ...(isActive(item.path)
-                    ? { background:`linear-gradient(135deg, ${T.navy}, ${roleAccent})`, color:'white', boxShadow:`0 4px 14px ${roleAccent}40` }
-                    : { color:T.textSec }),
-                }}
-                onMouseEnter={e => {
-                  if(!isActive(item.path)) {
-                    e.currentTarget.style.background=T.navy50;
-                    e.currentTarget.style.color=T.navy;
-                  }
-                }}
-                onMouseLeave={e => {
-                  if(!isActive(item.path)) {
-                    e.currentTarget.style.background='transparent';
-                    e.currentTarget.style.color=T.textSec;
-                  }
-                }}>
-                {item.icon} {item.label}
+          {/* desktop nav */}
+          <nav className="hidden items-center gap-1 md:flex">
+            {navItems.map((item, i) => (
+              <Link
+                key={`${item.path}-${i}`}
+                to={item.path}
+                className={cn(
+                  "inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-colors",
+                  isActive(item.path)
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                {item.icon}
+                {item.label}
               </Link>
             ))}
           </nav>
 
-          {/* Right */}
-          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-            {/* Bell */}
-            <button onClick={()=>setProfileOpen(false)}
-              style={{ position:'relative', padding:10, borderRadius:12, border:'none', background:'transparent',
-                cursor:'pointer', color:T.textSec, transition:'all 0.3s' }}
-              onMouseEnter={e=>{e.currentTarget.style.background=T.navy50;e.currentTarget.style.color=T.navy;}}
-              onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color=T.textSec;}}>
-              <PiBellBold size={20}/>
+          {/* right */}
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              aria-label="Notifications"
+              className="relative grid size-10 place-items-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <Bell className="size-5" />
               {unreadCount > 0 && (
-                <span style={{ position:'absolute', top:2, right:2, width:18, height:18, background:T.red,
-                  color:'white', fontSize:10, fontWeight:700, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center',
-                  animation:'pulse 2s infinite' }}>
-                  {unreadCount > 9 ? '9+' : unreadCount}
+                <span className="absolute right-1.5 top-1.5 grid min-w-[18px] place-items-center rounded-full bg-danger px-1 text-[10px] font-bold text-white">
+                  {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
             </button>
 
-            {/* Profile */}
-            <div style={{ position:'relative' }}>
-              <button onClick={()=>setProfileOpen(!profileOpen)}
-                style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 10px', borderRadius:14, border:'none',
-                  background:'transparent', cursor:'pointer', transition:'all 0.3s' }}
-                onMouseEnter={e=>{e.currentTarget.style.background=T.navy50;}}
-                onMouseLeave={e=>{e.currentTarget.style.background='transparent';}}>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setProfileOpen((v) => !v)}
+                aria-label="Account menu"
+                className="flex items-center gap-1.5 rounded-2xl p-1 pr-2 transition-colors hover:bg-muted"
+              >
                 {user.profile_photo && !avatarBroken ? (
-                  <img src={user.profile_photo} alt={user.full_name || 'Profile'}
+                  <img
+                    src={user.profile_photo}
+                    alt={user.full_name || "Profile"}
                     referrerPolicy="no-referrer"
                     onError={() => setAvatarBroken(true)}
-                    style={{ width:36, height:36, borderRadius:'50%', objectFit:'cover', border:`2px solid ${roleAccent}`, boxShadow:`0 0 0 3px ${roleAccent}22` }}/>
+                    className="size-9 rounded-full object-cover ring-2 ring-accent/40"
+                  />
                 ) : (
-                  <div style={{
-                    width:36, height:36, borderRadius:'50%',
-                    background:`linear-gradient(135deg, ${T.gold}, ${T.goldDark})`,
-                    display:'flex', alignItems:'center', justifyContent:'center',
-                    color:'white', fontSize:13, fontWeight:800, fontFamily:"'Poppins',sans-serif",
-                    border:`2px solid ${roleAccent}`, boxShadow:`0 4px 12px ${T.gold}44, 0 0 0 3px ${roleAccent}22`,
-                  }}>
+                  <span className="grid size-9 place-items-center rounded-full bg-gradient-to-br from-accent to-accent-strong font-display text-sm font-bold text-white ring-2 ring-accent/30">
                     {initials}
-                  </div>
+                  </span>
                 )}
-                <PiCaretDownBold size={12} color={T.muted}/>
+                <ChevronDown className="size-3.5 text-muted-foreground" />
               </button>
 
               <AnimatePresence>
                 {profileOpen && (
-                  <motion.div initial={{ opacity:0,y:10,scale:0.95 }} animate={{ opacity:1,y:0,scale:1 }} exit={{ opacity:0,y:10,scale:0.95 }}
-                    style={{ position:'absolute', right:0, marginTop:8, width:240, background:T.surface, borderRadius:16,
-                      boxShadow:T.shadow3, border:`1px solid ${T.border}`, overflow:'hidden', zIndex:50 }}>
-                    <div style={{ padding:16, borderBottom:`1px solid ${T.border}`, background:`linear-gradient(135deg,${T.bg},${T.navy50})` }}>
-                      <p style={{ fontWeight:700, color:T.text, fontSize:14, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                        {user.full_name || 'User'}
-                      </p>
-                      <p style={{ fontSize:11, color:T.muted, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                        {user.email}
-                      </p>
-                      <span style={{ display:'inline-block', marginTop:6, padding:'3px 10px', borderRadius:8, fontSize:11, fontWeight:600,
-                        background: user.user_type==='admin' ? T.redLight : user.user_type==='driver' ? T.blueLight : T.blue50,
-                        color: user.user_type==='admin' ? T.red : user.user_type==='driver' ? T.blueDark : T.blue }}>
-                        {user.user_type}
-                      </span>
-                    </div>
-                    <div style={{ padding:6 }}>
-                      <Link to="/profile" onClick={()=>setProfileOpen(false)}
-                        style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:12,
-                          fontSize:13, color:T.textSec, textDecoration:'none', transition:'all 0.3s' }}
-                        onMouseEnter={e=>{e.currentTarget.style.background=T.blue50;e.currentTarget.style.color=T.navy;}}
-                        onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color=T.textSec;}}>
-                        <PiUserBold size={16}/> My Profile
-                      </Link>
-                      <button onClick={handleLogout}
-                        style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:12,
-                          fontSize:13, color:T.red, border:'none', background:'transparent', cursor:'pointer', fontFamily:'inherit', transition:'all 0.3s' }}
-                        onMouseEnter={e=>{e.currentTarget.style.background=T.redLight;}}
-                        onMouseLeave={e=>{e.currentTarget.style.background='transparent';}}>
-                        <PiSignOutBold size={16}/> Sign Out
-                      </button>
-                    </div>
-                  </motion.div>
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.97 }}
+                      className="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-2xl border border-border bg-popover shadow-lg"
+                    >
+                      <div className="border-b border-border bg-muted/60 p-4">
+                        <p className="truncate font-semibold text-foreground">{user.full_name || "User"}</p>
+                        <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                        <span
+                          className={cn(
+                            "mt-2 inline-block rounded-lg px-2 py-0.5 text-xs font-semibold capitalize",
+                            TONE_BADGE[tone],
+                          )}
+                        >
+                          {user.user_type}
+                        </span>
+                      </div>
+                      <div className="p-1.5">
+                        <Link
+                          to="/profile"
+                          onClick={() => setProfileOpen(false)}
+                          className="flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm text-foreground transition-colors hover:bg-muted"
+                        >
+                          <User className="size-4" /> My profile
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={handleLogout}
+                          className="flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm text-danger transition-colors hover:bg-danger-soft"
+                        >
+                          <LogOut className="size-4" /> Sign out
+                        </button>
+                      </div>
+                    </motion.div>
+                  </>
                 )}
               </AnimatePresence>
             </div>
 
-            {/* Mobile toggle */}
-            <button onClick={()=>setMenuOpen(!menuOpen)}
-              style={{ display:'none', padding:10, borderRadius:12, border:'none', background:'transparent',
-                cursor:'pointer', color:T.textSec }} className="mobile-toggle">
-              {menuOpen ? <PiXBold size={20}/> : <PiListBold size={20}/>}
+            <button
+              type="button"
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              className="grid size-10 place-items-center rounded-xl text-muted-foreground hover:bg-muted md:hidden"
+            >
+              {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile nav */}
         <AnimatePresence>
           {menuOpen && (
-            <motion.nav initial={{ height:0,opacity:0 }} animate={{ height:'auto',opacity:1 }} exit={{ height:0,opacity:0 }}
-              style={{ overflow:'hidden', paddingBottom:16 }}>
-              {navItems.map(item => (
-                <Link key={item.path} to={item.path} onClick={()=>setMenuOpen(false)}
-                  style={{
-                    display:'flex', alignItems:'center', gap:12, padding:'12px 16px', borderRadius:12,
-                    fontSize:14, fontWeight:600, textDecoration:'none', transition:'all 0.3s',
-                    ...(isActive(item.path)
-                      ? { background:`linear-gradient(135deg, ${T.navy}, ${roleAccent})`, color:'white' }
-                      : { color:T.textSec }),
-                  }}>
-                  {item.icon} {item.label}
+            <motion.nav
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden pb-3 md:hidden"
+            >
+              {navItems.map((item, i) => (
+                <Link
+                  key={`${item.path}-m-${i}`}
+                  to={item.path}
+                  onClick={() => setMenuOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold",
+                    isActive(item.path)
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  )}
+                >
+                  {item.icon}
+                  {item.label}
                 </Link>
               ))}
             </motion.nav>
           )}
         </AnimatePresence>
       </div>
-
-      <style>{`
-        @media (max-width: 768px) {
-          .desktop-nav { display: none !important; }
-          .mobile-toggle { display: flex !important; }
-        }
-      `}</style>
     </header>
   );
 }
