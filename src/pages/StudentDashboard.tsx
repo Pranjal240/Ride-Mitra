@@ -1,859 +1,635 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { useEffect, useState, type ReactNode } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { motion, useReducedMotion } from "framer-motion";
 import {
-  PiMagnifyingGlassBold, PiCalendarCheckBold, PiCarBold, PiTrendUpBold,
-  PiLeafBold, PiStarBold, PiWarningBold, PiArrowRightBold, PiClockBold,
-  PiShieldCheckBold, PiMapPinBold, PiLightningBold,
-  PiNavigationArrowBold, PiChatCircleBold, PiPlusBold, PiGlobeBold,
-  PiCrosshairSimpleBold,
-} from 'react-icons/pi';
-import { useAuthStore } from '../hooks/useStore';
-import { getRides, getBookings } from '../lib/api';
-import { updateProfile } from '../lib/auth';
-import type { Ride, Booking } from '../types';
-import { format, formatDistanceToNow } from 'date-fns';
-import SOSModal from '../components/common/SOSModal';
-import { ImpactChart, TrendingRoutes } from '../components/common/GlobalUI';
-import { getUserStats, getSavedRoutes, deleteSavedRoute, type SavedRoute, type UserStats } from '../lib/api';
-import { RadialProgress, Reveal, TiltCard as TiltCardV5, Spotlight } from './../components/common/Interactive3D';
-import T, { FONT } from '../lib/theme';
-import { PiBookmarkSimpleBold, PiTrashBold } from 'react-icons/pi';
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
-import * as L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+  ArrowRight,
+  Bookmark,
+  Calendar,
+  Car,
+  Clock,
+  Globe,
+  Leaf,
+  MapPin,
+  MessageCircle,
+  Navigation,
+  Plus,
+  Search,
+  ShieldCheck,
+  Star,
+  Trash2,
+  TrendingUp,
+  TriangleAlert,
+  Zap,
+} from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
 
-/* JC Bose UST, Faridabad — default map center */
-const JCB_UST: [number, number] = [28.3762, 77.3149];
+import { useAuthStore } from "@/hooks/useStore";
+import {
+  getRides,
+  getBookings,
+  getUserStats,
+  getSavedRoutes,
+  deleteSavedRoute,
+  type SavedRoute,
+  type UserStats,
+} from "@/lib/api";
+import { updateProfile } from "@/lib/auth";
+import type { Ride, Booking } from "@/types";
+import SOSModal from "@/components/common/SOSModal";
+import LiveMap from "@/components/landing/LiveMap";
+import { Field } from "@/components/ui/smooth-input";
+import {
+  Badge,
+  Button,
+  Container,
+  Eyebrow,
+  Panel,
+  PageShell,
+  type BadgeTone,
+} from "@/components/ui/primitives";
+import { Reveal, RevealGroup, RevealItem } from "@/components/ui/scroll-reveal";
+import { cn } from "@/lib/utils";
 
-const meIcon = L.divIcon({
-  className: '',
-  html: `<div style="position:relative;width:22px;height:22px;"><div style="position:absolute;inset:0;border-radius:50%;background:#C8956C;border:3px solid white;box-shadow:0 0 0 6px rgba(200,149,108,0.25),0 6px 14px rgba(0,0,0,0.4);"></div></div>`,
-  iconSize: [22, 22], iconAnchor: [11, 11],
-});
+const TILE: Record<BadgeTone, string> = {
+  neutral: "bg-muted text-foreground",
+  accent: "bg-accent-soft text-accent-strong",
+  success: "bg-success-soft text-success",
+  warning: "bg-warning-soft text-warning",
+  danger: "bg-danger-soft text-danger",
+  info: "bg-info-soft text-info",
+};
 
-function MapFlyTo({ target, zoom }: { target: [number, number]; zoom: number }) {
-  const map = useMap();
-  useEffect(() => { map.flyTo(target, zoom, { duration: 1.6 }); }, [target, zoom, map]);
-  return null;
-}
-
-/* ── Magnetic 3D tilt with real cursor tracking ── */
-function CursorTilt({ children, style, max = 8 }: { children: React.ReactNode; style?: React.CSSProperties; max?: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const rX = useMotionValue(0);
-  const rY = useMotionValue(0);
-  const sX = useSpring(rX, { stiffness: 220, damping: 22 });
-  const sY = useSpring(rY, { stiffness: 220, damping: 22 });
-  const onMove = useCallback((e: React.MouseEvent) => {
-    const el = ref.current; if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const px = (e.clientX - rect.left) / rect.width - 0.5;
-    const py = (e.clientY - rect.top) / rect.height - 0.5;
-    rY.set(px * max);
-    rX.set(-py * max);
-    el.style.setProperty('--mx', `${e.clientX - rect.left}px`);
-    el.style.setProperty('--my', `${e.clientY - rect.top}px`);
-  }, [max, rX, rY]);
-  const onLeave = () => { rX.set(0); rY.set(0); };
+function CountUp({ value, prefix = "" }: { value: number; prefix?: string }) {
+  const [n, setN] = useState(0);
+  const reduce = useReducedMotion();
+  useEffect(() => {
+    if (reduce) {
+      setN(value);
+      return;
+    }
+    let frame: number;
+    const dur = 700;
+    const start = performance.now();
+    const step = (now: number) => {
+      const t = Math.min((now - start) / dur, 1);
+      setN(Math.round(t * value));
+      if (t < 1) frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [value, reduce]);
   return (
-    <motion.div ref={ref} onMouseMove={onMove} onMouseLeave={onLeave}
-      className="bento"
-      style={{ ...style, rotateX: sX, rotateY: sY, transformStyle: 'preserve-3d', transformPerspective: 1000 }}>
-      {children}
-    </motion.div>
+    <>
+      {prefix}
+      {n}
+    </>
   );
 }
 
-/* ── Scroll-in wrapper ── */
-const FadeUp = ({ children, delay = 0, ...rest }: any) => (
-  <motion.div initial={{ opacity:0, y:32 }} whileInView={{ opacity:1, y:0 }}
-    viewport={{ once:true, margin:'-40px' }}
-    transition={{ duration:0.55, delay, ease:[0.25,0.46,0.45,0.94] }} {...rest}>
-    {children}
-  </motion.div>
-);
-
-/* ── Live Campus Map (real Leaflet, live geolocation) ── */
-function LiveCampusMap() {
-  const [center, setCenter] = useState<[number, number]>(JCB_UST);
-  const [zoom, setZoom] = useState(15);
-  const [status, setStatus] = useState<'idle' | 'asking' | 'live' | 'denied'>('idle');
-  const requestLive = () => {
-    if (!('geolocation' in navigator)) { setStatus('denied'); return; }
-    setStatus('asking');
-    navigator.geolocation.getCurrentPosition(
-      (pos) => { setCenter([pos.coords.latitude, pos.coords.longitude]); setZoom(16); setStatus('live'); },
-      () => setStatus('denied'),
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
-  };
+/** Compact SVG score ring. */
+function ScoreRing({ value }: { value: number }) {
+  const r = 42;
+  const c = 2 * Math.PI * r;
+  const dash = (Math.min(100, Math.max(0, value)) / 100) * c;
   return (
-    <div style={{ position:'relative', borderRadius:20, overflow:'hidden', height:'100%', minHeight:280, background:'#0F1E3D' }}>
-      <MapContainer center={center as any} zoom={zoom} scrollWheelZoom={false} dragging={false}
-        doubleClickZoom={false} zoomControl={false} attributionControl={false}
-        style={{ width:'100%', height:'100%', background:'#0F1E3D' }}>
-        <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <Marker position={center as any} icon={meIcon} />
-        <MapFlyTo target={center} zoom={zoom} />
-      </MapContainer>
-      <div style={{
-        position:'absolute', top:14, left:14, padding:'8px 12px',
-        background:'rgba(0,0,0,0.55)', backdropFilter:'blur(10px)',
-        borderRadius:100, border:'1px solid rgba(255,255,255,0.1)',
-        display:'flex', alignItems:'center', gap:8,
-      }}>
-        <div className={status === 'live' ? 'ring-pulse' : ''} style={{
-          width:7, height:7, borderRadius:'50%',
-          background: status === 'live' ? T.green : T.gold,
-          boxShadow: `0 0 6px ${status === 'live' ? T.green : T.gold}`,
-        }}/>
-        <span style={{ fontSize:11, color:'white', fontWeight:700, letterSpacing:1, textTransform:'uppercase' }}>
-          {status === 'live' ? 'Your live area' : 'Around campus'}
-        </span>
-      </div>
-      {status !== 'live' && (
-        <button onClick={requestLive}
-          style={{
-            position:'absolute', bottom:14, right:14, padding:'8px 14px',
-            border:'none', borderRadius:100, cursor:'pointer',
-            background:`linear-gradient(135deg, ${T.gold}, ${T.goldDark})`, color:'white',
-            fontSize:12, fontWeight:800, letterSpacing:0.5,
-            boxShadow:`0 8px 20px ${T.gold}55, inset 0 1px 0 rgba(255,255,255,0.3)`,
-            display:'inline-flex', alignItems:'center', gap:6,
-          }}>
-          <PiCrosshairSimpleBold size={13}/> {status === 'asking' ? 'Locating…' : 'Use my location'}
-        </button>
-      )}
-    </div>
+    <svg viewBox="0 0 100 100" className="size-24 -rotate-90">
+      <circle cx="50" cy="50" r={r} fill="none" stroke="var(--rm-muted)" strokeWidth="9" />
+      <circle
+        cx="50"
+        cy="50"
+        r={r}
+        fill="none"
+        stroke="var(--rm-accent)"
+        strokeWidth="9"
+        strokeLinecap="round"
+        strokeDasharray={`${dash} ${c}`}
+      />
+      <text
+        x="50"
+        y="50"
+        transform="rotate(90 50 50)"
+        textAnchor="middle"
+        dominantBaseline="central"
+        className="fill-foreground font-mono"
+        style={{ fontSize: 22, fontWeight: 700 }}
+      >
+        {value}
+      </text>
+    </svg>
   );
 }
 
-/* ── Recent Activity Feed ── */
-function RecentActivity({ bookings, rides }: { bookings: Booking[]; rides: Ride[] }) {
-  type ActivityItem = { icon: React.ReactNode; label: string; sub: string; at: Date; color: string };
-  const items: ActivityItem[] = [];
-  bookings.slice(0, 5).forEach(b => {
-    items.push({
-      icon: <PiCarBold size={14}/>,
-      label: `Booked ride · ${b.seats_booked} seat${b.seats_booked !== 1 ? 's' : ''}`,
-      sub: `₹${b.total_price} · ${b.status}`,
-      at: new Date(b.created_at || Date.now()),
-      color: b.status === 'confirmed' ? T.green : b.status === 'cancelled' ? T.red : T.gold,
-    });
-  });
-  rides.slice(0, 3).forEach(r => {
-    items.push({
-      icon: <PiNavigationArrowBold size={14}/>,
-      label: `New ride from ${(r as any).driver?.full_name?.split(' ')[0] || 'driver'}`,
-      sub: `${r.seats_available} seats · ₹${r.price_per_seat}/seat`,
-      at: new Date(r.departure_time),
-      color: T.blue,
-    });
-  });
-  items.sort((a, b) => b.at.getTime() - a.at.getTime());
-  const top = items.slice(0, 6);
+/** Token-driven savings sparkline (bars). */
+function Sparkbars({ values }: { values: number[] }) {
+  const max = Math.max(...values, 1);
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-      {top.length === 0 ? (
-        <div style={{ padding:'32px 16px', textAlign:'center', color:'rgba(255,255,255,0.5)', fontSize:13 }}>
-          Your activity will appear here once you book or search a ride.
-        </div>
-      ) : top.map((it, i) => (
-        <motion.div key={i} initial={{ opacity:0, x:-8 }} animate={{ opacity:1, x:0 }} transition={{ delay:0.04*i }}
-          style={{
-            display:'flex', alignItems:'center', gap:12, padding:'10px 12px', borderRadius:12,
-            background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.05)',
-          }}>
-          <div style={{
-            width:32, height:32, borderRadius:10, flexShrink:0,
-            background:`linear-gradient(135deg, ${it.color}, ${it.color}88)`, color:'white',
-            display:'flex', alignItems:'center', justifyContent:'center',
-            boxShadow:`0 4px 10px ${it.color}44`,
-          }}>{it.icon}</div>
-          <div style={{ flex:1, minWidth:0 }}>
-            <p style={{ fontSize:13, fontWeight:700, color:'white', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{it.label}</p>
-            <p style={{ fontSize:11, color:'rgba(255,255,255,0.55)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{it.sub}</p>
-          </div>
-          <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)', flexShrink:0, textAlign:'right' }}>
-            {formatDistanceToNow(it.at, { addSuffix: true }).replace('about ', '')}
-          </span>
-        </motion.div>
+    <div className="flex h-28 items-end gap-2">
+      {values.map((v, i) => (
+        <motion.div
+          key={i}
+          initial={{ height: 0 }}
+          whileInView={{ height: `${(v / max) * 100}%` }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: i * 0.05 }}
+          className="flex-1 rounded-t-md bg-gradient-to-t from-accent/40 to-accent"
+          title={`₹${Math.round(v)}`}
+        />
       ))}
     </div>
   );
 }
 
-/* ── Animated stat counter ── */
-function AnimNum({ value, prefix = '' }: { value: number; prefix?: string }) {
-  const [n, setN] = useState(0);
-  useEffect(() => {
-    let frame: number;
-    const dur = 800, start = performance.now();
-    const animate = (now: number) => { const t = Math.min((now - start) / dur, 1); setN(Math.round(t * value)); if (t < 1) frame = requestAnimationFrame(animate); };
-    frame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(frame);
-  }, [value]);
-  return <>{prefix}{n}</>;
-}
+const TRENDING = [
+  { from: "Sector 15", to: "JC Bose UST", count: 42 },
+  { from: "NIT Faridabad", to: "JC Bose UST", count: 31 },
+  { from: "Ballabgarh", to: "JC Bose UST", count: 27 },
+  { from: "Old Faridabad", to: "JC Bose UST", count: 19 },
+];
 
-/* ── Personal Snapshot (from user_stats RPC) + Saved Routes strip ── */
-function PersonalSnapshotRow() {
-  const { user } = useAuthStore();
-  const nav = useNavigate();
-  const [stats, setStats] = useState<UserStats | null>(null);
-  const [saved, setSaved] = useState<SavedRoute[]>([]);
-
-  useEffect(() => {
-    if (!user) return;
-    getUserStats(user.id).then(setStats);
-    getSavedRoutes(user.id).then(setSaved);
-  }, [user]);
-
-  const del = async (id: string) => {
-    await deleteSavedRoute(id);
-    setSaved(s => s.filter(x => x.id !== id));
-  };
-
-  const rideCount = stats?.total_bookings || 0;
-  const spent = stats?.total_spent || 0;
-  const safetyScore = Math.max(60, 100 - rideCount * 2 + Math.min(30, rideCount * 3));
-
+function RideCard({ ride }: { ride: Ride }) {
+  const navigate = useNavigate();
+  const from = typeof ride.from_location === "object" ? ride.from_location.address : ride.from_location;
+  const to = typeof ride.to_location === "object" ? ride.to_location.address : ride.to_location;
+  const driver = (ride as unknown as { driver?: { full_name?: string } }).driver;
   return (
-    <FadeUp delay={0.05}>
-      <div className="mobile-widgets-row" style={{
-        display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: 16, marginBottom: 20,
-      }}>
-        {/* Personal snapshot */}
-        <TiltCardV5 max={6} radius={22} style={{
-          background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-          padding: 20, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-        }}>
-          <h3 style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', letterSpacing: 2, textTransform: 'uppercase', fontWeight: 700, marginBottom: 14 }}>
-            Your Snapshot
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 16, alignItems: 'center' }}>
-            <RadialProgress value={safetyScore} size={100} thickness={10} color={T.gold} label="Score" />
-            <div>
-              <div style={{ display: 'flex', gap: 14 }}>
-                <div>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: 'white', fontFamily: FONT.heading }}>{rideCount}</div>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', letterSpacing: 1, textTransform: 'uppercase' }}>Bookings</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: 'white', fontFamily: FONT.heading }}>₹{spent}</div>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', letterSpacing: 1, textTransform: 'uppercase' }}>Spent</div>
-                </div>
-              </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 10, lineHeight: 1.4 }}>
-                {rideCount === 0 ? 'Book your first ride — score grows with every safe trip.' : 'Keep sharing — your safety score climbs with every completed ride.'}
-              </div>
-            </div>
-          </div>
-        </TiltCardV5>
-
-        {/* Saved routes */}
-        <Spotlight color="rgba(200,149,108,0.18)" style={{
-          background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-          padding: 20, borderRadius: 22, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <h3 style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', letterSpacing: 2, textTransform: 'uppercase', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <PiBookmarkSimpleBold size={14} color={T.gold} /> Saved routes
-            </h3>
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 1 }}>Tap to search</span>
-          </div>
-          {saved.length === 0 ? (
-            <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, padding: '18px 0', textAlign: 'center' }}>
-              No saved routes yet — bookmark a route from the search page.
-            </p>
-          ) : (
-            <div className="h-scroll">
-              {saved.map(r => (
-                <div key={r.id} style={{
-                  minWidth: 220, padding: 14, borderRadius: 14,
-                  background: 'linear-gradient(135deg, rgba(200,149,108,0.10), rgba(255,255,255,0.02))',
-                  border: '1px solid rgba(200,149,108,0.28)', cursor: 'pointer',
-                  transition: 'transform 0.25s',
-                }}
-                  onClick={() => nav(`/rides/search?from=${encodeURIComponent(r.from_location.address || '')}&to=${encodeURIComponent(r.to_location.address || '')}`)}
-                  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-3px)'}
-                  onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', letterSpacing: 1, textTransform: 'uppercase', fontWeight: 700 }}>{r.label || 'Route'}</div>
-                      <div style={{ fontSize: 13, color: 'white', fontWeight: 700, marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.from_location.address}</div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>→ {r.to_location.address}</div>
-                    </div>
-                    <button onClick={(e) => { e.stopPropagation(); del(r.id); }} style={{
-                      border: 'none', background: 'transparent', color: 'rgba(255,255,255,0.55)', cursor: 'pointer', padding: 4,
-                    }}>
-                      <PiTrashBold size={14} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </Spotlight>
+    <Panel
+      hover
+      as="button"
+      className="w-full cursor-pointer text-left"
+      onClick={() => navigate(`/rides/${ride.id}`)}
+    >
+      <div className="mb-4 flex items-center gap-3">
+        <span className="grid size-11 place-items-center rounded-full bg-gradient-to-br from-accent to-accent-strong font-display font-bold text-white">
+          {driver?.full_name?.[0]?.toUpperCase() || "D"}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-semibold text-foreground">{driver?.full_name || "Driver"}</p>
+          <p className="text-xs text-muted-foreground">
+            {format(new Date(ride.departure_time), "MMM d · h:mm a")}
+          </p>
+        </div>
+        <Badge tone="success">{ride.seats_available} seats</Badge>
       </div>
-    </FadeUp>
+      <div className="flex items-start gap-3">
+        <div className="flex flex-col items-center gap-1 pt-1.5">
+          <span className="size-2.5 rounded-full bg-success" />
+          <span className="h-6 w-0.5 bg-border" />
+          <span className="size-2.5 rounded-full bg-accent" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium text-foreground">{from || "Pickup"}</p>
+          <p className="mt-3 truncate text-sm font-medium text-foreground">{to || "Drop"}</p>
+        </div>
+      </div>
+      <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+        <span className="font-mono text-2xl font-bold text-foreground">₹{ride.price_per_seat}</span>
+        <span className="text-sm text-muted-foreground">per seat</span>
+      </div>
+    </Panel>
   );
 }
 
 export default function StudentDashboard() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const reduce = useReducedMotion();
   const [rides, setRides] = useState<Ride[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [time, setTime] = useState(new Date());
   const [isSOSOpen, setIsSOSOpen] = useState(false);
-  const [emergencyPhone, setEmergencyPhone] = useState(user?.emergency_contact_phone || '');
+  const [emergencyPhone, setEmergencyPhone] = useState(user?.emergency_contact_phone || "");
   const [savingContact, setSavingContact] = useState(false);
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [saved, setSaved] = useState<SavedRoute[]>([]);
 
-  useEffect(() => { const t = setInterval(() => setTime(new Date()), 60000); return () => clearInterval(t); }, []);
+  useEffect(() => {
+    const t = setInterval(() => setTime(new Date()), 60000);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    getUserStats(user.id).then(setStats).catch(() => {});
+    getSavedRoutes(user.id).then(setSaved).catch(() => {});
+  }, [user]);
 
   useEffect(() => {
     (async () => {
       try {
-        const [r, b] = await Promise.all([getRides({ status: 'active' }), user ? getBookings(user.id) : []]);
+        const [r, b] = await Promise.all([
+          getRides({ status: "active" }),
+          user ? getBookings(user.id) : [],
+        ]);
         const now = new Date();
-        const activeRides = r.filter((ride: Ride) => new Date(ride.departure_time) > now);
-        setRides(activeRides.slice(0, 6));
-        const activeBookings = b.filter((booking: Booking) => {
-          const ride = (booking as any).ride;
-          if (!ride) return true;
-          return new Date(ride.departure_time) > now;
-        });
-        setBookings(activeBookings.slice(0, 3));
-      } catch (e) { console.error(e); }
-      finally { setLoading(false); }
+        setRides(r.filter((ride: Ride) => new Date(ride.departure_time) > now).slice(0, 6));
+        setBookings(
+          b
+            .filter((booking: Booking) => {
+              const ride = (booking as unknown as { ride?: Ride }).ride;
+              return !ride || new Date(ride.departure_time) > now;
+            })
+            .slice(0, 3),
+        );
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [user]);
 
   const hour = time.getHours();
-  const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
-  const timeStr = format(time, 'h:mm a');
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const rideCount = stats?.total_bookings || bookings.length;
+  const spent = stats?.total_spent || 0;
+  const safetyScore = Math.min(99, Math.max(60, 60 + rideCount * 3));
 
-  const stats = [
-    { label:'Rides Taken', value: bookings.length, icon:<PiCarBold size={22}/>, color:T.navy, bg:T.navy50 },
-    { label:'Money Saved', value: bookings.length*45, icon:<PiTrendUpBold size={22}/>, color:T.green, bg:T.greenLight, prefix:'₹' },
-    { label:'CO₂ Saved', value: bookings.length*2, icon:<PiLeafBold size={22}/>, color:'#2D8B55', bg:'#E3F2E8', suffix:'kg' },
-    { label:'Rating', value: 0, icon:<PiStarBold size={22}/>, color:T.orange, bg:T.orangeLight, custom: (user as any)?.rating?.toFixed(1) || '—' },
+  const statCards: {
+    label: string;
+    value?: number;
+    custom?: string;
+    prefix?: string;
+    suffix?: string;
+    tone: BadgeTone;
+    icon: ReactNode;
+  }[] = [
+    { label: "Rides taken", value: rideCount, tone: "info", icon: <Car className="size-5" /> },
+    { label: "Money saved", value: rideCount * 45, prefix: "₹", tone: "success", icon: <TrendingUp className="size-5" /> },
+    { label: "CO₂ saved", value: rideCount * 2, suffix: "kg", tone: "success", icon: <Leaf className="size-5" /> },
+    { label: "Rating", custom: (user as unknown as { rating?: number })?.rating?.toFixed(1) || "—", tone: "warning", icon: <Star className="size-5" /> },
   ];
 
   const quickActions = [
-    { label:'Find Ride', icon:<PiMagnifyingGlassBold size={24}/>, to:'/rides/search', color:T.navy, bg:T.navy50, desc:'Search available rides' },
-    { label:'Create Ride', icon:<PiPlusBold size={24}/>, to:'/rides/create', color:T.green, bg:T.greenLight, desc:'Offer a ride' },
-    { label:'My Bookings', icon:<PiCalendarCheckBold size={24}/>, to:'/bookings', color:T.orange, bg:T.orangeLight, desc:`${bookings.length} active` },
-    { label:'Messages', icon:<PiChatCircleBold size={24}/>, to:'/chat', color:T.gold, bg:T.gold50, desc:'Chat with riders' },
+    { label: "Find a ride", desc: "Search your corridor", to: "/rides/search", tone: "info" as BadgeTone, icon: <Search className="size-5" /> },
+    { label: "Offer a ride", desc: "Share your trip", to: "/rides/create", tone: "success" as BadgeTone, icon: <Plus className="size-5" /> },
+    { label: "My bookings", desc: `${bookings.length} active`, to: "/bookings", tone: "warning" as BadgeTone, icon: <Calendar className="size-5" /> },
+    { label: "Messages", desc: "Chat with drivers", to: "/bookings", tone: "accent" as BadgeTone, icon: <MessageCircle className="size-5" /> },
   ];
+
+  const savingsSeries =
+    bookings.length > 0
+      ? Array.from({ length: 7 }, (_, i) => Math.max(20, (bookings[i]?.total_price || [80, 60, 120, 90, 140, 70, 180][i]) * 0.6))
+      : [80, 60, 120, 90, 140, 70, 180];
 
   const handleSaveEmergency = async () => {
     if (!emergencyPhone || !user) return;
     setSavingContact(true);
-    try { await updateProfile(user.id, { emergency_contact_phone: emergencyPhone }); } catch (e) { console.error(e); }
-    finally { setSavingContact(false); }
+    try {
+      await updateProfile(user.id, { emergency_contact_phone: emergencyPhone });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSavingContact(false);
+    }
   };
 
+  const activity = [
+    ...bookings.slice(0, 4).map((b) => ({
+      icon: <Car className="size-4" />,
+      label: `Booked ride · ${b.seats_booked} seat${b.seats_booked !== 1 ? "s" : ""}`,
+      sub: `₹${b.total_price} · ${b.status}`,
+      at: new Date(b.created_at || Date.now()),
+      tone: (b.status === "confirmed" ? "success" : b.status === "cancelled" ? "danger" : "accent") as BadgeTone,
+    })),
+    ...rides.slice(0, 3).map((r) => ({
+      icon: <Navigation className="size-4" />,
+      label: `New ride: ${(r as unknown as { driver?: { full_name?: string } }).driver?.full_name?.split(" ")[0] || "driver"}`,
+      sub: `${r.seats_available} seats · ₹${r.price_per_seat}`,
+      at: new Date(r.departure_time),
+      tone: "info" as BadgeTone,
+    })),
+  ]
+    .sort((a, b) => b.at.getTime() - a.at.getTime())
+    .slice(0, 6);
+
   return (
-    <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }}
-      style={{
-        minHeight:'100vh',
-        background: 'radial-gradient(ellipse at top, #152240 0%, #0A1128 60%, #050914 100%)',
-        fontFamily:FONT.body, color:'white', position:'relative',
-      }}>
-      {/* ═══ HERO BANNER ═══ */}
-      <div className="mobile-hero" style={{
-        background: 'radial-gradient(ellipse at top, #152240 0%, #0A1128 60%, #050914 100%)',
-        padding: '48px 24px 72px', position: 'relative', overflow: 'hidden',
-      }}>
-        <div className="aurora-wrap">
-          <div className="aurora-blob aurora-1" />
-          <div className="aurora-blob aurora-2" />
-          <div className="noise-overlay" />
-        </div>
-
-        <div style={{ maxWidth:1200, margin:'0 auto', position:'relative', zIndex:2 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:16 }}>
-            <div>
-              {/* Role badge */}
-              <motion.div initial={{ opacity:0, y:-6 }} animate={{ opacity:1, y:0 }}
-                style={{
-                  display:'inline-flex', alignItems:'center', gap:7,
-                  padding:'5px 12px', borderRadius:100,
-                  background:'rgba(200,149,108,0.14)', border:'1px solid rgba(200,149,108,0.28)',
-                  marginBottom:14,
-                }}>
-                <div style={{ width:6, height:6, borderRadius:'50%', background:T.gold, boxShadow:`0 0 8px ${T.gold}` }} className="ring-pulse" />
-                <span style={{ fontSize:11, color:T.gold, fontWeight:700, letterSpacing:1.5, textTransform:'uppercase' }}>
-                  Rider Portal · JC Bose UST
-                </span>
-              </motion.div>
-
-              <motion.p initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.05 }}
-                style={{ color:'rgba(255,255,255,0.6)', fontSize:14, fontWeight:500, letterSpacing:'0.01em' }}>
-                {greeting},
-              </motion.p>
-              <motion.h1 initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
-                style={{
-                  fontSize:'clamp(30px, 5vw, 44px)', fontWeight:900, color:'#FFFFFF',
-                  fontFamily:FONT.heading, letterSpacing:'-0.03em', lineHeight:1.05, marginTop:4,
-                }}>
-                {user?.full_name?.split(' ')[0] || 'Student'}<span style={{
-                  background: `linear-gradient(135deg, ${T.gold}, #F5C99B)`,
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                }}>.</span>
-              </motion.h1>
-              <motion.p initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.2 }}
-                style={{ color:'rgba(255,255,255,0.6)', fontSize:14, marginTop:8, display:'flex', alignItems:'center', gap:6 }}>
-                <PiClockBold size={14}/> {timeStr} · Your campus commute, simplified
-              </motion.p>
+    <PageShell>
+      <Container size="7xl">
+        {/* greeting hero */}
+        <Reveal>
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-light p-7 text-white sm:p-9">
+            <div className="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full bg-accent/15 blur-3xl" />
+            <div className="relative flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5">
+                  <span className="size-1.5 rounded-full bg-accent" />
+                  <span className="text-xs font-semibold uppercase tracking-[0.14em] text-white/80">
+                    Rider portal · JC Bose UST
+                  </span>
+                </div>
+                <p className="mt-4 text-sm text-white/60">{greeting},</p>
+                <h1 className="font-display text-4xl font-extrabold tracking-tight sm:text-5xl">
+                  {user?.full_name?.split(" ")[0] || "Student"}
+                  <span className="text-accent">.</span>
+                </h1>
+                <p className="mt-2 flex items-center gap-1.5 text-sm text-white/60">
+                  <Clock className="size-4" /> {format(time, "h:mm a")} · your campus commute, simplified
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSOSOpen(true)}
+                className="inline-flex items-center gap-2 rounded-full bg-danger px-6 py-3 text-sm font-bold uppercase tracking-wide text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
+              >
+                <TriangleAlert className="size-4" /> SOS
+              </button>
             </div>
-            {/* SOS Button */}
-            <motion.button whileHover={{ scale:1.05, boxShadow:'0 8px 30px rgba(211,93,93,0.55)' }} whileTap={{ scale:0.95 }} onClick={()=>setIsSOSOpen(true)}
-              style={{
-                display:'flex', alignItems:'center', gap:8, padding:'11px 24px', borderRadius:T.rFull,
-                background:`linear-gradient(135deg, ${T.red}, #B24C4C)`, color:'white', border:'none',
-                fontSize:13, fontWeight:800, cursor:'pointer', letterSpacing:1.5, textTransform:'uppercase',
-                boxShadow:`0 6px 20px rgba(211,93,93,0.45), inset 0 1px 0 rgba(255,255,255,0.2)`,
-                fontFamily:FONT.heading, transition:'all 0.3s',
-              }}>
-              <PiWarningBold size={16}/>SOS
-            </motion.button>
           </div>
-        </div>
-      </div>
+        </Reveal>
 
-      <div style={{ maxWidth:1200, margin:'-36px auto 0', padding:'0 24px 80px', position:'relative', zIndex:3 }}>
-
-        {/* ═══ STATS CARDS ═══ */}
-        <div className="mobile-stat-grid" style={{
-          display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:14, marginBottom:36,
-        }}>
-          {stats.map((s,i) => (
-            <motion.div key={i}
-              initial={{ opacity:0, y:24 }} animate={{ opacity:1, y:0 }}
-              transition={{ delay:0.15+i*0.08, ease:'easeOut' }}
-              whileHover={{ y:-6, boxShadow:'0 24px 60px rgba(0,0,0,0.35)' }}
-              className="bento"
-              style={{
-                background:'rgba(255,255,255,0.04)',
-                border:'1px solid rgba(255,255,255,0.08)',
-                borderRadius:18, padding:'18px 16px',
-                backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)',
-                transition:'all 0.35s cubic-bezier(0.25,0.46,0.45,0.94)', cursor:'default', overflow:'hidden',
-              }}>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <p style={{ fontSize:11, color:'rgba(255,255,255,0.5)', fontWeight:600, letterSpacing:1.5, textTransform:'uppercase', marginBottom:8 }}>{s.label}</p>
-                  <p style={{
-                    fontSize:'clamp(22px, 4.5vw, 30px)', fontWeight:900, color:'white',
-                    fontFamily:FONT.heading, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
-                    letterSpacing:'-0.02em',
-                  }}>
-                    {s.custom || <AnimNum value={s.value} prefix={s.prefix || ''}/>}
-                    {s.suffix && <span style={{ fontSize:14, fontWeight:500, color:'rgba(255,255,255,0.55)', marginLeft:2 }}>{s.suffix}</span>}
+        {/* stats */}
+        <RevealGroup className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {statCards.map((s) => (
+            <RevealItem key={s.label}>
+              <Panel className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{s.label}</p>
+                  <p className="mt-1.5 font-mono text-2xl font-bold text-foreground sm:text-3xl">
+                    {s.custom ?? <CountUp value={s.value as number} prefix={s.prefix} />}
+                    {s.suffix && <span className="ml-0.5 text-sm text-muted-foreground">{s.suffix}</span>}
                   </p>
                 </div>
-                <div style={{
-                  width:44, height:44, borderRadius:14,
-                  background:`linear-gradient(135deg, ${s.color}, ${s.color}88)`,
-                  display:'flex', alignItems:'center', justifyContent:'center',
-                  color:'white', flexShrink:0,
-                  boxShadow:`0 8px 20px ${s.color}55, inset 0 1px 0 rgba(255,255,255,0.2)`,
-                }}>
+                <span className={cn("grid size-11 place-items-center rounded-2xl", TILE[s.tone])} aria-hidden>
                   {s.icon}
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* ═══ QUICK ACTIONS ═══ */}
-        <FadeUp delay={0.05}>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:18 }}>
-            <h2 style={{ fontSize:22, fontWeight:800, color:'white', fontFamily:FONT.heading, letterSpacing:'-0.02em' }}>
-              Quick <span style={{ background:`linear-gradient(135deg, ${T.gold}, #F5C99B)`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>Actions</span>
-            </h2>
-          </div>
-        </FadeUp>
-        <div className="mobile-grid-2" style={{
-          display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:14, marginBottom:40,
-        }}>
-          {quickActions.map((a,i) => (
-            <FadeUp key={i} delay={0.08+i*0.06}>
-              <motion.div
-                whileHover={{ y:-6 }}
-                whileTap={{ scale:0.98 }}
-                onClick={() => navigate(a.to)}
-                className="bento shine-hover"
-                style={{
-                  background:'rgba(255,255,255,0.04)',
-                  border:'1px solid rgba(255,255,255,0.08)',
-                  borderRadius:18, padding:'18px 16px', cursor:'pointer',
-                  backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)',
-                  transition:'all 0.35s cubic-bezier(0.25,0.46,0.45,0.94)',
-                  display:'flex', alignItems:'center', gap:14, overflow:'hidden',
-                }}>
-                <div style={{
-                  width:48, height:48, borderRadius:14,
-                  background:`linear-gradient(135deg, ${a.color}, ${a.color}aa)`,
-                  display:'flex', alignItems:'center', justifyContent:'center', color:'white',
-                  flexShrink:0, boxShadow:`0 8px 20px ${a.color}44, inset 0 1px 0 rgba(255,255,255,0.2)`,
-                }}>
-                  {a.icon}
-                </div>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <h3 style={{ fontSize:15, fontWeight:700, color:'white', fontFamily:FONT.heading, letterSpacing:'-0.01em' }}>{a.label}</h3>
-                  <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)', marginTop:3, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{a.desc}</p>
-                </div>
-                <PiArrowRightBold size={14} color="rgba(255,255,255,0.4)" style={{ flexShrink:0 }}/>
-              </motion.div>
-            </FadeUp>
-          ))}
-        </div>
-
-        {/* ═══ PERSONAL SNAPSHOT + SAVED ROUTES ═══ */}
-        <PersonalSnapshotRow />
-
-        {/* ═══ INSIGHTS ROW: Savings chart + Trending routes ═══ */}
-        <FadeUp delay={0.06}>
-          <div className="mobile-widgets-row" style={{
-            display:'grid', gridTemplateColumns:'1.35fr 1fr', gap:16, marginBottom:16,
-          }}>
-            {/* 7-day savings chart */}
-            <div className="bento" style={{
-              background:'rgba(255,255,255,0.04)',
-              border:'1px solid rgba(255,255,255,0.08)',
-              borderRadius:22, padding:24,
-              backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)',
-            }}>
-              <ImpactChart
-                title="Your savings · last 7 days"
-                sublabel="vs. private cab · estimated"
-                values={(() => {
-                  // Derive from booking price history (₹45/booking approx). Weekly rolling.
-                  const b = bookings.slice(0, 7);
-                  const pattern = [80, 60, 120, 90, 140, 70, 180];
-                  return b.length > 0
-                    ? Array.from({ length: 7 }, (_, i) => Math.max(20, (b[i]?.total_price || pattern[i]) * 0.6))
-                    : pattern;
-                })()}
-                unit="₹"
-                color={T.gold}
-              />
-            </div>
-
-            {/* Trending routes */}
-            <div className="bento" style={{
-              background:'rgba(255,255,255,0.04)',
-              border:'1px solid rgba(255,255,255,0.08)',
-              borderRadius:22, padding:20,
-              backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)',
-            }}>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
-                <h3 style={{ fontSize:14, fontWeight:800, color:'white', fontFamily:FONT.heading, letterSpacing:'-0.01em', display:'flex', alignItems:'center', gap:8 }}>
-                  <PiLightningBold size={15} color={T.gold}/>
-                  Trending routes
-                </h3>
-                <span style={{ fontSize:10, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:1, fontWeight:700 }}>Today</span>
-              </div>
-              <TrendingRoutes
-                onPick={(r) => navigate(`/rides/search?from=${encodeURIComponent(r.from)}&to=${encodeURIComponent(r.to)}`)}
-              />
-            </div>
-          </div>
-        </FadeUp>
-
-        {/* ═══ LIVE WIDGETS ROW ═══ */}
-        <FadeUp delay={0.08}>
-          <div className="mobile-widgets-row" style={{
-            display:'grid', gridTemplateColumns:'1.35fr 1fr', gap:16, marginBottom:40,
-          }}>
-            {/* Live Campus Map — CursorTilt */}
-            <CursorTilt style={{
-              background:'rgba(255,255,255,0.04)',
-              border:'1px solid rgba(255,255,255,0.08)',
-              borderRadius:22, padding:0,
-              backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)',
-              overflow:'hidden', display:'flex', flexDirection:'column',
-            }}>
-              <div style={{ padding:'18px 20px 14px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                <h3 style={{ fontSize:15, fontWeight:800, color:'white', fontFamily:FONT.heading, letterSpacing:'-0.01em', display:'flex', alignItems:'center', gap:10 }}>
-                  <div style={{
-                    width:30, height:30, borderRadius:10,
-                    background:`linear-gradient(135deg, ${T.blue}, ${T.navy})`, color:'white',
-                    display:'flex', alignItems:'center', justifyContent:'center',
-                    boxShadow:`0 6px 14px ${T.blue}55`,
-                  }}><PiMapPinBold size={14}/></div>
-                  Live Campus Map
-                </h3>
-                <span style={{ fontSize:11, color:'rgba(255,255,255,0.5)', letterSpacing:1, textTransform:'uppercase', fontWeight:600 }}>
-                  JC Bose UST · Faridabad
                 </span>
-              </div>
-              <div style={{ padding:'0 16px 16px', flex:1, minHeight:280 }}>
-                <LiveCampusMap />
-              </div>
-            </CursorTilt>
+              </Panel>
+            </RevealItem>
+          ))}
+        </RevealGroup>
 
-            {/* Recent Activity */}
-            <CursorTilt max={5} style={{
-              background:'rgba(255,255,255,0.04)',
-              border:'1px solid rgba(255,255,255,0.08)',
-              borderRadius:22, padding:20,
-              backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)',
-              display:'flex', flexDirection:'column',
-            }}>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
-                <h3 style={{ fontSize:15, fontWeight:800, color:'white', fontFamily:FONT.heading, letterSpacing:'-0.01em', display:'flex', alignItems:'center', gap:10 }}>
-                  <div style={{
-                    width:30, height:30, borderRadius:10,
-                    background:`linear-gradient(135deg, ${T.gold}, ${T.goldDark})`, color:'white',
-                    display:'flex', alignItems:'center', justifyContent:'center',
-                    boxShadow:`0 6px 14px ${T.gold}55`,
-                  }}><PiClockBold size={14}/></div>
-                  Recent Activity
-                </h3>
-                <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'3px 10px', borderRadius:100, background:`${T.green}22`, border:`1px solid ${T.green}55` }}>
-                  <div className="ring-pulse" style={{ width:5, height:5, borderRadius:'50%', background:T.green }}/>
-                  <span style={{ fontSize:10, color:T.green, fontWeight:800, letterSpacing:1, textTransform:'uppercase' }}>Live</span>
+        {/* quick actions */}
+        <RevealGroup className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {quickActions.map((a) => (
+            <RevealItem key={a.label}>
+              <Panel
+                hover
+                as="button"
+                className="flex w-full cursor-pointer items-center gap-4 text-left"
+                onClick={() => navigate(a.to)}
+              >
+                <span className={cn("grid size-12 place-items-center rounded-2xl", TILE[a.tone])} aria-hidden>
+                  {a.icon}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-display font-bold text-foreground">{a.label}</h3>
+                  <p className="truncate text-sm text-muted-foreground">{a.desc}</p>
                 </div>
-              </div>
-              <div style={{ flex:1 }}>
-                <RecentActivity bookings={bookings} rides={rides} />
-              </div>
-            </CursorTilt>
-          </div>
-        </FadeUp>
+                <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+              </Panel>
+            </RevealItem>
+          ))}
+        </RevealGroup>
 
-        {/* ═══ AVAILABLE RIDES ═══ */}
-        <FadeUp delay={0.1}>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:18 }}>
-            <h2 style={{ fontSize:22, fontWeight:800, color:'white', fontFamily:FONT.heading, letterSpacing:'-0.02em' }}>
-              Available <span style={{ background:`linear-gradient(135deg, ${T.gold}, #F5C99B)`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>Rides</span>
-            </h2>
-            <Link to="/rides/search" style={{
-              fontSize:13, fontWeight:600, color:T.gold, textDecoration:'none',
-              display:'flex', alignItems:'center', gap:4, transition:'transform 0.3s',
-            }}
-              onMouseEnter={e=>{e.currentTarget.style.transform='translateX(3px)';}}
-              onMouseLeave={e=>{e.currentTarget.style.transform='translateX(0)';}}>
-              View All <PiArrowRightBold size={14}/>
-            </Link>
-          </div>
-        </FadeUp>
-
-        {loading ? (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))', gap:16 }}>
-            {[1,2,3].map(i => (
-              <div key={i} style={{
-                height:180, borderRadius:20,
-                background:'linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.06), rgba(255,255,255,0.03))',
-                backgroundSize:'200% 100%', animation:'shimmer 1.5s infinite',
-                border:'1px solid rgba(255,255,255,0.06)',
-              }}/>
-            ))}
-          </div>
-        ) : rides.length === 0 ? (
-          <FadeUp>
-            <div style={{
-              textAlign:'center', padding:'56px 24px', borderRadius:22,
-              background:'rgba(255,255,255,0.03)',
-              border:'1px solid rgba(255,255,255,0.06)',
-              backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)',
-              position:'relative', overflow:'hidden',
-            }}>
-              <div style={{ position:'absolute', top:-40, right:-40, width:180, height:180, borderRadius:'50%', background:`radial-gradient(circle, ${T.gold}22, transparent 70%)`, filter:'blur(20px)' }} />
-              <div style={{
-                position:'relative', width:72, height:72, borderRadius:20,
-                background:`linear-gradient(135deg, ${T.gold}, ${T.goldDark})`,
-                display:'flex', alignItems:'center', justifyContent:'center',
-                margin:'0 auto 20px',
-                boxShadow:`0 12px 30px ${T.gold}44, inset 0 1px 0 rgba(255,255,255,0.3)`,
-              }}>
-                <PiCarBold size={30} color="white"/>
-              </div>
-              <p style={{ fontSize:19, fontWeight:800, color:'white', fontFamily:FONT.heading, letterSpacing:'-0.01em' }}>No upcoming rides yet</p>
-              <p style={{ fontSize:14, color:'rgba(255,255,255,0.55)', marginTop:8, maxWidth:340, margin:'8px auto 0' }}>Check back later or search for rides departing today from campus.</p>
-              <motion.button whileHover={{ scale:1.03, y:-2 }} whileTap={{ scale:0.97 }} onClick={()=>navigate('/rides/search')}
-                style={{
-                  marginTop:24, padding:'13px 32px', borderRadius:100, border:'none',
-                  background:`linear-gradient(135deg, ${T.gold}, ${T.goldDark})`, color:'white',
-                  fontSize:14, fontWeight:700, cursor:'pointer', fontFamily:FONT.heading,
-                  boxShadow:`0 10px 30px ${T.gold}44, inset 0 1px 0 rgba(255,255,255,0.3)`,
-                  transition:'all 0.3s', display:'inline-flex', alignItems:'center', gap:8,
-                }}>
-                Search Rides <PiArrowRightBold size={14}/>
-              </motion.button>
-            </div>
-          </FadeUp>
-        ) : (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(320px,1fr))', gap:16 }}>
-            {rides.map((ride,i) => (
-              <FadeUp key={ride.id} delay={i*0.06}>
-                <motion.div whileHover={{ y:-6 }}
-                  onClick={() => navigate(`/rides/${ride.id}`)}
-                  className="bento"
-                  style={{
-                    background:'rgba(255,255,255,0.04)',
-                    border:'1px solid rgba(255,255,255,0.08)',
-                    borderRadius:20, padding:22, cursor:'pointer',
-                    backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)',
-                    transition:'all 0.35s cubic-bezier(0.25,0.46,0.45,0.94)',
-                  }}>
-                  {/* Driver info */}
-                  <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
-                    <div style={{
-                      width:46, height:46, borderRadius:'50%',
-                      background:`linear-gradient(135deg, ${T.gold}, ${T.goldDark})`,
-                      display:'flex', alignItems:'center', justifyContent:'center',
-                      color:'white', fontSize:16, fontWeight:800, fontFamily:FONT.heading,
-                      boxShadow:`0 6px 16px ${T.gold}44`,
-                    }}>
-                      {(ride as any).driver?.full_name?.[0]?.toUpperCase() || 'D'}
-                    </div>
-                    <div style={{ flex:1, minWidth:0 }}>
-                      <p style={{ fontSize:15, fontWeight:700, color:'white', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{(ride as any).driver?.full_name || 'Driver'}</p>
-                      <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)' }}>{format(new Date(ride.departure_time), 'MMM d · h:mm a')}</p>
-                    </div>
-                    <span style={{
-                      padding:'5px 12px', borderRadius:100, fontSize:11, fontWeight:700,
-                      background:`${T.green}22`, color:T.green, border:`1px solid ${T.green}55`,
-                    }}>
-                      {ride.seats_available} seats
-                    </span>
-                  </div>
-                  {/* Route */}
-                  <div style={{ display:'flex', alignItems:'flex-start', gap:12, marginBottom:14 }}>
-                    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, paddingTop:4 }}>
-                      <div style={{ width:9, height:9, borderRadius:'50%', background:T.green, boxShadow:`0 0 8px ${T.green}` }}/>
-                      <div style={{ width:2, height:26, background:'rgba(255,255,255,0.12)' }}/>
-                      <div style={{ width:9, height:9, borderRadius:'50%', background:T.gold, boxShadow:`0 0 8px ${T.gold}` }}/>
-                    </div>
-                    <div style={{ flex:1, minWidth:0 }}>
-                      <p style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.85)', marginBottom:10, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                        {typeof ride.from_location === 'object' ? ride.from_location.address || 'Pickup' : ride.from_location}
-                      </p>
-                      <p style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.85)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                        {typeof ride.to_location === 'object' ? ride.to_location.address || 'Drop' : ride.to_location}
-                      </p>
-                    </div>
-                  </div>
-                  {/* Price */}
-                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', paddingTop:14, borderTop:'1px solid rgba(255,255,255,0.08)' }}>
-                    <span style={{
-                      fontSize:22, fontWeight:900, fontFamily:FONT.heading,
-                      background:`linear-gradient(135deg, ${T.gold}, #F5C99B)`,
-                      WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent',
-                    }}>₹{ride.price_per_seat}</span>
-                    <span style={{ fontSize:12, color:'rgba(255,255,255,0.5)', fontWeight:500 }}>per seat</span>
-                  </div>
-                </motion.div>
-              </FadeUp>
-            ))}
-          </div>
-        )}
-
-        {/* ═══ EMERGENCY CONTACT ═══ */}
-        <FadeUp delay={0.1}>
-          <div style={{
-            marginTop:48, borderRadius:22, padding:28,
-            background:'linear-gradient(135deg, rgba(211,93,93,0.10), rgba(255,255,255,0.03))',
-            border:`1px solid rgba(211,93,93,0.25)`,
-            backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)',
-            position:'relative', overflow:'hidden',
-          }}>
-            <div style={{ position:'absolute', top:-40, right:-40, width:180, height:180, borderRadius:'50%', background:`radial-gradient(circle, ${T.red}22, transparent 70%)`, filter:'blur(24px)' }} />
-            <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:18, position:'relative', zIndex:1 }}>
-              <div style={{
-                width:48, height:48, borderRadius:14,
-                background:`linear-gradient(135deg, ${T.red}, #B24C4C)`,
-                display:'flex', alignItems:'center', justifyContent:'center', color:'white',
-                boxShadow:`0 8px 20px ${T.red}44, inset 0 1px 0 rgba(255,255,255,0.2)`,
-              }}>
-                <PiWarningBold size={22}/>
-              </div>
+        {/* snapshot + saved routes */}
+        <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_1.6fr]">
+          <Reveal>
+            <Panel className="flex items-center gap-5">
+              <ScoreRing value={safetyScore} />
               <div>
-                <h3 style={{ fontSize:17, fontWeight:800, color:'white', fontFamily:FONT.heading, letterSpacing:'-0.01em' }}>Emergency Contact</h3>
-                <p style={{ fontSize:13, color:'rgba(255,255,255,0.6)' }}>Your live location is shared with this number during SOS.</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Safety score</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {rideCount === 0
+                    ? "Book your first ride — your score grows with every safe trip."
+                    : "Keep sharing — your score climbs with every completed ride."}
+                </p>
               </div>
-            </div>
-            <div className="mobile-emergency-row" style={{ display:'flex', gap:12, alignItems:'center', position:'relative', zIndex:1 }}>
-              <input value={emergencyPhone} onChange={e=>setEmergencyPhone(e.target.value)}
-                placeholder="+91 XXXXX XXXXX" type="tel" aria-label="Emergency contact phone"
-                style={{
-                  flex:1, padding:'14px 18px', borderRadius:14,
-                  border:'1px solid rgba(255,255,255,0.12)', background:'rgba(0,0,0,0.25)',
-                  fontSize:14, outline:'none', fontFamily:FONT.body, color:'white', transition:'all 0.3s',
-                }}
-                onFocus={e=>{e.currentTarget.style.borderColor=T.gold; e.currentTarget.style.boxShadow=`0 0 0 3px ${T.gold}22`;}}
-                onBlur={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.12)'; e.currentTarget.style.boxShadow='none';}}/>
-              <motion.button whileHover={{ scale:1.03, y:-2 }} whileTap={{ scale:0.97 }} onClick={handleSaveEmergency} disabled={savingContact}
-                style={{
-                  padding:'14px 30px', borderRadius:14, border:'none',
-                  background:`linear-gradient(135deg, ${T.gold}, ${T.goldDark})`, color:'white',
-                  fontSize:14, fontWeight:800, cursor:'pointer', fontFamily:FONT.heading,
-                  opacity:savingContact?0.6:1, transition:'all 0.3s',
-                  boxShadow:`0 8px 24px ${T.gold}44, inset 0 1px 0 rgba(255,255,255,0.3)`,
-                  letterSpacing:0.5,
-                }}>
-                {savingContact ? 'Saving…' : 'Save'}
-              </motion.button>
-            </div>
-          </div>
-        </FadeUp>
+            </Panel>
+          </Reveal>
+          <Reveal delay={0.05}>
+            <Panel className="h-full">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="flex items-center gap-2 font-display font-bold text-foreground">
+                  <Bookmark className="size-4 text-accent" /> Saved routes
+                </h3>
+                <span className="text-xs uppercase tracking-wide text-muted-foreground">Tap to search</span>
+              </div>
+              {saved.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  No saved routes yet — bookmark one from the search page.
+                </p>
+              ) : (
+                <div className="flex gap-3 overflow-x-auto pb-2">
+                  {saved.map((r) => (
+                    <div
+                      key={r.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() =>
+                        navigate(
+                          `/rides/search?from=${encodeURIComponent(r.from_location.address || "")}&to=${encodeURIComponent(r.to_location.address || "")}`,
+                        )
+                      }
+                      className="min-w-[220px] cursor-pointer rounded-2xl border border-border bg-muted/50 p-4 transition-transform hover:-translate-y-0.5"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            {r.label || "Route"}
+                          </p>
+                          <p className="mt-1 truncate text-sm font-semibold text-foreground">{r.from_location.address}</p>
+                          <p className="truncate text-sm text-muted-foreground">→ {r.to_location.address}</p>
+                        </div>
+                        <button
+                          type="button"
+                          aria-label="Delete saved route"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteSavedRoute(r.id);
+                            setSaved((s) => s.filter((x) => x.id !== r.id));
+                          }}
+                          className="text-muted-foreground hover:text-danger"
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Panel>
+          </Reveal>
+        </div>
 
-        {/* ═══ PLATFORM FEATURES ═══ */}
-        <FadeUp delay={0.15}>
-          <div style={{ marginTop:48 }}>
-            <h2 style={{ fontSize:22, fontWeight:800, color:'white', fontFamily:FONT.heading, marginBottom:18, letterSpacing:'-0.02em' }}>
-              Platform <span style={{ background:`linear-gradient(135deg, ${T.gold}, #F5C99B)`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>Features</span>
-            </h2>
-            <div className="mobile-feature-grid" style={{
-              display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))', gap:14,
-            }}>
-              {[
-                { icon:<PiShieldCheckBold size={22}/>, title:'Verified Only', desc:'JC Bose UST email + document check for every user.', color:T.green },
-                { icon:<PiNavigationArrowBold size={22}/>, title:'Live Tracking', desc:'Real-time GPS on every ride, shared with your contacts.', color:T.blue },
-                { icon:<PiGlobeBold size={22}/>, title:'Campus Routes', desc:'Optimised for the JC Bose gate → city routes.', color:T.orange },
-                { icon:<PiLightningBold size={22}/>, title:'Instant Match', desc:'Smart matching with nearby verified drivers.', color:T.gold },
-              ].map((f,i)=>(
-                <FadeUp key={i} delay={0.06*i}>
-                  <motion.div whileHover={{ y:-5 }}
-                    className="bento"
-                    style={{
-                      background:'rgba(255,255,255,0.04)',
-                      border:'1px solid rgba(255,255,255,0.08)',
-                      borderRadius:18, padding:22,
-                      backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)',
-                      display:'flex', alignItems:'flex-start', gap:14,
-                      transition:'all 0.35s', cursor:'default', overflow:'hidden',
-                    }}>
-                    <div style={{
-                      width:48, height:48, borderRadius:14,
-                      background:`linear-gradient(135deg, ${f.color}, ${f.color}aa)`,
-                      display:'flex', alignItems:'center', justifyContent:'center', color:'white',
-                      flexShrink:0, boxShadow:`0 8px 20px ${f.color}44, inset 0 1px 0 rgba(255,255,255,0.2)`,
-                    }}>
-                      {f.icon}
-                    </div>
-                    <div style={{ flex:1, minWidth:0 }}>
-                      <h4 style={{ fontSize:15, fontWeight:800, color:'white', fontFamily:FONT.heading, letterSpacing:'-0.01em' }}>{f.title}</h4>
-                      <p style={{ fontSize:13, color:'rgba(255,255,255,0.55)', marginTop:4, lineHeight:1.55 }}>{f.desc}</p>
-                    </div>
-                  </motion.div>
-                </FadeUp>
+        {/* insights */}
+        <div className="mt-4 grid gap-4 lg:grid-cols-[1.35fr_1fr]">
+          <Reveal>
+            <Panel>
+              <div className="mb-1 flex items-center justify-between">
+                <h3 className="font-display font-bold text-foreground">Your savings · last 7 days</h3>
+                <span className="text-xs text-muted-foreground">vs. private cab</span>
+              </div>
+              <p className="mb-4 text-sm text-muted-foreground">Estimated fuel-split savings</p>
+              <Sparkbars values={savingsSeries} />
+            </Panel>
+          </Reveal>
+          <Reveal delay={0.05}>
+            <Panel>
+              <h3 className="mb-3 flex items-center gap-2 font-display font-bold text-foreground">
+                <Zap className="size-4 text-accent" /> Trending routes
+              </h3>
+              <ul className="flex flex-col gap-2">
+                {TRENDING.map((t) => (
+                  <li key={t.from}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate(`/rides/search?from=${encodeURIComponent(t.from)}&to=${encodeURIComponent(t.to)}`)
+                      }
+                      className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-muted"
+                    >
+                      <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+                        <MapPin className="size-4 text-muted-foreground" />
+                        {t.from} → {t.to.replace("JC Bose UST", "Campus")}
+                      </span>
+                      <span className="font-mono text-xs text-muted-foreground">{t.count}×</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </Panel>
+          </Reveal>
+        </div>
+
+        {/* map + activity */}
+        <div className="mt-4 grid gap-4 lg:grid-cols-[1.35fr_1fr]">
+          <Reveal>
+            <Panel inset="none" className="overflow-hidden">
+              <div className="flex items-center justify-between p-5">
+                <h3 className="flex items-center gap-2 font-display font-bold text-foreground">
+                  <MapPin className="size-4 text-accent" /> Live campus map
+                </h3>
+                <span className="text-xs uppercase tracking-wide text-muted-foreground">Faridabad</span>
+              </div>
+              <LiveMap className="h-72 w-full border-t border-border" />
+            </Panel>
+          </Reveal>
+          <Reveal delay={0.05}>
+            <Panel>
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="flex items-center gap-2 font-display font-bold text-foreground">
+                  <Clock className="size-4 text-accent" /> Recent activity
+                </h3>
+                <Badge tone="success">Live</Badge>
+              </div>
+              {activity.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  Your activity appears here once you book or search a ride.
+                </p>
+              ) : (
+                <ul className="flex flex-col gap-2.5">
+                  {activity.map((it, i) => (
+                    <li key={i} className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-3 py-2.5">
+                      <span className={cn("grid size-8 place-items-center rounded-lg", TILE[it.tone])}>{it.icon}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-foreground">{it.label}</p>
+                        <p className="truncate text-xs text-muted-foreground">{it.sub}</p>
+                      </div>
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        {formatDistanceToNow(it.at, { addSuffix: true }).replace("about ", "")}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Panel>
+          </Reveal>
+        </div>
+
+        {/* available rides */}
+        <div className="mt-8 flex items-center justify-between">
+          <h2 className="font-display text-2xl font-bold text-foreground">Available rides</h2>
+          <Link to="/rides/search" className="inline-flex items-center gap-1 text-sm font-semibold text-accent hover:underline">
+            View all <ArrowRight className="size-4" />
+          </Link>
+        </div>
+        <div className="mt-4">
+          {loading ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-44 animate-pulse rounded-2xl border border-border bg-muted" />
               ))}
             </div>
-          </div>
-        </FadeUp>
-      </div>
+          ) : rides.length === 0 ? (
+            <Panel className="flex flex-col items-center py-14 text-center">
+              <span className="grid size-16 place-items-center rounded-2xl bg-accent-soft text-accent-strong">
+                <Car className="size-7" />
+              </span>
+              <p className="mt-5 font-display text-lg font-bold text-foreground">No upcoming rides yet</p>
+              <p className="mt-1.5 max-w-sm text-sm text-muted-foreground">
+                Check back soon, or search for rides departing today from campus.
+              </p>
+              <Button className="mt-6" onClick={() => navigate("/rides/search")} icon={<Search className="size-4" />}>
+                Search rides
+              </Button>
+            </Panel>
+          ) : (
+            <RevealGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {rides.map((ride) => (
+                <RevealItem key={ride.id}>
+                  <RideCard ride={ride} />
+                </RevealItem>
+              ))}
+            </RevealGroup>
+          )}
+        </div>
 
-      <SOSModal isOpen={isSOSOpen} onClose={()=>setIsSOSOpen(false)} />
-    </motion.div>
+        {/* emergency contact */}
+        <Reveal>
+          <Panel className="mt-8 border-danger/30 bg-danger-soft/40">
+            <div className="mb-4 flex items-center gap-3">
+              <span className="grid size-11 place-items-center rounded-2xl bg-danger text-white">
+                <TriangleAlert className="size-5" />
+              </span>
+              <div>
+                <h3 className="font-display font-bold text-foreground">Emergency contact</h3>
+                <p className="text-sm text-muted-foreground">
+                  Your live location is shared with this number during SOS.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+              <div className="flex-1">
+                <Field
+                  type="tel"
+                  aria-label="Emergency contact phone"
+                  placeholder="+91 XXXXX XXXXX"
+                  value={emergencyPhone}
+                  onChange={(e) => setEmergencyPhone(e.target.value)}
+                />
+              </div>
+              <Button onClick={handleSaveEmergency} loading={savingContact} className="sm:mt-0">
+                Save
+              </Button>
+            </div>
+          </Panel>
+        </Reveal>
+
+        {/* platform features */}
+        <div className="mt-8">
+          <h2 className="mb-4 font-display text-2xl font-bold text-foreground">Why it's safe</h2>
+          <RevealGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { icon: <ShieldCheck className="size-5" />, title: "Verified only", desc: "Campus email + document check for every user.", tone: "success" as BadgeTone },
+              { icon: <Navigation className="size-5" />, title: "Live tracking", desc: "Real-time GPS on every ride, shared with contacts.", tone: "info" as BadgeTone },
+              { icon: <Globe className="size-5" />, title: "Campus routes", desc: "Tuned for the JC Bose gate → city corridors.", tone: "warning" as BadgeTone },
+              { icon: <Zap className="size-5" />, title: "Corridor match", desc: "Only rides travelling your direction show up.", tone: "accent" as BadgeTone },
+            ].map((f) => (
+              <RevealItem key={f.title}>
+                <Panel hover className="h-full">
+                  <span className={cn("grid size-11 place-items-center rounded-2xl", TILE[f.tone])} aria-hidden>
+                    {f.icon}
+                  </span>
+                  <h4 className="mt-3 font-display font-bold text-foreground">{f.title}</h4>
+                  <p className="mt-1 text-sm text-muted-foreground">{f.desc}</p>
+                </Panel>
+              </RevealItem>
+            ))}
+          </RevealGroup>
+        </div>
+      </Container>
+
+      <SOSModal isOpen={isSOSOpen} onClose={() => setIsSOSOpen(false)} />
+    </PageShell>
   );
 }
