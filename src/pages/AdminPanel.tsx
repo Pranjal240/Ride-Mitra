@@ -1,51 +1,76 @@
-import { useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  PiUsersBold, PiCarBold, PiCurrencyInrBold, PiShieldCheckBold, PiWarningBold,
-  PiTrendUpBold, PiChatCircleTextBold, PiFlagBold, PiClipboardTextBold,
-  PiMegaphoneBold, PiCheckCircleBold, PiXCircleBold, PiMagnifyingGlassBold,
-  PiPlusCircleBold, PiListChecksBold, PiSirenBold, PiPaperPlaneRightBold,
-  PiIdentificationCardBold, PiClockCounterClockwiseBold,
-} from 'react-icons/pi';
-import { useAuthStore } from '../hooks/useStore';
-import {
-  getAdminAnalytics, getActiveSOSAlerts, getPendingVerifications,
-  resolveSOSAlert, updateVerificationStatus, searchUsers,
-  getAllRidesAdmin, forceCancelRide, getOpenReports, resolveReport,
-  getAnnouncements, createAnnouncement, deactivateAnnouncement,
-  getSupportThreads, replySupport, markSupportRead, getAdminLogs,
-  banUser, unbanUser, getBannedUsers,
-  type AdminAnalytics, type Announcement,
-} from '../lib/api';
-import T, { FONT } from '../lib/theme';
-import { ImpactChart } from '../components/common/GlobalUI';
-import {
-  TiltCard, Reveal, RadialProgress, AnimatedCounter, Spotlight,
-  RippleButton,
-} from '../components/common/Interactive3D';
-import { format, formatDistanceToNow } from 'date-fns';
+  Car,
+  ClipboardList,
+  Clock,
+  Flag,
+  IdCard,
+  IndianRupee,
+  ListChecks,
+  Megaphone,
+  MessageSquareText,
+  Search,
+  Send,
+  ShieldCheck,
+  Siren,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
 
-/* ─── Tab pill row ─── */
-type TabKey =
-  | 'overview' | 'users' | 'drivers' | 'rides' | 'alerts'
-  | 'reports' | 'support' | 'announcements' | 'audit';
+import { useAuthStore } from "@/hooks/useStore";
+import {
+  getAdminAnalytics,
+  getActiveSOSAlerts,
+  getPendingVerifications,
+  resolveSOSAlert,
+  updateVerificationStatus,
+  searchUsers,
+  getAllRidesAdmin,
+  forceCancelRide,
+  getOpenReports,
+  resolveReport,
+  getAnnouncements,
+  createAnnouncement,
+  deactivateAnnouncement,
+  getSupportThreads,
+  replySupport,
+  markSupportRead,
+  getAdminLogs,
+  banUser,
+  unbanUser,
+  getBannedUsers,
+  type AdminAnalytics,
+  type Announcement,
+} from "@/lib/api";
+import { roleLabel } from "@/lib/roles";
+import { SmoothInput } from "@/components/ui/smooth-input";
+import { Badge, Button, Container, PageShell, Panel, buttonVariants, type BadgeTone } from "@/components/ui/primitives";
+import { CountUp, ScoreRing, Sparkbars, toneTile } from "@/components/ui/dashboard";
+import { cn } from "@/lib/utils";
 
-const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
-  { key: 'overview', label: 'Overview', icon: <PiTrendUpBold size={14} /> },
-  { key: 'users', label: 'Users', icon: <PiUsersBold size={14} /> },
-  { key: 'drivers', label: 'Drivers', icon: <PiIdentificationCardBold size={14} /> },
-  { key: 'rides', label: 'Rides', icon: <PiCarBold size={14} /> },
-  { key: 'alerts', label: 'SOS', icon: <PiSirenBold size={14} /> },
-  { key: 'reports', label: 'Reports', icon: <PiFlagBold size={14} /> },
-  { key: 'support', label: 'Support', icon: <PiChatCircleTextBold size={14} /> },
-  { key: 'announcements', label: 'Announce', icon: <PiMegaphoneBold size={14} /> },
-  { key: 'audit', label: 'Audit', icon: <PiClipboardTextBold size={14} /> },
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+type TabKey = "overview" | "users" | "drivers" | "rides" | "alerts" | "reports" | "support" | "announcements" | "audit";
+
+const TABS: { key: TabKey; label: string; icon: ReactNode }[] = [
+  { key: "overview", label: "Overview", icon: <TrendingUp className="size-4" /> },
+  { key: "users", label: "Users", icon: <Users className="size-4" /> },
+  { key: "drivers", label: "Verify", icon: <IdCard className="size-4" /> },
+  { key: "rides", label: "Rides", icon: <Car className="size-4" /> },
+  { key: "alerts", label: "SOS", icon: <Siren className="size-4" /> },
+  { key: "reports", label: "Reports", icon: <Flag className="size-4" /> },
+  { key: "support", label: "Support", icon: <MessageSquareText className="size-4" /> },
+  { key: "announcements", label: "Announce", icon: <Megaphone className="size-4" /> },
+  { key: "audit", label: "Audit", icon: <ClipboardList className="size-4" /> },
 ];
 
-/* ═══════════ MAIN ═══════════ */
+const empty = (m: string) => <p className="py-10 text-center text-sm text-muted-foreground">{m}</p>;
+
 export default function AdminPanel() {
   const { user } = useAuthStore();
-  const [tab, setTab] = useState<TabKey>('overview');
+  const [tab, setTab] = useState<TabKey>("overview");
   const [analytics, setAnalytics] = useState<AdminAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -54,276 +79,195 @@ export default function AdminPanel() {
     try {
       const a = await getAdminAnalytics();
       if (a) setAnalytics(a);
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  const badgeFor = (key: TabKey) => {
+    if (!analytics) return 0;
+    const k = analytics.kpi;
+    return key === "alerts" ? k.active_alerts : key === "drivers" ? k.pending_verifications : key === "reports" ? k.open_reports : key === "support" ? k.open_support : 0;
+  };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'radial-gradient(ellipse at top, #152240 0%, #0A1128 60%, #050914 100%)',
-      color: 'white', fontFamily: FONT.body, position: 'relative',
-    }}>
-      {/* Hero */}
-      <div style={{
-        background: 'radial-gradient(ellipse at top, #152240 0%, #0A1128 60%, #050914 100%)',
-        padding: '40px 24px 60px', position: 'relative', overflow: 'hidden',
-      }}>
-        <div className="aurora-wrap">
-          <div className="aurora-blob aurora-1" />
-          <div className="aurora-blob aurora-2" />
-          <div className="noise-overlay" />
-        </div>
-        <div style={{ maxWidth: 1280, margin: '0 auto', position: 'relative', zIndex: 2 }}>
-          <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 7,
-              padding: '5px 12px', borderRadius: 100,
-              background: `${T.red}22`, border: `1px solid ${T.red}55`, marginBottom: 14,
-            }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: T.red, boxShadow: `0 0 8px ${T.red}` }} className="ring-pulse" />
-            <span style={{ fontSize: 11, color: '#F5A5A5', fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase' }}>
-              Admin Console · JC Bose UST
-            </span>
-          </motion.div>
-          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-            style={{
-              fontSize: 'clamp(28px, 5vw, 44px)', fontWeight: 900, color: 'white',
-              fontFamily: FONT.heading, letterSpacing: '-0.03em', lineHeight: 1.05,
-            }}>
-            Command<span className="text-gradient-gold"> Center.</span>
-          </motion.h1>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
-            style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', marginTop: 8 }}>
-            Live safety monitoring, driver verification, and platform operations.
-          </motion.p>
-
-          {/* Tab row */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 22 }}>
-            <div className="tab-pills h-scroll" style={{ maxWidth: '100%', overflowX: 'auto' }}>
-              {TABS.map(t => (
-                <button key={t.key} className={`tab-pill ${tab === t.key ? 'active' : ''}`}
-                  onClick={() => setTab(t.key)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  {t.icon}{t.label}
-                  {t.key === 'alerts' && analytics && analytics.kpi.active_alerts > 0 && (
-                    <span style={{ marginLeft: 4, background: T.red, color: 'white', borderRadius: 100, padding: '1px 6px', fontSize: 9, fontWeight: 900 }}>
-                      {analytics.kpi.active_alerts}
-                    </span>
-                  )}
-                  {t.key === 'drivers' && analytics && analytics.kpi.pending_verifications > 0 && (
-                    <span style={{ marginLeft: 4, background: T.orange, color: 'white', borderRadius: 100, padding: '1px 6px', fontSize: 9, fontWeight: 900 }}>
-                      {analytics.kpi.pending_verifications}
-                    </span>
-                  )}
-                  {t.key === 'reports' && analytics && analytics.kpi.open_reports > 0 && (
-                    <span style={{ marginLeft: 4, background: T.red, color: 'white', borderRadius: 100, padding: '1px 6px', fontSize: 9, fontWeight: 900 }}>
-                      {analytics.kpi.open_reports}
-                    </span>
-                  )}
-                  {t.key === 'support' && analytics && analytics.kpi.open_support > 0 && (
-                    <span style={{ marginLeft: 4, background: T.blue, color: 'white', borderRadius: 100, padding: '1px 6px', fontSize: 9, fontWeight: 900 }}>
-                      {analytics.kpi.open_support}
-                    </span>
-                  )}
-                </button>
-              ))}
+    <PageShell>
+      <Container size="7xl">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-light p-7 text-white sm:p-9">
+          <div className="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full bg-danger/15 blur-3xl" />
+          <div className="relative">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5">
+              <span className="size-1.5 rounded-full bg-danger" />
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-white/80">Admin console · JC Bose UST</span>
             </div>
+            <h1 className="mt-4 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">
+              Command <span className="text-accent">center.</span>
+            </h1>
+            <p className="mt-2 text-sm text-white/60">Live safety monitoring, verification, and platform operations.</p>
           </div>
         </div>
-      </div>
 
-      {/* Body */}
-      <div style={{ maxWidth: 1280, margin: '-28px auto 0', padding: '0 20px 60px', position: 'relative', zIndex: 3 }}>
-        <AnimatePresence mode="wait">
-          <motion.div key={tab} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.28 }}>
-            {tab === 'overview' && <OverviewTab loading={loading} data={analytics} />}
-            {tab === 'users' && <UsersTab admin={user?.id || ''} onChange={refresh} />}
-            {tab === 'drivers' && <DriversTab admin={user?.id || ''} onChange={refresh} />}
-            {tab === 'rides' && <RidesTab admin={user?.id || ''} />}
-            {tab === 'alerts' && <AlertsTab admin={user?.id || ''} onChange={refresh} />}
-            {tab === 'reports' && <ReportsTab admin={user?.id || ''} onChange={refresh} />}
-            {tab === 'support' && <SupportTab admin={user?.id || ''} />}
-            {tab === 'announcements' && <AnnouncementsTab admin={user?.id || ''} />}
-            {tab === 'audit' && <AuditTab />}
-          </motion.div>
-        </AnimatePresence>
-      </div>
-    </div>
+        {/* tabs */}
+        <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
+          {TABS.map((t) => {
+            const count = badgeFor(t.key);
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setTab(t.key)}
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
+                  tab === t.key ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {t.icon}
+                {t.label}
+                {count > 0 && <span className="rounded-full bg-danger px-1.5 text-[10px] font-bold text-white">{count}</span>}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-5">
+          <AnimatePresence mode="wait">
+            <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
+              {tab === "overview" && <OverviewTab loading={loading} data={analytics} />}
+              {tab === "users" && <UsersTab admin={user?.id || ""} onChange={refresh} />}
+              {tab === "drivers" && <DriversTab admin={user?.id || ""} onChange={refresh} />}
+              {tab === "rides" && <RidesTab admin={user?.id || ""} />}
+              {tab === "alerts" && <AlertsTab admin={user?.id || ""} onChange={refresh} />}
+              {tab === "reports" && <ReportsTab admin={user?.id || ""} onChange={refresh} />}
+              {tab === "support" && <SupportTab admin={user?.id || ""} />}
+              {tab === "announcements" && <AnnouncementsTab admin={user?.id || ""} />}
+              {tab === "audit" && <AuditTab />}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </Container>
+    </PageShell>
   );
 }
 
-/* ────────────────────────────────────────────────────────────
- *  OVERVIEW
- * ──────────────────────────────────────────────────────────── */
-function StatTile({ icon, label, value, color, format: fmt }: { icon: React.ReactNode; label: string; value: number; color: string; format?: (n: number) => string }) {
+function StatTile({ icon, label, value, tone, format: fmt }: { icon: ReactNode; label: string; value: number; tone: BadgeTone; format?: (n: number) => string }) {
   return (
-    <Reveal>
-      <TiltCard max={7} radius={20} style={{
-        background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
-        border: '1px solid rgba(255,255,255,0.08)',
-        padding: 18, height: '100%',
-        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <div style={{
-            width: 40, height: 40, borderRadius: 12,
-            background: `linear-gradient(135deg, ${color}, ${color}aa)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'white', boxShadow: `0 8px 20px ${color}55, inset 0 1px 0 rgba(255,255,255,0.2)`,
-          }}>{icon}</div>
-        </div>
-        <p style={{ fontSize: 'clamp(22px, 4vw, 28px)', fontWeight: 900, color: 'white', fontFamily: FONT.heading, letterSpacing: '-0.02em' }}>
-          <AnimatedCounter value={value} format={fmt} />
-        </p>
-        <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 4, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700 }}>{label}</p>
-      </TiltCard>
-    </Reveal>
+    <Panel>
+      <span className={toneTile(tone, "size-10 [&>svg]:size-5")} aria-hidden>
+        {icon}
+      </span>
+      <p className="mt-3 font-mono text-2xl font-bold text-foreground">{fmt ? fmt(value) : <CountUp value={value} />}</p>
+      <p className="mt-0.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+    </Panel>
   );
 }
 
 function OverviewTab({ loading, data }: { loading: boolean; data: AdminAnalytics | null }) {
-  if (loading || !data) {
+  if (loading || !data)
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px,1fr))', gap: 14 }}>
-        {[1, 2, 3, 4, 5, 6].map(i => (
-          <div key={i} style={{
-            height: 120, borderRadius: 20,
-            background: 'linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.06), rgba(255,255,255,0.03))',
-            backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite',
-          }} />
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="h-28 animate-pulse rounded-2xl border border-border bg-muted" />
         ))}
       </div>
     );
-  }
-
   const k = data.kpi;
   const completeRate = k.total_bookings === 0 ? 0 : Math.round((k.paid_bookings / k.total_bookings) * 100);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* KPI grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
-        <StatTile icon={<PiUsersBold size={20} />} label="Total users" value={k.total_users} color={T.blue} />
-        <StatTile icon={<PiIdentificationCardBold size={20} />} label="Drivers" value={k.drivers} color={T.green} />
-        <StatTile icon={<PiCarBold size={20} />} label="Active rides" value={k.active_rides} color={T.gold} />
-        <StatTile icon={<PiCheckCircleBold size={20} />} label="Completed" value={k.completed_rides} color="#7BB88F" />
-        <StatTile icon={<PiCurrencyInrBold size={20} />} label="Revenue" value={k.total_revenue} color={T.gold} format={(n) => `₹${n.toFixed(0)}`} />
-        <StatTile icon={<PiShieldCheckBold size={20} />} label="Pending KYC" value={k.pending_verifications} color={T.orange} />
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+        <StatTile icon={<Users />} label="Total users" value={k.total_users} tone="info" />
+        <StatTile icon={<IdCard />} label="Service providers" value={k.drivers} tone="success" />
+        <StatTile icon={<Car />} label="Active rides" value={k.active_rides} tone="accent" />
+        <StatTile icon={<ShieldCheck />} label="Completed" value={k.completed_rides} tone="success" />
+        <StatTile icon={<IndianRupee />} label="Revenue" value={k.total_revenue} tone="accent" format={(n) => `₹${n.toFixed(0)}`} />
+        <StatTile icon={<ShieldCheck />} label="Pending KYC" value={k.pending_verifications} tone="warning" />
       </div>
 
-      {/* Chart + Ratings + Route top */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(280px, 340px)', gap: 16 }} className="mobile-grid-stack">
-        <TiltCard max={4} radius={22} style={{
-          background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-          padding: 20, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-        }}>
-          <ImpactChart
-            title="Platform activity · last 14 days"
-            sublabel="Bookings created per day"
-            values={data.series.map(s => s.bookings)}
-            unit=""
-            color={T.blue}
-          />
-        </TiltCard>
-
-        <TiltCard max={6} radius={22} style={{
-          background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-          padding: 20, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-          display: 'flex', flexDirection: 'column', alignItems: 'center',
-        }}>
-          <h3 style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', letterSpacing: 2, textTransform: 'uppercase', fontWeight: 700, marginBottom: 10 }}>Booking completion</h3>
-          <RadialProgress value={completeRate} size={140} thickness={12} color={T.gold} label="Paid" sub={`${k.paid_bookings} / ${k.total_bookings}`} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 18, width: '100%' }}>
-            <div style={{ padding: 10, borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: 'white' }}>{k.avg_rating.toFixed(2)}</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', letterSpacing: 1, textTransform: 'uppercase' }}>Avg rating</div>
+      <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
+        <Panel>
+          <div className="mb-1 flex items-center justify-between">
+            <h3 className="font-display font-bold text-foreground">Platform activity · last 14 days</h3>
+            <span className="text-xs text-muted-foreground">Bookings / day</span>
+          </div>
+          <Sparkbars values={data.series.map((s) => s.bookings)} className="mt-4" />
+        </Panel>
+        <Panel className="flex flex-col items-center">
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Booking completion</h3>
+          <ScoreRing value={completeRate} size={140} />
+          <div className="mt-4 grid w-full grid-cols-2 gap-3">
+            <div className="rounded-xl border border-border bg-muted/40 p-3 text-center">
+              <div className="font-mono text-xl font-bold text-foreground">{k.avg_rating.toFixed(2)}</div>
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Avg rating</div>
             </div>
-            <div style={{ padding: 10, borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: 'white' }}>{k.total_reviews}</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', letterSpacing: 1, textTransform: 'uppercase' }}>Reviews</div>
+            <div className="rounded-xl border border-border bg-muted/40 p-3 text-center">
+              <div className="font-mono text-xl font-bold text-foreground">{k.total_reviews}</div>
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Reviews</div>
             </div>
           </div>
-        </TiltCard>
+        </Panel>
       </div>
 
-      {/* Top routes + queues */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
-        <Spotlight color="rgba(200,149,108,0.15)" style={{
-          background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-          padding: 20, borderRadius: 22, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-        }}>
-          <h3 style={{ fontSize: 14, color: 'white', fontWeight: 800, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 24, height: 24, borderRadius: 8, background: `linear-gradient(135deg, ${T.gold}, ${T.goldDark})`, display: 'grid', placeItems: 'center' }}>
-              <PiCarBold size={12} color="white" />
-            </div>
-            Top routes
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Panel>
+          <h3 className="mb-3 flex items-center gap-2 font-display font-bold text-foreground">
+            <Car className="size-4 text-accent" /> Top routes
           </h3>
           {data.top_routes.length === 0 ? (
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>No rides yet</p>
+            empty("No rides yet")
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div className="space-y-2">
               {data.top_routes.map((r, i) => (
-                <div key={i} style={{
-                  padding: '10px 12px', borderRadius: 12,
-                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
-                  display: 'flex', alignItems: 'center', gap: 10,
-                }}>
-                  <div style={{ minWidth: 24, height: 24, borderRadius: 8, background: `${T.gold}22`, color: T.gold, display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 900 }}>{i + 1}</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, color: 'white', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {r.from_label} → {r.to_label}
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: T.gold }}>{r.ride_count}×</div>
+                <div key={i} className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-3 py-2.5">
+                  <span className="grid size-6 place-items-center rounded-lg bg-accent-soft font-mono text-xs font-bold text-accent-strong">{i + 1}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm text-foreground">
+                    {r.from_label} → {r.to_label}
+                  </span>
+                  <span className="font-mono text-xs font-bold text-accent-strong">{r.ride_count}×</span>
                 </div>
               ))}
             </div>
           )}
-        </Spotlight>
-
-        <Spotlight color="rgba(74,111,165,0.15)" style={{
-          background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-          padding: 20, borderRadius: 22, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-        }}>
-          <h3 style={{ fontSize: 14, color: 'white', fontWeight: 800, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 24, height: 24, borderRadius: 8, background: `linear-gradient(135deg, ${T.blue}, ${T.navy})`, display: 'grid', placeItems: 'center' }}>
-              <PiListChecksBold size={12} color="white" />
-            </div>
-            Queues
+        </Panel>
+        <Panel>
+          <h3 className="mb-3 flex items-center gap-2 font-display font-bold text-foreground">
+            <ListChecks className="size-4 text-accent" /> Queues
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="space-y-2">
             {[
-              { label: 'Active SOS alerts', v: k.active_alerts, color: k.active_alerts ? T.red : T.green },
-              { label: 'Pending verifications', v: k.pending_verifications, color: k.pending_verifications ? T.orange : T.green },
-              { label: 'Open ride reports', v: k.open_reports, color: k.open_reports ? T.red : T.green },
-              { label: 'Unread support msgs', v: k.open_support, color: k.open_support ? T.blue : T.green },
-              { label: 'Banned users', v: k.banned, color: T.gray },
-              { label: 'Cancelled rides', v: k.cancelled_rides, color: T.gray },
-            ].map((r, i) => (
-              <div key={i} style={{
-                padding: '12px 14px', borderRadius: 12,
-                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              }}>
-                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>{r.label}</span>
-                <span style={{
-                  padding: '3px 10px', borderRadius: 100, fontSize: 11, fontWeight: 900,
-                  background: `${r.color}22`, color: r.color, border: `1px solid ${r.color}55`,
-                }}>{r.v}</span>
+              { label: "Active SOS alerts", v: k.active_alerts, tone: (k.active_alerts ? "danger" : "success") as BadgeTone },
+              { label: "Pending verifications", v: k.pending_verifications, tone: (k.pending_verifications ? "warning" : "success") as BadgeTone },
+              { label: "Open ride reports", v: k.open_reports, tone: (k.open_reports ? "danger" : "success") as BadgeTone },
+              { label: "Unread support", v: k.open_support, tone: (k.open_support ? "info" : "success") as BadgeTone },
+              { label: "Banned users", v: k.banned, tone: "neutral" as BadgeTone },
+              { label: "Cancelled rides", v: k.cancelled_rides, tone: "neutral" as BadgeTone },
+            ].map((r) => (
+              <div key={r.label} className="flex items-center justify-between rounded-xl border border-border bg-muted/40 px-3.5 py-2.5">
+                <span className="text-sm text-foreground">{r.label}</span>
+                <Badge tone={r.tone}>{r.v}</Badge>
               </div>
             ))}
           </div>
-        </Spotlight>
+        </Panel>
       </div>
     </div>
   );
 }
 
-/* ────────────────────────────────────────────────────────────
- *  USERS
- * ──────────────────────────────────────────────────────────── */
+function pill(variant: "success" | "danger" | "info" | "neutral") {
+  const map = {
+    success: "border-success/40 bg-success-soft text-success",
+    danger: "border-danger/40 bg-danger-soft text-danger",
+    info: "border-info/40 bg-info-soft text-info",
+    neutral: "border-border bg-muted text-muted-foreground",
+  };
+  return cn("rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors", map[variant]);
+}
+
 function UsersTab({ admin, onChange }: { admin: string; onChange: () => void }) {
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState("");
   const [rows, setRows] = useState<any[]>([]);
   const [banned, setBanned] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -332,355 +276,297 @@ function UsersTab({ admin, onChange }: { admin: string; onChange: () => void }) 
   const load = async () => {
     setLoading(true);
     const [r, b] = await Promise.all([searchUsers(q), getBannedUsers()]);
-    setRows(r); setBanned(b); setLoading(false);
+    setRows(r);
+    setBanned(b);
+    setLoading(false);
   };
-  useEffect(() => { const t = setTimeout(load, 250); return () => clearTimeout(t); }, [q]);
+  useEffect(() => {
+    const t = setTimeout(load, 250);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q]);
 
-  const bannedIds = useMemo(() => new Set(banned.map(b => b.user_id)), [banned]);
-
+  const bannedIds = useMemo(() => new Set(banned.map((b) => b.user_id)), [banned]);
   const handleBan = async (id: string) => {
-    const reason = prompt('Reason for ban?');
+    const reason = prompt("Reason for ban?");
     if (!reason) return;
     await banUser(id, reason, admin);
-    await load(); onChange();
+    await load();
+    onChange();
   };
   const handleUnban = async (id: string) => {
-    if (!confirm('Unban this user?')) return;
+    if (!confirm("Unban this user?")) return;
     await unbanUser(id, admin);
-    await load(); onChange();
+    await load();
+    onChange();
   };
-
-  const list = showBanned ? banned.map(b => ({ ...b.user, banned_reason: b.reason, banned_at: b.banned_at })) : rows;
+  const list = showBanned ? banned.map((b) => ({ ...b.user, banned_reason: b.reason, banned_at: b.banned_at })) : rows;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <div className="frosted-section" style={{ padding: 18 }}>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-          <div style={{
-            flex: 1, minWidth: 220, display: 'flex', alignItems: 'center', gap: 10,
-            padding: '10px 14px', borderRadius: 12,
-            background: 'rgba(0,0,0,0.28)', border: '1px solid rgba(255,255,255,0.08)',
-          }}>
-            <PiMagnifyingGlassBold size={16} color="rgba(255,255,255,0.5)" />
-            <input value={q} onChange={e => setQ(e.target.value)}
-              placeholder="Search name, email, phone…"
-              style={{
-                flex: 1, background: 'transparent', border: 'none', outline: 'none',
-                color: 'white', fontSize: 14, fontFamily: FONT.body,
-              }} />
-          </div>
-          <div className="tab-pills">
-            <button className={`tab-pill ${!showBanned ? 'active' : ''}`} onClick={() => setShowBanned(false)}>All</button>
-            <button className={`tab-pill ${showBanned ? 'active' : ''}`} onClick={() => setShowBanned(true)}>Banned</button>
-          </div>
+    <div className="space-y-4">
+      <Panel className="flex flex-wrap items-center gap-3">
+        <div className="min-w-[220px] flex-1">
+          <SmoothInput value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, email, phone…" wrapperClassName="py-2.5" aria-label="Search users" />
         </div>
-      </div>
+        <div className="flex gap-1 rounded-xl border border-border p-1">
+          <button type="button" onClick={() => setShowBanned(false)} className={cn("rounded-lg px-3 py-1.5 text-sm font-semibold", !showBanned ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>
+            All
+          </button>
+          <button type="button" onClick={() => setShowBanned(true)} className={cn("rounded-lg px-3 py-1.5 text-sm font-semibold", showBanned ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>
+            Banned
+          </button>
+        </div>
+      </Panel>
 
-      <div className="frosted-section" style={{ padding: 0, overflow: 'hidden' }}>
-        {loading ? (
-          <div style={{ padding: 24, color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>Loading…</div>
-        ) : list.length === 0 ? (
-          <div style={{ padding: 40, color: 'rgba(255,255,255,0.5)', textAlign: 'center', fontSize: 13 }}>No users found.</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {list.map((u: any) => {
-              const isBanned = bannedIds.has(u.id);
-              return (
-                <div key={u.id} style={{
-                  display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 14,
-                  padding: '14px 18px', borderTop: '1px solid rgba(255,255,255,0.06)', alignItems: 'center',
-                }}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 12,
-                    background: u.profile_photo ? `url(${u.profile_photo}) center/cover` : `linear-gradient(135deg, ${T.gold}, ${T.goldDark})`,
-                    color: 'white', display: 'grid', placeItems: 'center', fontWeight: 900,
-                    boxShadow: `0 4px 12px ${T.gold}44`,
-                  }}>
-                    {!u.profile_photo && (u.full_name?.[0] || u.email?.[0] || '?').toUpperCase()}
-                  </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 14, color: 'white', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {u.full_name || '(no name)'}
-                      {isBanned && <span style={{ marginLeft: 8, background: `${T.red}22`, color: T.red, padding: '1px 8px', borderRadius: 100, fontSize: 10, fontWeight: 900, border: `1px solid ${T.red}55` }}>BANNED</span>}
-                      {u.user_type && <span style={{ marginLeft: 8, background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.65)', padding: '1px 8px', borderRadius: 100, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>{u.user_type}</span>}
-                    </div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>{u.email} · {u.phone || '—'}</div>
-                    {showBanned && u.banned_reason && (
-                      <div style={{ fontSize: 11, color: T.red, marginTop: 4 }}>Reason: {u.banned_reason} · {formatDistanceToNow(new Date(u.banned_at), { addSuffix: true })}</div>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    {isBanned ? (
-                      <button onClick={() => handleUnban(u.id)} style={pillBtn(T.green)}>Unban</button>
-                    ) : (
-                      <button onClick={() => handleBan(u.id)} style={pillBtn(T.red)}>Ban</button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      <Panel inset="none" className="divide-y divide-border overflow-hidden">
+        {loading ? empty("Loading…") : list.length === 0 ? empty("No users found.") : list.map((u: any) => {
+          const isBanned = bannedIds.has(u.id);
+          return (
+            <div key={u.id} className="flex items-center gap-3 p-4">
+              <span
+                className="grid size-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-accent to-accent-strong bg-cover bg-center font-display font-bold text-white"
+                style={u.profile_photo ? { backgroundImage: `url(${u.profile_photo})` } : undefined}
+              >
+                {!u.profile_photo && (u.full_name?.[0] || u.email?.[0] || "?").toUpperCase()}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="flex items-center gap-2 truncate text-sm font-semibold text-foreground">
+                  {u.full_name || "(no name)"}
+                  {isBanned && <Badge tone="danger">Banned</Badge>}
+                  {u.user_type && <Badge tone="neutral">{roleLabel(u.user_type)}</Badge>}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {u.email} · {u.phone || "—"}
+                </p>
+                {showBanned && u.banned_reason && (
+                  <p className="mt-1 text-xs text-danger">
+                    Reason: {u.banned_reason} · {formatDistanceToNow(new Date(u.banned_at), { addSuffix: true })}
+                  </p>
+                )}
+              </div>
+              {isBanned ? (
+                <button type="button" onClick={() => handleUnban(u.id)} className={pill("success")}>
+                  Unban
+                </button>
+              ) : (
+                <button type="button" onClick={() => handleBan(u.id)} className={pill("danger")}>
+                  Ban
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </Panel>
     </div>
   );
 }
 
-const pillBtn = (color: string): React.CSSProperties => ({
-  padding: '6px 12px', borderRadius: 8, border: `1px solid ${color}55`,
-  background: `${color}22`, color, fontSize: 11, fontWeight: 800, cursor: 'pointer',
-});
-
-/* ────────────────────────────────────────────────────────────
- *  DRIVERS / VERIFICATIONS
- * ──────────────────────────────────────────────────────────── */
 function DriversTab({ admin, onChange }: { admin: string; onChange: () => void }) {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
   const load = async () => {
     setLoading(true);
     setRows(await getPendingVerifications());
     setLoading(false);
   };
-  useEffect(() => { load(); }, []);
-
-  const handle = async (id: string, status: 'verified' | 'rejected') => {
+  useEffect(() => {
+    load();
+  }, []);
+  const handle = async (id: string, status: "verified" | "rejected") => {
     await updateVerificationStatus(id, status, admin);
-    await load(); onChange();
+    await load();
+    onChange();
   };
-
   return (
-    <div className="frosted-section" style={{ padding: 0, overflow: 'hidden' }}>
-      <div style={{ padding: 18, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <h3 style={{ fontSize: 15, fontWeight: 800, color: 'white', fontFamily: FONT.heading, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 30, height: 30, borderRadius: 10, background: `linear-gradient(135deg, ${T.orange}, ${T.gold})`, display: 'grid', placeItems: 'center' }}>
-            <PiShieldCheckBold size={14} color="white" />
+    <Panel inset="none" className="divide-y divide-border overflow-hidden">
+      <h3 className="flex items-center gap-2 p-4 font-display font-bold text-foreground">
+        <ShieldCheck className="size-4 text-accent" /> Pending verifications
+      </h3>
+      {loading ? empty("Loading…") : rows.length === 0 ? empty("All caught up — no pending requests.") : rows.map((v: any) => (
+        <div key={v.id} className="flex flex-wrap items-center gap-3 p-4">
+          <span className="grid size-11 place-items-center rounded-xl bg-gradient-to-br from-accent to-accent-strong font-display font-bold text-white">{v.user?.full_name?.[0] || "?"}</span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-foreground">{v.user?.full_name || "Unknown"}</p>
+            <p className="text-xs text-muted-foreground">{v.user?.email}</p>
+            <p className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
+              <span>Licence · <b className="text-foreground">{v.license_number}</b></span>
+              {v.vehicle_type && <span>Vehicle · {v.vehicle_type} {v.vehicle_number}</span>}
+            </p>
           </div>
-          Pending driver verifications
-        </h3>
-      </div>
-      {loading ? (
-        <div style={{ padding: 24, color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>Loading…</div>
-      ) : rows.length === 0 ? (
-        <div style={{ padding: 40, color: 'rgba(255,255,255,0.5)', textAlign: 'center', fontSize: 13 }}>All caught up — no pending requests.</div>
-      ) : (
-        <div>
-          {rows.map((v: any) => (
-            <div key={v.id} style={{
-              padding: '16px 18px', borderTop: '1px solid rgba(255,255,255,0.06)',
-              display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'center',
-            }}>
-              <div style={{ display: 'flex', gap: 12, minWidth: 0 }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: 12,
-                  background: `linear-gradient(135deg, ${T.gold}, ${T.goldDark})`,
-                  color: 'white', display: 'grid', placeItems: 'center', fontWeight: 900, fontFamily: FONT.heading, flexShrink: 0,
-                  boxShadow: `0 4px 12px ${T.gold}44`,
-                }}>
-                  {v.user?.full_name?.[0] || '?'}
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 14, color: 'white', fontWeight: 700 }}>{v.user?.full_name || 'Unknown'}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>{v.user?.email}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                    <span>License · <b style={{ color: 'white' }}>{v.license_number}</b></span>
-                    {v.vehicle_type && <span>Vehicle · {v.vehicle_type} {v.vehicle_number}</span>}
-                  </div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {v.license_photo && (
-                  <a href={v.license_photo} target="_blank" rel="noreferrer" style={{ ...pillBtn(T.blue), textDecoration: 'none' }}>Docs</a>
-                )}
-                <button onClick={() => handle(v.id, 'verified')} style={pillBtn(T.green)}>Verify</button>
-                <button onClick={() => handle(v.id, 'rejected')} style={pillBtn(T.red)}>Reject</button>
-              </div>
-            </div>
-          ))}
+          <div className="flex gap-2">
+            {v.license_photo && (
+              <a href={v.license_photo} target="_blank" rel="noreferrer" className={pill("info")}>
+                Docs
+              </a>
+            )}
+            <button type="button" onClick={() => handle(v.id, "verified")} className={pill("success")}>
+              Verify
+            </button>
+            <button type="button" onClick={() => handle(v.id, "rejected")} className={pill("danger")}>
+              Reject
+            </button>
+          </div>
         </div>
-      )}
-    </div>
+      ))}
+    </Panel>
   );
 }
 
-/* ────────────────────────────────────────────────────────────
- *  RIDES
- * ──────────────────────────────────────────────────────────── */
 function RidesTab({ admin }: { admin: string }) {
-  const [status, setStatus] = useState<string>('active');
+  const [status, setStatus] = useState("active");
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
   const load = async () => {
     setLoading(true);
     setRows(await getAllRidesAdmin(status));
     setLoading(false);
   };
-  useEffect(() => { load(); }, [status]);
-
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
   const doCancel = async (id: string) => {
-    const reason = prompt('Reason to force-cancel this ride?');
+    const reason = prompt("Reason to force-cancel this ride?");
     if (!reason) return;
     await forceCancelRide(id, admin, reason);
     await load();
   };
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <div className="tab-pills">
-          {['active', 'completed', 'cancelled'].map(s => (
-            <button key={s} className={`tab-pill ${status === s ? 'active' : ''}`} onClick={() => setStatus(s)}>{s.toUpperCase()}</button>
-          ))}
-        </div>
+    <div className="space-y-4">
+      <div className="flex gap-1 rounded-xl border border-border bg-card p-1">
+        {["active", "completed", "cancelled"].map((s) => (
+          <button key={s} type="button" onClick={() => setStatus(s)} className={cn("flex-1 rounded-lg px-3 py-2 text-sm font-semibold capitalize", status === s ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>
+            {s}
+          </button>
+        ))}
       </div>
-      <div className="frosted-section" style={{ padding: 0, overflow: 'hidden' }}>
-        {loading ? (
-          <div style={{ padding: 24, color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>Loading…</div>
-        ) : rows.length === 0 ? (
-          <div style={{ padding: 40, color: 'rgba(255,255,255,0.5)', textAlign: 'center', fontSize: 13 }}>No {status} rides.</div>
-        ) : (
-          <div>
-            {rows.map(r => (
-              <div key={r.id} style={{
-                padding: '14px 18px', borderTop: '1px solid rgba(255,255,255,0.06)',
-                display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'center',
-              }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, color: 'white', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {r.from_location?.address || 'Unknown'} → {r.to_location?.address || 'Unknown'}
-                  </div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 4 }}>
-                    {format(new Date(r.departure_time), 'MMM d, HH:mm')} · {r.seats_available} seats · ₹{r.price_per_seat}/seat · Driver: {r.driver?.full_name || '—'}
-                  </div>
-                </div>
-                {status === 'active' && (
-                  <button onClick={() => doCancel(r.id)} style={pillBtn(T.red)}>Cancel</button>
-                )}
-              </div>
-            ))}
+      <Panel inset="none" className="divide-y divide-border overflow-hidden">
+        {loading ? empty("Loading…") : rows.length === 0 ? empty(`No ${status} rides.`) : rows.map((r) => (
+          <div key={r.id} className="flex flex-wrap items-center gap-3 p-4">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-foreground">
+                {r.from_location?.address || "Unknown"} → {r.to_location?.address || "Unknown"}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {format(new Date(r.departure_time), "MMM d, HH:mm")} · {r.seats_available} seats · ₹{r.price_per_seat}/seat · {r.driver?.full_name || "—"}
+              </p>
+            </div>
+            {status === "active" && (
+              <button type="button" onClick={() => doCancel(r.id)} className={pill("danger")}>
+                Cancel
+              </button>
+            )}
           </div>
-        )}
-      </div>
+        ))}
+      </Panel>
     </div>
   );
 }
 
-/* ────────────────────────────────────────────────────────────
- *  ALERTS (SOS)
- * ──────────────────────────────────────────────────────────── */
 function AlertsTab({ admin, onChange }: { admin: string; onChange: () => void }) {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const load = async () => { setLoading(true); setRows(await getActiveSOSAlerts()); setLoading(false); };
-  useEffect(() => { load(); }, []);
-
-  const resolve = async (id: string) => { await resolveSOSAlert(id, admin); await load(); onChange(); };
-
+  const load = async () => {
+    setLoading(true);
+    setRows(await getActiveSOSAlerts());
+    setLoading(false);
+  };
+  useEffect(() => {
+    load();
+  }, []);
+  const resolve = async (id: string) => {
+    await resolveSOSAlert(id, admin);
+    await load();
+    onChange();
+  };
   return (
-    <div className="frosted-section" style={{ padding: 0, overflow: 'hidden' }}>
-      <div style={{ padding: 18, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <h3 style={{ fontSize: 15, fontWeight: 800, color: 'white', fontFamily: FONT.heading, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 30, height: 30, borderRadius: 10, background: `linear-gradient(135deg, ${T.red}, #B24C4C)`, display: 'grid', placeItems: 'center' }} className="ring-pulse">
-            <PiSirenBold size={14} color="white" />
+    <Panel inset="none" className="divide-y divide-border overflow-hidden">
+      <h3 className="flex items-center gap-2 p-4 font-display font-bold text-foreground">
+        <Siren className="size-4 text-danger" /> Active SOS alerts
+      </h3>
+      {loading ? empty("Loading…") : rows.length === 0 ? empty("No active alerts — everyone's safe.") : rows.map((a) => (
+        <div key={a.id} className="flex flex-wrap items-center gap-3 p-4">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-foreground">{a.user?.full_name || "Unknown user"}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {a.location ? (
+                <a target="_blank" rel="noreferrer" href={`https://www.openstreetmap.org/?mlat=${a.location.lat}&mlon=${a.location.lng}#map=17/${a.location.lat}/${a.location.lng}`} className="font-semibold text-accent-strong hover:underline">
+                  Map · {a.location.lat.toFixed(4)}, {a.location.lng.toFixed(4)}
+                </a>
+              ) : (
+                "No location"
+              )}{" "}
+              · {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
+            </p>
+            {a.message && <p className="mt-1.5 text-sm text-foreground">“{a.message}”</p>}
           </div>
-          Active SOS alerts
-        </h3>
-      </div>
-      {loading ? (
-        <div style={{ padding: 24, color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>Loading…</div>
-      ) : rows.length === 0 ? (
-        <div style={{ padding: 40, color: 'rgba(255,255,255,0.5)', textAlign: 'center', fontSize: 13 }}>No active alerts — everyone's safe.</div>
-      ) : (
-        <div>
-          {rows.map(a => (
-            <div key={a.id} style={{
-              padding: '14px 18px', borderTop: '1px solid rgba(255,255,255,0.06)',
-              display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'center',
-            }}>
-              <div>
-                <div style={{ fontSize: 13, color: 'white', fontWeight: 700 }}>{a.user?.full_name || 'Unknown user'}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 4 }}>
-                  {a.location ? (
-                    <a target="_blank" rel="noreferrer" href={`https://www.openstreetmap.org/?mlat=${a.location.lat}&mlon=${a.location.lng}#map=17/${a.location.lat}/${a.location.lng}`}
-                       style={{ color: T.gold, textDecoration: 'none' }}>
-                      Map · {a.location.lat.toFixed(4)}, {a.location.lng.toFixed(4)}
-                    </a>
-                  ) : 'No location'}
-                  {' · '} {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
-                </div>
-                {a.message && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 6 }}>"{a.message}"</div>}
-              </div>
-              <button onClick={() => resolve(a.id)} style={{ ...pillBtn(T.green), padding: '8px 14px' }}>Resolve</button>
-            </div>
-          ))}
+          <button type="button" onClick={() => resolve(a.id)} className={pill("success")}>
+            Resolve
+          </button>
         </div>
-      )}
-    </div>
+      ))}
+    </Panel>
   );
 }
 
-/* ────────────────────────────────────────────────────────────
- *  REPORTS
- * ──────────────────────────────────────────────────────────── */
 function ReportsTab({ admin, onChange }: { admin: string; onChange: () => void }) {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const load = async () => { setLoading(true); setRows(await getOpenReports()); setLoading(false); };
-  useEffect(() => { load(); }, []);
-
-  const act = async (id: string, status: 'reviewed' | 'dismissed' | 'action_taken') => {
-    await resolveReport(id, admin, status); await load(); onChange();
+  const load = async () => {
+    setLoading(true);
+    setRows(await getOpenReports());
+    setLoading(false);
   };
-
+  useEffect(() => {
+    load();
+  }, []);
+  const act = async (id: string, status: "reviewed" | "dismissed" | "action_taken") => {
+    await resolveReport(id, admin, status);
+    await load();
+    onChange();
+  };
   return (
-    <div className="frosted-section" style={{ padding: 0, overflow: 'hidden' }}>
-      {loading ? (
-        <div style={{ padding: 24, color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>Loading…</div>
-      ) : rows.length === 0 ? (
-        <div style={{ padding: 40, color: 'rgba(255,255,255,0.5)', textAlign: 'center', fontSize: 13 }}>No open reports.</div>
-      ) : (
-        <div>
-          {rows.map(r => (
-            <div key={r.id} style={{ padding: '14px 18px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ fontSize: 13, color: 'white', fontWeight: 700 }}>
-                {r.reporter?.full_name || 'Someone'} reported {r.reported?.full_name || 'a user'}
-              </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 4 }}>
-                {formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}
-                {r.ride?.from_location?.address && ` · Ride: ${r.ride.from_location.address} → ${r.ride.to_location?.address}`}
-              </div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 8, padding: 10, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                {r.reason}
-              </div>
-              <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-                <button onClick={() => act(r.id, 'action_taken')} style={pillBtn(T.red)}>Take action</button>
-                <button onClick={() => act(r.id, 'reviewed')} style={pillBtn(T.blue)}>Mark reviewed</button>
-                <button onClick={() => act(r.id, 'dismissed')} style={pillBtn(T.gray)}>Dismiss</button>
-              </div>
-            </div>
-          ))}
+    <Panel inset="none" className="divide-y divide-border overflow-hidden">
+      {loading ? empty("Loading…") : rows.length === 0 ? empty("No open reports.") : rows.map((r) => (
+        <div key={r.id} className="p-4">
+          <p className="text-sm font-semibold text-foreground">
+            {r.reporter?.full_name || "Someone"} reported {r.reported?.full_name || "a user"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}
+            {r.ride?.from_location?.address && ` · ${r.ride.from_location.address} → ${r.ride.to_location?.address}`}
+          </p>
+          <p className="mt-2 rounded-xl border border-border bg-muted/40 p-3 text-sm text-foreground">{r.reason}</p>
+          <div className="mt-3 flex gap-2">
+            <button type="button" onClick={() => act(r.id, "action_taken")} className={pill("danger")}>
+              Take action
+            </button>
+            <button type="button" onClick={() => act(r.id, "reviewed")} className={pill("info")}>
+              Reviewed
+            </button>
+            <button type="button" onClick={() => act(r.id, "dismissed")} className={pill("neutral")}>
+              Dismiss
+            </button>
+          </div>
         </div>
-      )}
-    </div>
+      ))}
+    </Panel>
   );
 }
 
-/* ────────────────────────────────────────────────────────────
- *  SUPPORT INBOX
- * ──────────────────────────────────────────────────────────── */
 function SupportTab({ admin }: { admin: string }) {
   const [rows, setRows] = useState<any[]>([]);
   const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [reply, setReply] = useState('');
+  const [reply, setReply] = useState("");
   const [loading, setLoading] = useState(true);
-
-  const load = async () => { setLoading(true); setRows(await getSupportThreads()); setLoading(false); };
-  useEffect(() => { load(); }, []);
-
+  const load = async () => {
+    setLoading(true);
+    setRows(await getSupportThreads());
+    setLoading(false);
+  };
+  useEffect(() => {
+    load();
+  }, []);
   const grouped = useMemo(() => {
     const map = new Map<string, { user: any; messages: any[]; unread: number }>();
     for (const r of rows) {
@@ -688,262 +574,218 @@ function SupportTab({ admin }: { admin: string }) {
       if (!map.has(key)) map.set(key, { user: r.user, messages: [], unread: 0 });
       const g = map.get(key)!;
       g.messages.push(r);
-      if (r.sender_type === 'user' && !r.is_read) g.unread++;
+      if (r.sender_type === "user" && !r.is_read) g.unread++;
     }
-    return Array.from(map.values()).sort((a, b) => (b.unread - a.unread) || (new Date(b.messages[0].created_at).getTime() - new Date(a.messages[0].created_at).getTime()));
+    return Array.from(map.values()).sort((a, b) => b.unread - a.unread || new Date(b.messages[0].created_at).getTime() - new Date(a.messages[0].created_at).getTime());
   }, [rows]);
-
   const send = async () => {
     if (!reply.trim() || !selectedUser) return;
     await replySupport(selectedUser.id, admin, reply.trim());
     await markSupportRead(selectedUser.id);
-    setReply('');
+    setReply("");
     await load();
   };
-
   const openThread = async (u: any) => {
     setSelectedUser(u);
     await markSupportRead(u.id);
     await load();
   };
-
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(240px, 320px) 1fr', gap: 14 }} className="mobile-grid-stack">
-      <div className="frosted-section" style={{ padding: 0, overflow: 'hidden', maxHeight: 620 }}>
-        <div style={{ padding: 14, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          <h3 style={{ fontSize: 13, color: 'white', fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase' }}>Threads</h3>
+    <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+      <Panel inset="none" className="max-h-[620px] overflow-hidden">
+        <h3 className="border-b border-border p-3.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">Threads</h3>
+        <div className="max-h-[560px] divide-y divide-border overflow-y-auto">
+          {loading ? empty("Loading…") : grouped.length === 0 ? empty("No support conversations.") : grouped.map((g) => (
+            <button
+              key={g.user?.id || Math.random()}
+              type="button"
+              onClick={() => openThread(g.user)}
+              className={cn("flex w-full items-center gap-2.5 p-3 text-left transition-colors hover:bg-muted", selectedUser?.id === g.user?.id && "bg-accent-soft/40")}
+            >
+              <span
+                className="grid size-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-accent to-accent-strong bg-cover bg-center font-bold text-white"
+                style={g.user?.profile_photo ? { backgroundImage: `url(${g.user.profile_photo})` } : undefined}
+              >
+                {!g.user?.profile_photo && (g.user?.full_name?.[0] || "?")}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-foreground">{g.user?.full_name || g.user?.email || "Unknown"}</p>
+                <p className="truncate text-xs text-muted-foreground">{g.messages[0]?.message}</p>
+              </div>
+              {g.unread > 0 && <Badge tone="info">{g.unread}</Badge>}
+            </button>
+          ))}
         </div>
-        {loading ? (
-          <div style={{ padding: 20, color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>Loading…</div>
-        ) : grouped.length === 0 ? (
-          <div style={{ padding: 28, color: 'rgba(255,255,255,0.5)', textAlign: 'center', fontSize: 13 }}>No support conversations.</div>
-        ) : (
-          <div style={{ overflowY: 'auto', maxHeight: 560 }}>
-            {grouped.map((g) => (
-              <button key={g.user?.id || Math.random()} onClick={() => openThread(g.user)} style={{
-                width: '100%', textAlign: 'left', cursor: 'pointer',
-                padding: '12px 14px', border: 'none', background: selectedUser?.id === g.user?.id ? 'rgba(200,149,108,0.08)' : 'transparent',
-                borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: 10, alignItems: 'center',
-              }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: 10,
-                  background: g.user?.profile_photo ? `url(${g.user.profile_photo}) center/cover` : `linear-gradient(135deg, ${T.gold}, ${T.goldDark})`,
-                  color: 'white', display: 'grid', placeItems: 'center', fontWeight: 900,
-                }}>{!g.user?.profile_photo && (g.user?.full_name?.[0] || '?')}</div>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontSize: 13, color: 'white', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.user?.full_name || g.user?.email || 'Unknown'}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {g.messages[0]?.message}
-                  </div>
-                </div>
-                {g.unread > 0 && (
-                  <span style={{ background: T.blue, color: 'white', borderRadius: 100, padding: '1px 8px', fontSize: 10, fontWeight: 900 }}>{g.unread}</span>
-                )}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      </Panel>
 
-      <div className="frosted-section" style={{ padding: 0, display: 'flex', flexDirection: 'column', minHeight: 480 }}>
+      <Panel inset="none" className="flex min-h-[480px] flex-col">
         {selectedUser ? (
           <>
-            <div style={{ padding: 14, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-              <div style={{ fontSize: 14, color: 'white', fontWeight: 800 }}>{selectedUser.full_name || 'User'}</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>{selectedUser.email}</div>
+            <div className="border-b border-border p-3.5">
+              <p className="font-semibold text-foreground">{selectedUser.full_name || "User"}</p>
+              <p className="text-xs text-muted-foreground">{selectedUser.email}</p>
             </div>
-            <div style={{ flex: 1, padding: 16, overflowY: 'auto', maxHeight: 420, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {grouped.find(g => g.user?.id === selectedUser.id)?.messages.slice().reverse().map((m: any) => (
-                <div key={m.id} style={{
-                  alignSelf: m.sender_type === 'admin' ? 'flex-end' : 'flex-start',
-                  maxWidth: '80%',
-                  padding: '10px 14px', borderRadius: 14,
-                  background: m.sender_type === 'admin' ? `linear-gradient(135deg, ${T.gold}, ${T.goldDark})` : 'rgba(255,255,255,0.05)',
-                  border: m.sender_type === 'admin' ? 'none' : '1px solid rgba(255,255,255,0.08)',
-                  color: 'white',
-                }}>
-                  <div style={{ fontSize: 13, fontWeight: 500 }}>{m.message}</div>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', marginTop: 4 }}>
-                    {m.sender_type} · {formatDistanceToNow(new Date(m.created_at), { addSuffix: true })}
+            <div className="flex max-h-[420px] flex-1 flex-col gap-2.5 overflow-y-auto p-4">
+              {grouped
+                .find((g) => g.user?.id === selectedUser.id)
+                ?.messages.slice()
+                .reverse()
+                .map((m: any) => (
+                  <div
+                    key={m.id}
+                    className={cn(
+                      "max-w-[80%] rounded-2xl px-3.5 py-2 text-sm",
+                      m.sender_type === "admin" ? "self-end bg-primary text-primary-foreground" : "self-start border border-border bg-muted text-foreground",
+                    )}
+                  >
+                    <p>{m.message}</p>
+                    <p className={cn("mt-1 text-[10px]", m.sender_type === "admin" ? "text-white/60" : "text-muted-foreground")}>
+                      {m.sender_type} · {formatDistanceToNow(new Date(m.created_at), { addSuffix: true })}
+                    </p>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
-            <div style={{ padding: 12, borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', gap: 8 }}>
-              <input value={reply} onChange={e => setReply(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') send(); }}
-                placeholder="Type a reply…"
-                style={{
-                  flex: 1, padding: '10px 14px', borderRadius: 12,
-                  background: 'rgba(0,0,0,0.28)', border: '1px solid rgba(255,255,255,0.1)',
-                  color: 'white', fontSize: 14, outline: 'none',
-                }} />
-              <RippleButton onClick={send} style={{
-                padding: '10px 16px', borderRadius: 12,
-                background: `linear-gradient(135deg, ${T.gold}, ${T.goldDark})`,
-                color: 'white', fontWeight: 800, fontSize: 13,
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-              }}>
-                <PiPaperPlaneRightBold size={14} /> Send
-              </RippleButton>
+            <div className="flex items-center gap-2 border-t border-border p-3">
+              <SmoothInput value={reply} onChange={(e) => setReply(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Type a reply…" wrapperClassName="flex-1" aria-label="Reply" />
+              <Button size="md" onClick={send} className="!px-3.5" icon={<Send className="size-4" />}>
+                Send
+              </Button>
             </div>
           </>
         ) : (
-          <div style={{ flex: 1, display: 'grid', placeItems: 'center', color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>
-            Select a thread to start replying.
-          </div>
+          <div className="grid flex-1 place-items-center text-sm text-muted-foreground">Select a thread to reply.</div>
         )}
-      </div>
+      </Panel>
     </div>
   );
 }
 
-/* ────────────────────────────────────────────────────────────
- *  ANNOUNCEMENTS
- * ──────────────────────────────────────────────────────────── */
 function AnnouncementsTab({ admin }: { admin: string }) {
   const [rows, setRows] = useState<Announcement[]>([]);
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
-  const [severity, setSeverity] = useState<'info' | 'warning' | 'critical' | 'success'>('info');
-  const [audience, setAudience] = useState<'all' | 'students' | 'drivers' | 'admins'>('all');
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [severity, setSeverity] = useState<"info" | "warning" | "critical" | "success">("info");
+  const [audience, setAudience] = useState<"all" | "students" | "drivers" | "admins">("all");
   const [posting, setPosting] = useState(false);
-
   const load = async () => setRows(await getAnnouncements());
-  useEffect(() => { load(); }, []);
-
+  useEffect(() => {
+    load();
+  }, []);
   const post = async () => {
     if (!title.trim() || !body.trim()) return;
     setPosting(true);
     try {
       await createAnnouncement({ title: title.trim(), body: body.trim(), severity, audience }, admin);
-      setTitle(''); setBody('');
+      setTitle("");
+      setBody("");
       await load();
-    } finally { setPosting(false); }
+    } finally {
+      setPosting(false);
+    }
   };
-
   const disable = async (id: string) => {
-    if (!confirm('Deactivate this announcement?')) return;
+    if (!confirm("Deactivate this announcement?")) return;
     await deactivateAnnouncement(id, admin);
     await load();
   };
-
+  const sevTone = (s: string): BadgeTone => (s === "critical" ? "danger" : s === "warning" ? "warning" : s === "success" ? "success" : "info");
+  const AUD_LABEL: Record<string, string> = { all: "all", students: "users", drivers: "service", admins: "admins" };
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }} className="mobile-grid-stack">
-      <div className="frosted-section">
-        <h3 style={{ fontSize: 14, color: 'white', fontWeight: 800, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 26, height: 26, borderRadius: 8, background: `linear-gradient(135deg, ${T.gold}, ${T.goldDark})`, display: 'grid', placeItems: 'center' }}>
-            <PiPlusCircleBold size={13} color="white" />
-          </div>
-          New announcement
+    <div className="grid gap-4 lg:grid-cols-2">
+      <Panel>
+        <h3 className="mb-4 flex items-center gap-2 font-display font-bold text-foreground">
+          <Megaphone className="size-4 text-accent" /> New announcement
         </h3>
-        <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Title"
-          style={inputStyle} />
-        <textarea value={body} onChange={e => setBody(e.target.value)} placeholder="Message body" rows={4}
-          style={{ ...inputStyle, marginTop: 8, resize: 'vertical', fontFamily: FONT.body }} />
-        <div style={{ display: 'flex', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
-          <div className="tab-pills">
-            {(['info', 'success', 'warning', 'critical'] as const).map(s => (
-              <button key={s} className={`tab-pill ${severity === s ? 'active' : ''}`} onClick={() => setSeverity(s)}>{s}</button>
+        <div className="space-y-3">
+          <SmoothInput value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" aria-label="Title" />
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Message body"
+            rows={4}
+            className="w-full resize-y rounded-2xl border border-border bg-muted2 px-4 py-3 text-foreground outline-none placeholder:text-muted-foreground/60 focus:border-accent focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          <div className="flex flex-wrap gap-2">
+            {(["info", "success", "warning", "critical"] as const).map((s) => (
+              <button key={s} type="button" onClick={() => setSeverity(s)} className={cn("rounded-lg border px-3 py-1.5 text-xs font-semibold capitalize", severity === s ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground")}>
+                {s}
+              </button>
             ))}
           </div>
-          <div className="tab-pills">
-            {(['all', 'students', 'drivers', 'admins'] as const).map(a => (
-              <button key={a} className={`tab-pill ${audience === a ? 'active' : ''}`} onClick={() => setAudience(a)}>{a}</button>
+          <div className="flex flex-wrap gap-2">
+            {(["all", "students", "drivers", "admins"] as const).map((a) => (
+              <button key={a} type="button" onClick={() => setAudience(a)} className={cn("rounded-lg border px-3 py-1.5 text-xs font-semibold", audience === a ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground")}>
+                {AUD_LABEL[a]}
+              </button>
             ))}
           </div>
+          <Button onClick={post} loading={posting} disabled={!title.trim() || !body.trim()}>
+            Publish announcement
+          </Button>
         </div>
-        <RippleButton onClick={post} disabled={posting || !title.trim() || !body.trim()} style={{
-          marginTop: 12, padding: '10px 18px', borderRadius: 12,
-          background: `linear-gradient(135deg, ${T.gold}, ${T.goldDark})`,
-          color: 'white', fontWeight: 800, fontSize: 13,
-        }}>
-          {posting ? 'Posting…' : 'Publish announcement'}
-        </RippleButton>
-      </div>
-
-      <div className="frosted-section">
-        <h3 style={{ fontSize: 14, color: 'white', fontWeight: 800, marginBottom: 14 }}>Live announcements</h3>
+      </Panel>
+      <Panel>
+        <h3 className="mb-4 font-display font-bold text-foreground">Live announcements</h3>
         {rows.length === 0 ? (
-          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, textAlign: 'center', padding: 20 }}>Nothing published.</div>
+          empty("Nothing published.")
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {rows.map(a => {
-              const color = a.severity === 'critical' ? T.red : a.severity === 'warning' ? T.orange : a.severity === 'success' ? T.green : T.blue;
-              return (
-                <div key={a.id} style={{ padding: 12, borderRadius: 12, background: `${color}12`, border: `1px solid ${color}44` }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-                    <div>
-                      <div style={{ fontSize: 13, color: 'white', fontWeight: 800 }}>{a.title}</div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 4 }}>{a.body}</div>
-                    </div>
-                    <button onClick={() => disable(a.id)} style={pillBtn(T.red)}>Off</button>
+          <div className="space-y-3">
+            {rows.map((a) => (
+              <div key={a.id} className="rounded-2xl border border-border bg-muted/40 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-foreground">{a.title}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{a.body}</p>
                   </div>
-                  <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                    <span className="chip" style={{ background: `${color}22`, color, borderColor: `${color}55` }}>{a.severity}</span>
-                    <span className="chip">{a.audience}</span>
-                    <span className="chip">{formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}</span>
-                  </div>
+                  <button type="button" onClick={() => disable(a.id)} className={pill("danger")}>
+                    Off
+                  </button>
                 </div>
-              );
-            })}
+                <div className="mt-2.5 flex flex-wrap gap-2">
+                  <Badge tone={sevTone(a.severity)}>{a.severity}</Badge>
+                  <Badge tone="neutral">{a.audience}</Badge>
+                  <Badge tone="neutral">{formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}</Badge>
+                </div>
+              </div>
+            ))}
           </div>
         )}
-      </div>
+      </Panel>
     </div>
   );
 }
 
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 14px', borderRadius: 12,
-  background: 'rgba(0,0,0,0.28)', border: '1px solid rgba(255,255,255,0.1)',
-  color: 'white', fontSize: 14, outline: 'none', fontFamily: FONT.body,
-};
-
-/* ────────────────────────────────────────────────────────────
- *  AUDIT LOGS
- * ──────────────────────────────────────────────────────────── */
 function AuditTab() {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const load = async () => { setLoading(true); setRows(await getAdminLogs(200)); setLoading(false); };
-  useEffect(() => { load(); }, []);
-
+  const load = async () => {
+    setLoading(true);
+    setRows(await getAdminLogs(200));
+    setLoading(false);
+  };
+  useEffect(() => {
+    load();
+  }, []);
   return (
-    <div className="frosted-section" style={{ padding: 0, overflow: 'hidden' }}>
-      <div style={{ padding: 14, borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <PiClockCounterClockwiseBold size={16} color={T.gold} />
-        <h3 style={{ fontSize: 13, color: 'white', fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase' }}>Admin action log</h3>
-      </div>
-      {loading ? (
-        <div style={{ padding: 24, color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>Loading…</div>
-      ) : rows.length === 0 ? (
-        <div style={{ padding: 30, color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>No activity logged yet.</div>
-      ) : (
-        <div style={{ maxHeight: 640, overflowY: 'auto' }}>
-          {rows.map(r => (
-            <div key={r.id} style={{
-              padding: '10px 16px', borderTop: '1px solid rgba(255,255,255,0.05)',
-              display: 'grid', gridTemplateColumns: '1fr auto', gap: 10, alignItems: 'center',
-            }}>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 12, color: 'white' }}>
-                  <b>{r.admin?.full_name || 'Admin'}</b> · <span style={{ color: T.gold }}>{r.action}</span>
-                </div>
-                {r.details && (
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {JSON.stringify(r.details)}
-                  </div>
-                )}
+    <Panel inset="none" className="overflow-hidden">
+      <h3 className="flex items-center gap-2 border-b border-border p-4 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+        <Clock className="size-4 text-accent" /> Admin action log
+      </h3>
+      {loading ? empty("Loading…") : rows.length === 0 ? empty("No activity logged yet.") : (
+        <div className="max-h-[640px] divide-y divide-border overflow-y-auto">
+          {rows.map((r) => (
+            <div key={r.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
+              <div className="min-w-0">
+                <p className="text-sm text-foreground">
+                  <b>{r.admin?.full_name || "Admin"}</b> · <span className="text-accent-strong">{r.action}</span>
+                </p>
+                {r.details && <p className="mt-0.5 truncate font-mono text-[10px] text-muted-foreground">{JSON.stringify(r.details)}</p>}
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>
-                {formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}
-              </div>
+              <span className="shrink-0 text-xs text-muted-foreground">{formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}</span>
             </div>
           ))}
         </div>
       )}
-    </div>
+    </Panel>
   );
 }
