@@ -28,17 +28,17 @@ const ROLE_META: Record<
   { label: string; tone: BadgeTone; title: string; sub: string; dot: string; badges: string[] }
 > = {
   student: {
-    label: "Rider",
+    label: "User",
     tone: "info",
-    title: "Sign in as a Rider",
-    sub: "Search verified drivers, split fares, and track every trip live from your JC Bose UST portal.",
+    title: "Sign in to ride",
+    sub: "Find verified people heading your way, split fares, and track every trip live from campus.",
     dot: "bg-info",
     badges: ["Verified campus email only", "Live ride tracking + SOS", "Split fares at the pump"],
   },
   driver: {
-    label: "Driver",
+    label: "Service",
     tone: "accent",
-    title: "Sign in as a Driver",
+    title: "Sign in to offer rides",
     sub: "Offer seats on trips you're already making. Cover fuel, meet peers, get paid instantly.",
     dot: "bg-accent",
     badges: ["Vehicle & licence verification", "Post rides in under a minute", "Fair, capped payouts"],
@@ -46,10 +46,10 @@ const ROLE_META: Record<
   admin: {
     label: "Admin",
     tone: "danger",
-    title: "Sign in as Admin",
-    sub: "University staff console — driver verification, SOS command centre, and community reports.",
+    title: "Sign in as admin",
+    sub: "University console — verification, SOS command centre, and community reports.",
     dot: "bg-danger",
-    badges: ["Verify driver documents", "Respond to live SOS alerts", "Community & audit logs"],
+    badges: ["Verify member documents", "Respond to live SOS alerts", "Community & audit logs"],
   },
 };
 

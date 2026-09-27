@@ -14,9 +14,8 @@ import AuthCallback from './components/auth/AuthCallback';
 import Landing from './pages/Landing';
 import RolePortal from './pages/RolePortal';
 import Login from './pages/Login';
-import StudentDashboard from './pages/StudentDashboard';
-import DriverDashboard from './pages/DriverDashboard';
-import UnifiedDashboard from './pages/UnifiedDashboard';
+import UserDashboard from './pages/UserDashboard';
+import ServiceDashboard from './pages/ServiceDashboard';
 import AdminPanel from './pages/AdminPanel';
 import PendingAdmin from './pages/PendingAdmin';
 import RideSearch from './pages/RideSearch';
@@ -31,6 +30,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
 import T from './lib/theme';
 import { cleanupPastRides } from './lib/api';
+import { dashboardPath } from './lib/roles';
 
 /* ---- Protected Route ---- */
 function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
@@ -86,15 +86,16 @@ export default function App() {
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           {/* Public */}
-          <Route path="/" element={user ? <Navigate to={user.user_type === 'admin' ? '/admin' : user.user_type === 'pending_admin' ? '/pending-admin' : user.user_type === 'both' ? '/unified' : user.user_type === 'driver' ? '/driver' : '/student'} /> : <AnimatedPage><Landing /></AnimatedPage>} />
+          <Route path="/" element={user ? <Navigate to={dashboardPath(user.user_type)} /> : <AnimatedPage><Landing /></AnimatedPage>} />
           <Route path="/portal" element={user ? <Navigate to="/" /> : <AnimatedPage><RolePortal /></AnimatedPage>} />
           <Route path="/login" element={user ? <Navigate to="/" /> : <AnimatedPage><Login /></AnimatedPage>} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/privacy" element={<AnimatedPage><PrivacyPolicy /></AnimatedPage>} />
           <Route path="/terms" element={<AnimatedPage><Terms /></AnimatedPage>} />
 
-          {/* Student */}
-          <Route path="/student" element={<ProtectedRoute roles={['student']}><AnimatedPage><StudentDashboard /></AnimatedPage></ProtectedRoute>} />
+          {/* User (rider) */}
+          <Route path="/user" element={<ProtectedRoute roles={['student', 'both']}><AnimatedPage><UserDashboard /></AnimatedPage></ProtectedRoute>} />
+          <Route path="/student" element={<Navigate to="/user" replace />} />
           <Route path="/rides" element={<AnimatedPage><RideSearch /></AnimatedPage>} />
           <Route path="/rides/search" element={<AnimatedPage><RideSearch /></AnimatedPage>} />
           <Route path="/rides/:id" element={<AnimatedPage><BookRide /></AnimatedPage>} />
@@ -103,13 +104,14 @@ export default function App() {
           <Route path="/tracking/:rideId" element={<ProtectedRoute><AnimatedPage><LiveTracking /></AnimatedPage></ProtectedRoute>} />
           <Route path="/chat/:rideId" element={<ProtectedRoute><AnimatedPage><Chat /></AnimatedPage></ProtectedRoute>} />
 
-          {/* Driver */}
-          <Route path="/driver" element={<ProtectedRoute roles={['driver']}><AnimatedPage><DriverDashboard /></AnimatedPage></ProtectedRoute>} />
+          {/* Service (offers rides) */}
+          <Route path="/service" element={<ProtectedRoute roles={['driver', 'both']}><AnimatedPage><ServiceDashboard /></AnimatedPage></ProtectedRoute>} />
+          <Route path="/driver" element={<Navigate to="/service" replace />} />
           <Route path="/rides/create" element={<ProtectedRoute roles={['driver']}><AnimatedPage><CreateRide /></AnimatedPage></ProtectedRoute>} />
           <Route path="/verification" element={<ProtectedRoute roles={['driver']}><AnimatedPage><Verification /></AnimatedPage></ProtectedRoute>} />
 
-          {/* Unified */}
-          <Route path="/unified" element={<ProtectedRoute roles={['both']}><AnimatedPage><UnifiedDashboard /></AnimatedPage></ProtectedRoute>} />
+          {/* Unified role folded into the User dashboard */}
+          <Route path="/unified" element={<Navigate to="/user" replace />} />
 
           {/* Admin */}
           <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AnimatedPage><AdminPanel /></AnimatedPage></ProtectedRoute>} />

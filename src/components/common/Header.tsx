@@ -19,6 +19,7 @@ import { useAuthStore, useNotificationStore } from "../../hooks/useStore";
 import Logo from "./Logo";
 import { cn } from "@/lib/utils";
 import type { BadgeTone } from "@/components/ui/primitives";
+import { roleLabel } from "@/lib/roles";
 
 const ROLE_TONE: Record<string, BadgeTone> = {
   admin: "danger",
@@ -64,12 +65,12 @@ export default function Header() {
         ]
       : user.user_type === "driver"
         ? [
-            { label: "Dashboard", path: "/driver", icon: <Home className="size-[18px]" /> },
+            { label: "Dashboard", path: "/service", icon: <Home className="size-[18px]" /> },
             { label: "Create ride", path: "/rides/create", icon: <Plus className="size-[18px]" /> },
-            { label: "My rides", path: "/driver", icon: <Car className="size-[18px]" /> },
+            { label: "My rides", path: "/service", icon: <Car className="size-[18px]" /> },
           ]
         : [
-            { label: "Dashboard", path: user.user_type === "both" ? "/unified" : "/student", icon: <Home className="size-[18px]" /> },
+            { label: "Dashboard", path: "/user", icon: <Home className="size-[18px]" /> },
             { label: "Find ride", path: "/rides/search", icon: <Search className="size-[18px]" /> },
             { label: "My bookings", path: "/bookings", icon: <Car className="size-[18px]" /> },
           ];
@@ -164,11 +165,11 @@ export default function Header() {
                         <p className="truncate text-xs text-muted-foreground">{user.email}</p>
                         <span
                           className={cn(
-                            "mt-2 inline-block rounded-lg px-2 py-0.5 text-xs font-semibold capitalize",
+                            "mt-2 inline-block rounded-lg px-2 py-0.5 text-xs font-semibold",
                             TONE_BADGE[tone],
                           )}
                         >
-                          {user.user_type}
+                          {roleLabel(user.user_type)}
                         </span>
                       </div>
                       <div className="p-1.5">

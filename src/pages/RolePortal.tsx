@@ -21,28 +21,28 @@ type Role = {
 const ROLES: Role[] = [
   {
     key: "student",
-    title: "Rider",
-    tag: "For JC Bose UST students",
-    desc: "Find safe, affordable rides with verified drivers heading your way.",
+    title: "User",
+    tag: "Take rides across campus",
+    desc: "Find safe, affordable rides with verified members heading your way.",
     perks: ["Search & book rides", "Live tracking + SOS", "Split fares fairly"],
     tone: "info",
     icon: <Smile />,
   },
   {
     key: "driver",
-    title: "Driver",
-    tag: "For campus car & bike owners",
+    title: "Service",
+    tag: "Offer rides & share seats",
     desc: "Offer seats on trips you're already making. Cover fuel, meet peers.",
-    perks: ["Post rides in seconds", "Verified passenger requests", "Fair, capped fares"],
+    perks: ["Post rides in seconds", "Verified ride requests", "Fair, capped fares"],
     tone: "accent",
     icon: <Car />,
   },
   {
     key: "admin",
     title: "Admin",
-    tag: "University staff access",
+    tag: "University operator access",
     desc: "Manage verifications, SOS alerts and community reports.",
-    perks: ["Driver verification", "SOS command center", "Community reports"],
+    perks: ["Member verification", "SOS command center", "Community reports"],
     tone: "success",
     icon: <ShieldCheck />,
   },
@@ -148,7 +148,7 @@ export default function RolePortal() {
         <p className="mt-10 text-center text-sm text-muted-foreground">
           Not sure which one?{" "}
           <Link to="/login?role=student" className="font-semibold text-accent hover:underline">
-            Start as a Rider
+            Start as a User
           </Link>{" "}
           — you can offer rides later.
         </p>

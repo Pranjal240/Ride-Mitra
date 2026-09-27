@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../hooks/useStore';
 import { createOrUpdateProfile, isAdminEmail } from '../../lib/auth';
+import { dashboardPath } from '../../lib/roles';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -63,11 +64,7 @@ export default function AuthCallback() {
           }
 
           setUser(finalUser);
-          if (finalUser.user_type === 'admin') navigate('/admin');
-          else if (finalUser.user_type === 'pending_admin') navigate('/pending-admin');
-          else if (finalUser.user_type === 'both') navigate('/unified');
-          else if (finalUser.user_type === 'driver') navigate('/driver');
-          else navigate('/student');
+          navigate(dashboardPath(finalUser.user_type));
         } else {
           // Create new profile
           const profile = await createOrUpdateProfile(authUser.id, email, fullName, role);
@@ -76,12 +73,7 @@ export default function AuthCallback() {
             profile.profile_photo = avatar;
           }
           setUser(profile);
-
-          if (profile.user_type === 'admin') navigate('/admin');
-          else if (profile.user_type === 'pending_admin') navigate('/pending-admin');
-          else if (profile.user_type === 'both') navigate('/unified');
-          else if (profile.user_type === 'driver') navigate('/driver');
-          else navigate('/student');
+          navigate(dashboardPath(profile.user_type));
         }
 
         localStorage.removeItem('selectedRole');

@@ -189,7 +189,7 @@ function RideCard({ ride }: { ride: Ride }) {
   );
 }
 
-export default function StudentDashboard() {
+export default function UserDashboard() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const reduce = useReducedMotion();
@@ -315,12 +315,12 @@ export default function StudentDashboard() {
                 <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5">
                   <span className="size-1.5 rounded-full bg-accent" />
                   <span className="text-xs font-semibold uppercase tracking-[0.14em] text-white/80">
-                    Rider portal · JC Bose UST
+                    User portal · JC Bose UST
                   </span>
                 </div>
                 <p className="mt-4 text-sm text-white/60">{greeting},</p>
                 <h1 className="font-display text-4xl font-extrabold tracking-tight sm:text-5xl">
-                  {user?.full_name?.split(" ")[0] || "Student"}
+                  {user?.full_name?.split(" ")[0] || "there"}
                   <span className="text-accent">.</span>
                 </h1>
                 <p className="mt-2 flex items-center gap-1.5 text-sm text-white/60">
