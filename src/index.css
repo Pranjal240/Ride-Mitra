@@ -4,7 +4,9 @@
    ═══════════════════════════════════════════════ */
 
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=JetBrains+Mono:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800;900&display=swap');
+/* Fonts are loaded via <link> in index.html (Bricolage Grotesque / Plus Jakarta
+   Sans / JetBrains Mono / Poppins) — kept out of CSS so the @import isn't
+   reordered after Tailwind's generated layers. */
 
 /* ─────────────────────────────────────────────────────────────
    DESIGN TOKENS — single source of truth: design-system/MASTER.md
@@ -173,45 +175,52 @@
   --shadow-xl:  0 24px 56px rgba(27,43,75,0.18);
 }
 
-/* ——— Reset & Base ——— */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ——— Reset & Base ———
+   MUST live in @layer base: Tailwind utilities live in @layer utilities, and an
+   UNLAYERED rule beats any layered rule regardless of specificity. Left
+   unlayered, `* { padding: 0 }` silently nullified every p-*/px-*/pt-* utility,
+   and the heading rule blocked leading-*/font-*/text-* on headings. In @layer
+   base, utilities correctly win while these remain the defaults. */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html {
-  scroll-behavior: smooth;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-b);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: var(--gold);
+    color: white;
+  }
+
+  /* ——— Scrollbar ——— */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb {
+    background: var(--gray-200);
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+  /* ——— Typography ——— */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-h);
+    color: inherit;
+    line-height: 1.2;
+  }
+
+  a { color: inherit; text-decoration: none; }
 }
-
-body {
-  font-family: var(--font-b);
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.6;
-  overflow-x: hidden;
-}
-
-::selection {
-  background: var(--gold);
-  color: white;
-}
-
-/* ——— Scrollbar ——— */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb {
-  background: var(--gray-200);
-  border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover { background: var(--gold); }
-
-/* ——— Typography ——— */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-h);
-  color: var(--dark);
-  line-height: 1.25;
-}
-
-a { color: var(--navy-light); text-decoration: none; }
 
 /* ——— Keyframes ——— */
 @keyframes spin-slow {

@@ -1,602 +1,642 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { motion, useReducedMotion } from "framer-motion";
 import {
-  PiCarBold, PiArrowRightBold, PiGraduationCapBold, PiShieldCheckBold,
-  PiChatCircleBold, PiCurrencyInrBold, PiLeafBold, PiLightningBold,
-  PiPlayCircleBold, PiCheckCircleFill, PiCrosshairSimpleBold, PiMapPinBold,
-  PiNavigationArrowBold, PiDownloadSimpleBold, PiAndroidLogoBold, PiDeviceMobileBold,
-  PiXBold,
-} from 'react-icons/pi';
-import Logo, { LogoText } from '../components/common/Logo';
-import T, { FONT } from '../lib/theme';
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
-import * as L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import { QRCodeSVG } from 'qrcode.react';
+  ArrowRight,
+  Bike,
+  Car,
+  Check,
+  Clock,
+  Download,
+  GraduationCap,
+  IndianRupee,
+  MapPin,
+  MessageCircle,
+  Navigation,
+  Play,
+  Route,
+  ShieldCheck,
+  Users,
+  Wallet,
+  Zap,
+} from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
-/* Map markers */
-const pickupIcon = L.divIcon({
-  className: '',
-  html: `<div style="width:20px;height:20px;border-radius:50%;background:#5B9A6F;border:3px solid white;box-shadow:0 0 0 4px rgba(91,154,111,0.35),0 4px 10px rgba(0,0,0,0.35);"></div>`,
-  iconSize: [20, 20], iconAnchor: [10, 10],
-});
-const meIcon = L.divIcon({
-  className: '',
-  html: `<div style="width:22px;height:22px;border-radius:50%;background:#4A6FA5;border:3px solid white;box-shadow:0 0 0 6px rgba(74,111,165,0.25),0 6px 14px rgba(0,0,0,0.4);"></div>`,
-  iconSize: [22, 22], iconAnchor: [11, 11],
-});
+import { SmoothScroll } from "@/components/ui/smooth-scroll";
+import { Field } from "@/components/ui/smooth-input";
+import { HoverExpandGallery, type GalleryItem } from "@/components/ui/hover-expand";
+import { ScrollReveal, Reveal, RevealGroup, RevealItem } from "@/components/ui/scroll-reveal";
+import { VideoReveal } from "@/components/ui/video-reveal";
+import { TrafficHero } from "@/components/ui/traffic-hero";
+import {
+  Badge,
+  Button,
+  buttonVariants,
+  Container,
+  Eyebrow,
+  Panel,
+  SectionHeading,
+  type BadgeTone,
+} from "@/components/ui/primitives";
+import { CursorGlow, Magnetic, MagneticButton } from "@/components/ui/cursor";
+import LiveMap from "@/components/landing/LiveMap";
+import IntroFilm from "@/components/landing/IntroFilm";
+import LandingHeader from "@/components/landing/LandingHeader";
+import Logo from "@/components/common/Logo";
+import { cn } from "@/lib/utils";
 
-const JCB_UST: [number, number] = [28.3762, 77.3149];
-const APK_URL = 'https://github.com/Pranjal240/Ride-Mitra/releases/latest/download/RideMitra.apk';
+const APK_URL =
+  "https://github.com/Pranjal240/Ride-Mitra/releases/latest/download/RideMitra.apk";
 
-/* ══════════════ INTRO VIDEO (the loading screen) ══════════════
-   The first thing a visitor sees on a fresh session: the launch film,
-   full screen, muted, with a Skip. Dismisses on Skip or when it ends. */
-function IntroVideo({ onDone }: { onDone: () => void }) {
-  const [ready, setReady] = useState(false);
-  const [leaving, setLeaving] = useState(false);
-  // Fade out on our own, then unmount — no framer exit (that can stall when the
-  // tab isn't active). CSS opacity + a timer always completes.
-  const finish = useCallback(() => {
-    setLeaving(true);
-    window.setTimeout(onDone, 400);
-  }, [onDone]);
-  // Never trap the user: dismiss if the film never starts, and hard-cap length.
-  useEffect(() => {
-    const hard = window.setTimeout(finish, 24000);
-    return () => window.clearTimeout(hard);
-  }, [finish]);
-  useEffect(() => {
-    if (ready) return;
-    const stall = window.setTimeout(finish, 6000);
-    return () => window.clearTimeout(stall);
-  }, [ready, finish]);
+/* ── On-load character reveal for the hero headline ──────────── */
+function HeroTitle() {
+  const reduce = useReducedMotion();
+  const lines: { text: string; accent?: boolean }[] = [
+    { text: "Share the ride." },
+    { text: "Skip the wait.", accent: true },
+  ];
 
   return (
-    <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 100000, background: '#07101F',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-        opacity: leaving ? 0 : 1, transition: 'opacity 0.4s ease',
-        pointerEvents: leaving ? 'none' : 'auto',
+    <h1 className="font-display text-[clamp(2.75rem,9vw,7rem)] font-extrabold leading-[0.95] tracking-[-0.03em] text-foreground">
+      {lines.map((line, li) => {
+        const chars = [...line.text];
+        return (
+          <span key={li} className={cn("block", line.accent && "text-accent")}>
+            {chars.map((ch, ci) =>
+              reduce ? (
+                <span key={ci}>{ch}</span>
+              ) : (
+                <motion.span
+                  key={ci}
+                  className="inline-block"
+                  initial={{ opacity: 0, y: "0.6em", rotateX: -40 }}
+                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                  transition={{
+                    delay: 0.15 + li * 0.28 + ci * 0.028,
+                    duration: 0.62,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  style={{ transformOrigin: "bottom" }}
+                >
+                  {ch === " " ? " " : ch}
+                </motion.span>
+              ),
+            )}
+          </span>
+        );
+      })}
+    </h1>
+  );
+}
+
+/* ── Hero route search (SmoothInput showcase) ────────────────── */
+function HeroSearch() {
+  const navigate = useNavigate();
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        navigate("/rides");
       }}
+      className="flex w-full max-w-2xl flex-col gap-2.5 rounded-3xl border border-border bg-card p-2.5 shadow-md sm:flex-row sm:items-center"
     >
-      <video
-        src="/launch.mp4"
-        poster="/launch-poster.jpg"
-        autoPlay
-        muted
-        playsInline
-        preload="auto"
-        onCanPlay={(e) => { setReady(true); e.currentTarget.play().catch(() => {}); }}
-        onPlaying={() => setReady(true)}
-        onEnded={finish}
-        style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
-      />
-
-      {!ready && (
-        <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', pointerEvents: 'none' }}>
-          <div style={{ position: 'relative', width: 104, height: 104, display: 'grid', placeItems: 'center' }}>
-            <div style={{
-              position: 'absolute', width: '100%', height: '100%', background: T.gold, opacity: 0.9,
-              borderRadius: '42% 58% 63% 37% / 41% 44% 56% 59%', animation: 'rm-morph 3.2s ease-in-out infinite',
-            }} />
-            <div style={{ position: 'relative', zIndex: 1 }}><Logo size={58} light /></div>
-          </div>
-        </div>
-      )}
-
-      <button
-        onClick={finish}
-        aria-label="Skip intro"
-        style={{
-          position: 'absolute', top: 'max(20px, env(safe-area-inset-top))', right: 20,
-          display: 'inline-flex', alignItems: 'center', gap: 8,
-          padding: '11px 18px', minHeight: 44, borderRadius: 100, cursor: 'pointer',
-          background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.28)',
-          color: '#fff', fontSize: 14, fontWeight: 700, fontFamily: FONT.body,
-        }}
-      >
-        Skip <PiXBold size={13} />
-      </button>
-    </div>
-  );
-}
-
-/* ══════════════ WORD REVEAL (clean, per-word fade-up) ══════════════ */
-function WordReveal({ text, delay = 0, active = true, style }: { text: string; delay?: number; active?: boolean; style?: React.CSSProperties }) {
-  return (
-    <span>
-      {text.split(' ').map((w, i) => (
-        <motion.span
-          key={i}
-          initial={{ opacity: 0, y: '0.35em' }}
-          animate={active ? { opacity: 1, y: 0 } : { opacity: 0, y: '0.35em' }}
-          transition={{ delay: delay + i * 0.06, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          style={{ display: 'inline-block', marginRight: '0.28em', ...style }}
-        >
-          {w}
-        </motion.span>
-      ))}
-    </span>
-  );
-}
-
-/* ══════════════ REVEAL (fade-up on scroll) ══════════════ */
-function Reveal({ children, delay = 0, style }: { children: React.ReactNode; delay?: number; style?: React.CSSProperties }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.5, delay, ease: 'easeOut' }}
-      style={style}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-/* ══════════════ MAGNETIC BUTTON (cursor-follow, flat) ══════════════ */
-function MagneticButton({ children, onClick, variant = 'primary', style: extraStyle }: {
-  children: React.ReactNode; onClick?: () => void; variant?: 'primary' | 'ghost'; style?: React.CSSProperties;
-}) {
-  const ref = useRef<HTMLButtonElement>(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const sx = useSpring(x, { stiffness: 260, damping: 18, mass: 0.6 });
-  const sy = useSpring(y, { stiffness: 260, damping: 18, mass: 0.6 });
-  const onMove = (e: React.MouseEvent) => {
-    const r = ref.current?.getBoundingClientRect(); if (!r) return;
-    x.set((e.clientX - r.left - r.width / 2) * 0.35);
-    y.set((e.clientY - r.top - r.height / 2) * 0.35);
-  };
-  const onLeave = () => { x.set(0); y.set(0); };
-  const base: React.CSSProperties = {
-    display: 'inline-flex', alignItems: 'center', gap: 10, padding: '15px 30px',
-    borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: 'pointer',
-    fontFamily: FONT.body, border: 'none', letterSpacing: '-0.01em', minHeight: 48,
-  };
-  const variants: Record<string, React.CSSProperties> = {
-    primary: { background: T.gold, color: '#20130A' },
-    ghost: { background: 'transparent', color: 'white', border: '1px solid rgba(255,255,255,0.28)' },
-  };
-  return (
-    <motion.button ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} onClick={onClick}
-      whileTap={{ scale: 0.96 }} style={{ ...base, ...variants[variant], x: sx, y: sy, ...extraStyle }}>
-      {children}
-    </motion.button>
-  );
-}
-
-/* ══════════════ LIVE MAP ══════════════ */
-function MapFlyTo({ target, zoom }: { target: [number, number]; zoom: number }) {
-  const map = useMap();
-  useEffect(() => { map.flyTo(target, zoom, { duration: 1.6, easeLinearity: 0.25 }); }, [target, zoom, map]);
-  return null;
-}
-function LiveMap() {
-  const [center, setCenter] = useState<[number, number]>(JCB_UST);
-  const [zoom, setZoom] = useState(15);
-  const [locStatus, setLocStatus] = useState<'idle' | 'asking' | 'live' | 'denied'>('idle');
-  const requestLive = () => {
-    if (!('geolocation' in navigator)) { setLocStatus('denied'); return; }
-    setLocStatus('asking');
-    navigator.geolocation.getCurrentPosition(
-      (pos) => { setCenter([pos.coords.latitude, pos.coords.longitude]); setZoom(16); setLocStatus('live'); },
-      () => setLocStatus('denied'),
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
-  };
-  const label = locStatus === 'live' ? 'You' : 'JC Bose UST';
-  const sublabel = locStatus === 'live' ? 'Live location' : locStatus === 'denied' ? 'Location denied — campus view' : 'Campus view';
-  return (
-    <div style={{
-      position: 'relative', borderRadius: 16, overflow: 'hidden',
-      border: '1px solid rgba(255,255,255,0.1)', aspectRatio: '4 / 3', background: '#0F1E3D',
-    }}>
-      <MapContainer center={center as any} zoom={zoom} scrollWheelZoom={false} dragging={false}
-        doubleClickZoom={false} zoomControl={false} attributionControl={false}
-        style={{ width: '100%', height: '100%', background: '#0F1E3D' }}>
-        <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap" />
-        <Marker position={center as any} icon={locStatus === 'live' ? meIcon : pickupIcon} />
-        <MapFlyTo target={center} zoom={zoom} />
-      </MapContainer>
-      <div style={{
-        position: 'absolute', top: 12, left: 12, padding: '8px 12px', background: '#fff',
-        borderRadius: 10, display: 'flex', alignItems: 'center', gap: 10,
-      }}>
-        <div style={{ width: 8, height: 8, borderRadius: '50%', background: locStatus === 'live' ? T.green : T.gold }} />
-        <div>
-          <div style={{ fontSize: 10, color: T.gray, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 }}>{sublabel}</div>
-          <div style={{ fontSize: 13, color: T.navy, fontWeight: 800, fontFamily: FONT.heading, lineHeight: 1.2 }}>{label}</div>
-        </div>
+      <div className="sm:flex-1">
+        <Field
+          aria-label="Pickup point"
+          placeholder="From your gate…"
+          value={from}
+          onChange={(e) => setFrom(e.target.value)}
+          icon={<Navigation className="size-4" />}
+          wrapperClassName="border-transparent bg-muted2"
+        />
       </div>
-      {locStatus !== 'live' && (
-        <button onClick={requestLive} aria-label="Use my live location" style={{
-          position: 'absolute', bottom: 12, right: 12, padding: '9px 14px', background: '#fff',
-          border: 'none', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-          fontSize: 12, fontWeight: 700, color: T.navy, fontFamily: FONT.body, minHeight: 40,
-        }}>
-          <PiCrosshairSimpleBold size={14} color={T.gold} />
-          {locStatus === 'asking' ? 'Locating…' : 'Use my location'}
-        </button>
-      )}
-    </div>
+      <div className="sm:flex-1">
+        <Field
+          aria-label="Destination"
+          placeholder="Where to?"
+          value={to}
+          onChange={(e) => setTo(e.target.value)}
+          icon={<MapPin className="size-4" />}
+          wrapperClassName="border-transparent bg-muted2"
+        />
+      </div>
+      <Button type="submit" size="lg" variant="accent" className="shrink-0" icon={<Route className="size-4" />}>
+        Find rides
+      </Button>
+    </form>
   );
 }
 
-/* ══════════════ SCROLL PROGRESS (flat gold bar) ══════════════ */
-function ScrollProgress() {
-  const [p, setP] = useState(0);
-  useEffect(() => {
-    const onScroll = () => {
-      const total = document.documentElement.scrollHeight - window.innerHeight;
-      setP(total > 0 ? (window.scrollY / total) * 100 : 0);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-  return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 2, background: 'transparent', zIndex: 60 }}>
-      <div style={{ height: '100%', width: `${p}%`, background: T.gold, transition: 'width 0.1s' }} />
-    </div>
-  );
-}
-
-/* ══════════════ FEATURE CARD (flat, hover-lift) ══════════════ */
-function FeatureCard({ icon, tint, title, body }: { icon: React.ReactNode; tint: string; title: string; body: string }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-40px' }}
-      transition={{ duration: 0.45, ease: 'easeOut' }}
-      whileHover={{ y: -5 }}
-      style={{
-        padding: 26, borderRadius: 16, background: 'rgba(255,255,255,0.04)',
-        border: '1px solid rgba(255,255,255,0.1)', height: '100%',
-      }}
-    >
-      <div style={{
-        width: 46, height: 46, borderRadius: 12, background: `${tint}22`,
-        border: `1px solid ${tint}55`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: tint, marginBottom: 16,
-      }}>{icon}</div>
-      <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', fontFamily: FONT.heading, marginBottom: 8, letterSpacing: '-0.01em' }}>{title}</h3>
-      <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 1.55 }}>{body}</p>
-    </motion.div>
-  );
-}
-
-const FEATURES = [
-  { icon: <PiShieldCheckBold size={22} />, tint: T.gold, title: 'Verified drivers only', body: 'University email + document check for every driver. You always know who you ride with.' },
-  { icon: <PiNavigationArrowBold size={22} />, tint: T.blue, title: 'Real-time GPS tracking', body: 'Watch your ride move live, and auto-share your ETA with emergency contacts.' },
-  { icon: <PiCurrencyInrBold size={22} />, tint: T.green, title: 'Split fuel, no surge', body: 'No commission, no surge pricing — just the fuel cost divided fairly between riders.' },
-  { icon: <PiChatCircleBold size={22} />, tint: T.blue, title: 'In-ride chat', body: 'Coordinate pickup without ever sharing your phone number.' },
-  { icon: <PiLightningBold size={22} />, tint: T.red, title: 'One-tap SOS', body: 'An emergency alert with your live location, sent to your trusted contacts instantly.' },
-  { icon: <PiLeafBold size={22} />, tint: T.green, title: 'Greener campus', body: 'Fewer cars at the gate means less traffic and lower fuel bills for everyone.' },
+const STEPS: GalleryItem[] = [
+  {
+    tag: "01",
+    title: "Verify with campus email",
+    caption: "Sign in with your JC Bose UST Google account. One-time check — no paperwork.",
+    icon: <GraduationCap />,
+  },
+  {
+    tag: "02",
+    title: "Match on your corridor",
+    caption: "We surface only rides already travelling your route, in your direction.",
+    icon: <Route />,
+  },
+  {
+    tag: "03",
+    title: "Agree the fare",
+    caption: "A fair, distance-capped price. Counter-offer if you like — no surge, ever.",
+    icon: <Wallet />,
+  },
+  {
+    tag: "04",
+    title: "Track, chat, arrive",
+    caption: "Live GPS the whole way, in-app chat, one-tap SOS. Split at the pump.",
+    icon: <Navigation />,
+  },
 ];
 
-const STEPS = [
-  { n: '01', icon: <PiGraduationCapBold size={22} />, title: 'Verify with campus email', body: 'Sign in with your JC Bose UST email or Google. One-time OTP — no paperwork.' },
-  { n: '02', icon: <PiNavigationArrowBold size={22} />, title: 'Find or offer a ride', body: 'Search by route and time, or offer seats on trips you are already making.' },
-  { n: '03', icon: <PiCarBold size={22} />, title: 'Track, chat, arrive', body: 'Live GPS, in-app chat, one-tap SOS. Pay in-app, split at the pump.' },
+const VEHICLES: GalleryItem[] = [
+  { tag: "4 seats", title: "Car pool", caption: "Split a full car four ways on the long campus run.", icon: <Car /> },
+  { tag: "1 pillion", title: "Bike pool", caption: "Beat the Mathura Road jam on two wheels.", icon: <Bike /> },
+  { tag: "Group", title: "Society runs", caption: "Recurring rides for the same colony, same schedule.", icon: <Users /> },
 ];
 
 const STATS = [
-  { v: '100%', label: 'Verified drivers', note: 'Licence + college ID checked' },
-  { v: '100%', label: 'Rides tracked', note: 'Live GPS + one-tap SOS' },
-  { v: 'Campus', label: 'Only access', note: '@jcboseust.ac.in required' },
-  { v: '₹0', label: 'Surge & fees', note: 'Split real fuel cost only' },
+  { v: "100%", label: "Drivers verified", note: "Licence + college ID" },
+  { v: "100%", label: "Rides tracked", note: "Live GPS + SOS" },
+  { v: "₹0", label: "Surge & commission", note: "Split real fuel only" },
+  { v: "1", label: "Campus, closed", note: "@jcboseust.ac.in" },
 ];
 
-/* ══════════════════════════════════════════════════════════════════════
-   LANDING
-   ══════════════════════════════════════════════════════════════════════ */
+const TONE_TILE: Record<BadgeTone, string> = {
+  neutral: "bg-muted text-foreground",
+  accent: "bg-accent-soft text-accent-strong",
+  success: "bg-success-soft text-success",
+  warning: "bg-warning-soft text-warning",
+  danger: "bg-danger-soft text-danger",
+  info: "bg-info-soft text-info",
+};
+
+const COMPARE: [string, boolean | "basic", boolean][] = [
+  ["Verified students & staff only", true, false],
+  ["Corridor + direction matching", true, false],
+  ["Split fuel — no surge, no commission", true, false],
+  ["Live tracking + one-tap SOS", true, false],
+  ["In-ride chat & video support", true, false],
+  ["Fare bargaining within a fair band", true, false],
+];
+
 export default function Landing() {
   const navigate = useNavigate();
+  const reduce = useReducedMotion();
   const [showIntro, setShowIntro] = useState(() => {
     try {
-      if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return false;
-      return !sessionStorage.getItem('intro_done_v1');
-    } catch { return false; }
+      if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return false;
+      return !sessionStorage.getItem("rm_intro_v2");
+    } catch {
+      return false;
+    }
   });
-  const endIntro = () => { setShowIntro(false); try { sessionStorage.setItem('intro_done_v1', '1'); } catch {} };
-  useEffect(() => { window.scrollTo(0, 0); }, []);
+  const endIntro = () => {
+    setShowIntro(false);
+    try {
+      sessionStorage.setItem("rm_intro_v2", "1");
+    } catch {
+      /* ignore */
+    }
+  };
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
-  const goPortal = () => navigate('/portal');
-  const downloadApp = () => window.open(APK_URL, '_blank', 'noopener');
-  const heroReady = !showIntro;
-
-  const navLink: React.CSSProperties = { color: 'rgba(255,255,255,0.6)', fontSize: 14, fontWeight: 500, textDecoration: 'none', transition: 'color 0.2s' };
+  const year = useMemo(() => new Date().getFullYear(), []);
 
   return (
-    <>
-      {showIntro && <IntroVideo onDone={endIntro} />}
-      <ScrollProgress />
+    <SmoothScroll>
+      {showIntro && <IntroFilm onDone={endIntro} />}
+      <LandingHeader />
 
-      <div style={{ minHeight: '100vh', background: '#0F1A33', color: 'white', overflow: 'hidden', position: 'relative' }}>
-
-        {/* HEADER */}
-        <header style={{
-          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, padding: '16px 32px',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          background: 'rgba(13,22,42,0.92)', borderBottom: '1px solid rgba(255,255,255,0.07)',
-        }} className="mobile-padding">
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <Logo size={32} light /><LogoText light />
-          </Link>
-          <nav style={{ display: 'flex', gap: 28, alignItems: 'center' }} className="mobile-hide">
-            <a href="#features" style={navLink} onMouseEnter={e => (e.currentTarget.style.color = 'white')} onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}>Features</a>
-            <a href="#how" style={navLink} onMouseEnter={e => (e.currentTarget.style.color = 'white')} onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}>How it works</a>
-            <a href="#safety" style={navLink} onMouseEnter={e => (e.currentTarget.style.color = 'white')} onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}>Safety</a>
-            <a href="#download" style={{ color: T.gold, fontSize: 14, fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}><PiAndroidLogoBold size={15} /> Get the app</a>
-          </nav>
-          <button onClick={goPortal} style={{
-            padding: '10px 20px', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer',
-            background: T.gold, color: '#20130A', border: 'none', display: 'flex', alignItems: 'center', gap: 6, minHeight: 42,
-          }}>
-            Sign In <PiArrowRightBold size={12} />
-          </button>
-        </header>
-
-        {/* HERO */}
-        <section style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', padding: '120px 24px 80px' }} className="mobile-padding">
-          <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', display: 'grid', gridTemplateColumns: '1.15fr 1fr', gap: 60, alignItems: 'center' }} className="mobile-grid-stack">
-            {/* Left */}
-            <div>
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={heroReady ? { opacity: 1, y: 0 } : {}} transition={{ delay: 0.1, duration: 0.5 }}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 14px', borderRadius: 100, background: 'rgba(200,149,108,0.12)', border: '1px solid rgba(200,149,108,0.25)', marginBottom: 26 }}>
-                <PiShieldCheckBold size={13} color={T.gold} />
-                <span style={{ fontSize: 12, color: T.gold, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>Built for JC Bose UST</span>
+      <main className="overflow-x-hidden bg-background text-foreground">
+        {/* ── HERO ─────────────────────────────────────────── */}
+        <section className="relative overflow-hidden pt-32 sm:pt-40">
+          <div className="relative">
+            <CursorGlow />
+            <Container size="7xl" className="relative z-10">
+              <motion.div
+                initial={reduce ? undefined : { opacity: 0, y: 12 }}
+                animate={reduce ? undefined : { opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, duration: 0.5 }}
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 shadow-sm"
+              >
+                <ShieldCheck className="size-3.5 text-accent" />
+                <span className="font-sans text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  JC Bose University · YMCA Faridabad
+                </span>
               </motion.div>
-              <h1 style={{ fontSize: 'clamp(44px, 8vw, 82px)', fontWeight: 900, color: 'white', lineHeight: 1.03, fontFamily: FONT.heading, letterSpacing: '-0.035em', marginBottom: 22 }}>
-                <WordReveal text="Every trip." delay={0.1} active={heroReady} />
-                <br />
-                <WordReveal text="Shared." delay={0.3} active={heroReady} style={{ color: T.gold }} />{' '}
-                <WordReveal text="Safer." delay={0.45} active={heroReady} />
-              </h1>
-              <motion.p initial={{ opacity: 0, y: 12 }} animate={heroReady ? { opacity: 1, y: 0 } : {}} transition={{ delay: 0.75, duration: 0.5 }}
-                style={{ fontSize: 18, color: 'rgba(255,255,255,0.65)', lineHeight: 1.6, maxWidth: 500, marginBottom: 34 }}>
-                Carpooling built only for JC Bose University students and staff. Verified accounts, live tracking on every ride, and fares split at the pump. No surge. No strangers.
+
+              <div className="mt-7 max-w-5xl">
+                <HeroTitle />
+              </div>
+
+              <motion.p
+                initial={reduce ? undefined : { opacity: 0, y: 16 }}
+                animate={reduce ? undefined : { opacity: 1, y: 0 }}
+                transition={{ delay: 0.95, duration: 0.6 }}
+                className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl"
+              >
+                The closed carpool network built only for JC Bose University students and
+                staff — verified faces, live-tracked trips, fares split at the pump.
+                <span className="font-semibold text-foreground"> No surge. No strangers.</span>
               </motion.p>
-              <motion.div initial={{ opacity: 0, y: 12 }} animate={heroReady ? { opacity: 1, y: 0 } : {}} transition={{ delay: 0.9, duration: 0.5 }}
-                style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 36 }}>
-                <MagneticButton onClick={downloadApp} style={{ background: '#FFFFFF', color: T.navy, padding: '17px 30px', fontSize: 16 }}>
-                  <PiAndroidLogoBold size={20} /> Download the app
+
+              <motion.div
+                initial={reduce ? undefined : { opacity: 0, y: 16 }}
+                animate={reduce ? undefined : { opacity: 1, y: 0 }}
+                transition={{ delay: 1.05, duration: 0.6 }}
+                className="mt-8 flex flex-wrap items-center gap-3"
+              >
+                <MagneticButton size="lg" onClick={() => navigate("/portal")} icon={<Car className="size-4" />}>
+                  Find a ride
                 </MagneticButton>
-                <MagneticButton onClick={goPortal}>Get Started <PiArrowRightBold size={16} /></MagneticButton>
-                <MagneticButton variant="ghost" onClick={() => document.getElementById('how')?.scrollIntoView({ behavior: 'smooth' })}>
-                  <PiPlayCircleBold size={18} /> How it works
+                <MagneticButton size="lg" variant="secondary" onClick={() => navigate("/portal")}>
+                  Offer a ride <ArrowRight className="size-4" />
                 </MagneticButton>
               </motion.div>
-              <motion.div initial={{ opacity: 0 }} animate={heroReady ? { opacity: 1 } : {}} transition={{ delay: 1.1, duration: 0.5 }}
-                style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-                {[{ c: T.green, t: 'Verified campus email' }, { c: T.gold, t: 'Live GPS + SOS' }, { c: T.blue, t: 'No commission, no surge' }].map((b, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: 'rgba(255,255,255,0.65)' }}>
-                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: b.c }} />{b.t}
-                  </div>
+
+              <motion.div
+                initial={reduce ? undefined : { opacity: 0 }}
+                animate={reduce ? undefined : { opacity: 1 }}
+                transition={{ delay: 1.15, duration: 0.6 }}
+                className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground"
+              >
+                {[
+                  { icon: <ShieldCheck className="size-4 text-success" />, t: "Verified campus ID" },
+                  { icon: <Navigation className="size-4 text-accent" />, t: "Live GPS + SOS" },
+                  { icon: <IndianRupee className="size-4 text-info" />, t: "No surge, no commission" },
+                ].map((c, i) => (
+                  <span key={i} className="inline-flex items-center gap-2">
+                    {c.icon}
+                    {c.t}
+                  </span>
                 ))}
               </motion.div>
-            </div>
-            {/* Right — flat live map card */}
-            <motion.div initial={{ opacity: 0, y: 24 }} animate={heroReady ? { opacity: 1, y: 0 } : {}} transition={{ delay: 0.6, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
-              <div style={{ background: 'rgba(255,255,255,0.04)', padding: 20, borderRadius: 20, border: '1px solid rgba(255,255,255,0.1)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 9, height: 9, borderRadius: '50%', background: T.green }} />
-                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase' }}>Live Map</span>
-                  </div>
-                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>JC Bose UST · Faridabad</span>
-                </div>
-                <LiveMap />
-                <div style={{ display: 'flex', gap: 10, marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                  <PiMapPinBold size={16} color={T.gold} style={{ flexShrink: 0, marginTop: 2 }} />
-                  <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>
-                    Real routes from your gate to your destination. Grant location access to see rides matched around you.
+
+              <motion.div
+                initial={reduce ? undefined : { opacity: 0, y: 16 }}
+                animate={reduce ? undefined : { opacity: 1, y: 0 }}
+                transition={{ delay: 1.25, duration: 0.6 }}
+                className="mt-9"
+              >
+                <HeroSearch />
+              </motion.div>
+            </Container>
+          </div>
+
+          {/* full-bleed live map, edge to edge under the headline */}
+          <motion.div
+            initial={reduce ? undefined : { opacity: 0 }}
+            animate={reduce ? undefined : { opacity: 1 }}
+            transition={{ delay: 0.7, duration: 0.8 }}
+            className="relative mt-12 w-screen"
+          >
+            <LiveMap className="h-[54vh] min-h-[380px] w-full border-y border-border" />
+          </motion.div>
+        </section>
+
+        {/* ── SCROLL STATEMENT ─────────────────────────────── */}
+        <section className="py-24 sm:py-32">
+          <Container size="6xl" className="text-center">
+            <ScrollReveal
+              as="h2"
+              text="Same route. Same time. Share the ride."
+              accent={["Share", "the", "ride."]}
+              className="mx-auto max-w-4xl text-[clamp(2rem,6vw,4.5rem)] font-extrabold leading-[1.02] tracking-tight text-foreground"
+            />
+            <Reveal delay={0.1}>
+              <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
+                Hundreds of students leave the same colonies for the same gate every morning.
+                Ride Mitra simply puts them in the same car.
+              </p>
+            </Reveal>
+          </Container>
+        </section>
+
+        {/* ── TRAFFIC METAPHOR ─────────────────────────────── */}
+        <section className="bg-muted/40 py-8">
+          <TrafficHero
+            eyebrow="The daily wait"
+            title={
+              <>
+                Everyone&apos;s stuck in the same jam.
+                <span className="text-accent"> Why ride it alone?</span>
+              </>
+            }
+            subtitle="One rider per car means more cars at the gate, longer waits, and a bigger fuel bill for everyone. Pool the trip and the road clears — for you and the whole campus."
+            actions={
+              <>
+                <MagneticButton onClick={() => navigate("/portal")}>Start pooling</MagneticButton>
+                <VideoReveal src="/launch.mp4" poster="/launch-poster.jpg">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-[15px] font-semibold text-foreground transition-colors hover:border-accent">
+                    <Play className="size-4 fill-current" /> Watch the film
+                  </span>
+                </VideoReveal>
+              </>
+            }
+          />
+        </section>
+
+        {/* ── HOW IT WORKS (hover-expand) ──────────────────── */}
+        <section id="how" className="py-20 sm:py-28">
+          <Container size="7xl">
+            <Reveal>
+              <SectionHeading
+                align="center"
+                eyebrow="4 steps · 60 seconds"
+                title={<>Your first ride is minutes away.</>}
+                description="Hover a step to open it — on your phone, just tap."
+                className="mb-12"
+              />
+            </Reveal>
+            <HoverExpandGallery items={STEPS} defaultActive={0} />
+          </Container>
+        </section>
+
+        {/* ── VEHICLE TYPES (hover-expand) ─────────────────── */}
+        <section className="bg-muted/40 py-20 sm:py-28">
+          <Container size="7xl">
+            <Reveal>
+              <SectionHeading
+                align="center"
+                eyebrow="However you travel"
+                title="A pool for every kind of trip."
+                className="mb-12"
+              />
+            </Reveal>
+            <HoverExpandGallery items={VEHICLES} defaultActive={0} />
+          </Container>
+        </section>
+
+        {/* ── TRUST / SAFETY BENTO ─────────────────────────── */}
+        <section id="safety" className="py-20 sm:py-28">
+          <Container size="7xl">
+            <Reveal>
+              <SectionHeading
+                eyebrow="Safety by design"
+                title={<>Trust is the whole point.</>}
+                description="A university-governed network where every safeguard is on by default — not an upsell."
+                className="mb-12 max-w-2xl"
+              />
+            </Reveal>
+
+            <div className="grid gap-4 md:grid-cols-6">
+              <Panel className="md:col-span-4 md:row-span-2 flex flex-col justify-between overflow-hidden bg-gradient-to-br from-navy to-navy-light text-white" inset="lg">
+                <div>
+                  <Badge tone="accent" icon={<ShieldCheck />}>
+                    Verified community
+                  </Badge>
+                  <h3 className="mt-5 font-display text-2xl font-bold sm:text-3xl">
+                    Every face is a verified JC Bose UST student or staff member.
+                  </h3>
+                  <p className="mt-3 max-w-md text-white/70">
+                    Licence and college-ID checks for drivers, campus email for everyone. You
+                    always know exactly who you&apos;re riding with.
                   </p>
                 </div>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* CAMPUS BAND */}
-        <div style={{ padding: '26px 24px', background: 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, flexWrap: 'wrap', textAlign: 'center' }}>
-          <PiGraduationCapBold size={20} color={T.gold} />
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.85)', fontFamily: FONT.heading }}>
-            Exclusively for JC Bose University of Science &amp; Technology, YMCA · Faridabad
-          </div>
-        </div>
-
-        {/* FEATURES */}
-        <section id="features" style={{ padding: '90px 24px 70px' }} className="mobile-padding">
-          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-            <Reveal style={{ textAlign: 'center', maxWidth: 720, margin: '0 auto 48px' }}>
-              <div style={{ fontSize: 12, color: T.gold, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 14 }}>Everything you need</div>
-              <h2 style={{ fontSize: 'clamp(30px, 5vw, 48px)', fontWeight: 900, color: 'white', fontFamily: FONT.heading, letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: 14 }}>
-                Built for the way students move.
-              </h2>
-              <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6 }}>
-                Not a taxi app with a student sticker. Every feature is designed for campus life — verified, tracked, and priced fairly.
-              </p>
-            </Reveal>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
-              {FEATURES.map((f) => <FeatureCard key={f.title} {...f} />)}
-            </div>
-          </div>
-        </section>
-
-        {/* HOW IT WORKS */}
-        <section id="how" style={{ padding: '70px 24px', background: 'rgba(255,255,255,0.015)' }} className="mobile-padding">
-          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-            <Reveal style={{ textAlign: 'center', marginBottom: 44 }}>
-              <div style={{ fontSize: 12, color: T.green, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 14 }}>3 steps · 60 seconds</div>
-              <h2 style={{ fontSize: 'clamp(30px, 5vw, 48px)', fontWeight: 900, color: 'white', fontFamily: FONT.heading, letterSpacing: '-0.03em' }}>
-                Your first ride is <span style={{ color: T.gold }}>minutes away.</span>
-              </h2>
-            </Reveal>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
-              {STEPS.map((s, i) => (
-                <Reveal key={s.n} delay={i * 0.06}>
-                  <div style={{ padding: 26, borderRadius: 16, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', height: '100%' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                      <div style={{ width: 46, height: 46, borderRadius: 12, background: 'rgba(200,149,108,0.16)', border: `1px solid ${T.gold}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.gold }}>{s.icon}</div>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: T.gold, letterSpacing: 1 }}>{s.n}</span>
+                <div className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-4">
+                  {STATS.map((s) => (
+                    <div key={s.label}>
+                      <div className="font-mono text-2xl font-semibold tabular-nums text-accent sm:text-3xl">
+                        {s.v}
+                      </div>
+                      <div className="mt-1 text-sm font-semibold text-white">{s.label}</div>
+                      <div className="text-xs text-white/55">{s.note}</div>
                     </div>
-                    <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', fontFamily: FONT.heading, marginBottom: 8 }}>{s.title}</h3>
-                    <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 1.55 }}>{s.body}</p>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
+                  ))}
+                </div>
+              </Panel>
 
-        {/* SAFETY / STATS */}
-        <section id="safety" style={{ padding: '70px 24px' }} className="mobile-padding">
-          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-            <Reveal style={{ textAlign: 'center', marginBottom: 40 }}>
-              <div style={{ fontSize: 12, color: '#F5A5A5', fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 14 }}>Safety by design</div>
-              <h2 style={{ fontSize: 'clamp(28px, 5vw, 42px)', fontWeight: 900, color: 'white', fontFamily: FONT.heading, letterSpacing: '-0.03em' }}>
-                Every safeguard, <span style={{ color: T.gold }}>verified.</span>
-              </h2>
-            </Reveal>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-              {STATS.map((s, i) => (
-                <Reveal key={s.label} delay={i * 0.05}>
-                  <div style={{ padding: 24, borderRadius: 16, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', height: '100%' }}>
-                    <div style={{ fontSize: 40, fontWeight: 900, color: T.gold, fontFamily: FONT.heading, letterSpacing: '-0.03em', lineHeight: 1 }}>{s.v}</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginTop: 12, fontFamily: FONT.heading }}>{s.label}</div>
-                    <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.55)', marginTop: 4 }}>{s.note}</div>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* COMPARISON */}
-        <section style={{ padding: '30px 24px 70px' }} className="mobile-padding">
-          <div style={{ maxWidth: 860, margin: '0 auto' }}>
-            <Reveal style={{ textAlign: 'center', marginBottom: 32 }}>
-              <h2 style={{ fontSize: 'clamp(26px, 5vw, 38px)', fontWeight: 900, color: 'white', fontFamily: FONT.heading, letterSpacing: '-0.03em' }}>
-                RideMitra vs. everything else.
-              </h2>
-            </Reveal>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 1, background: 'rgba(255,255,255,0.08)', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }} className="compare-table">
               {[
-                ['', 'RideMitra', 'Cab apps'],
-                ['Verified students only', true, false],
-                ['Split fuel — no surge', true, false],
-                ['Live tracking + SOS', true, 'basic'],
-                ['In-ride chat', true, false],
-                ['No commission fee', true, false],
-                ['Campus route matching', true, false],
-              ].map((row, i) => (
-                row.map((cell, j) => (
-                  <div key={`${i}-${j}`} style={{
-                    padding: '16px 18px', background: i === 0 ? '#16233F' : '#111d38',
-                    fontSize: 14, fontWeight: i === 0 || j === 0 ? 700 : 500,
-                    fontFamily: i === 0 || j === 0 ? FONT.heading : FONT.body,
-                    color: i === 0 ? T.gold : j === 0 ? 'white' : 'rgba(255,255,255,0.7)',
-                    display: 'flex', alignItems: 'center', justifyContent: j === 0 ? 'flex-start' : 'center',
-                    letterSpacing: i === 0 ? 1 : 0, textTransform: i === 0 ? 'uppercase' : 'none',
-                  }}>
-                    {typeof cell === 'boolean'
-                      ? (cell ? <PiCheckCircleFill size={20} color={T.green} /> : <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 20 }}>—</span>)
-                      : cell === 'basic' ? <span style={{ fontSize: 12, color: T.orange, fontWeight: 700 }}>Basic</span> : cell}
-                  </div>
-                ))
+                {
+                  icon: <Navigation className="size-5" />,
+                  tone: "info" as const,
+                  title: "Live GPS on every ride",
+                  body: "Watch the trip move in real time and auto-share your ETA with trusted contacts.",
+                },
+                {
+                  icon: <Zap className="size-5" />,
+                  tone: "danger" as const,
+                  title: "One-tap SOS",
+                  body: "An emergency alert with your live location, always one tap away.",
+                },
+                {
+                  icon: <MessageCircle className="size-5" />,
+                  tone: "accent" as const,
+                  title: "Chat & video support",
+                  body: "Coordinate pickup — and reach live support — without sharing your number.",
+                },
+                {
+                  icon: <Clock className="size-5" />,
+                  tone: "success" as const,
+                  title: "Fair, capped fares",
+                  body: "Distance-based price bands with room to bargain. No surge, no commission.",
+                },
+              ].map((c) => (
+                <Panel key={c.title} hover className="md:col-span-2">
+                  <span
+                    className={cn(
+                      "inline-grid size-11 place-items-center rounded-2xl [&>svg]:size-5",
+                      TONE_TILE[c.tone],
+                    )}
+                    aria-hidden
+                  >
+                    {c.icon}
+                  </span>
+                  <h3 className="mt-3 font-display text-lg font-bold text-foreground">{c.title}</h3>
+                  <p className="mt-1.5 text-sm text-muted-foreground">{c.body}</p>
+                </Panel>
               ))}
             </div>
-          </div>
+          </Container>
         </section>
 
-        {/* SEE IT IN MOTION */}
-        <section id="motion" style={{ padding: '40px 24px 20px' }} className="mobile-padding">
-          <div style={{ maxWidth: 960, margin: '0 auto', textAlign: 'center' }}>
-            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, color: T.gold, textTransform: 'uppercase', marginBottom: 12 }}>See it in motion</div>
-            <h2 style={{ fontSize: 'clamp(28px, 5vw, 44px)', fontWeight: 900, color: '#fff', letterSpacing: '-0.03em', marginBottom: 26, fontFamily: FONT.heading, lineHeight: 1.08 }}>
-              Campus rides, in twenty seconds.
-            </h2>
-            <div style={{ borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.12)', background: '#0F1A33' }}>
-              <video src="/launch.mp4" poster="/launch-poster.jpg" autoPlay muted loop playsInline preload="auto"
-                onCanPlay={(e) => { e.currentTarget.play().catch(() => {}); }}
-                style={{ width: '100%', display: 'block', aspectRatio: '16 / 9', objectFit: 'cover' }} />
-            </div>
-          </div>
-        </section>
-
-        {/* GET THE APP */}
-        <section id="download" style={{ padding: '40px 24px 20px' }} className="mobile-padding">
-          <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 40, padding: 'clamp(32px, 5vw, 52px)', borderRadius: 24, background: '#16233F', border: '1px solid rgba(200,149,108,0.25)' }}>
-              <div style={{ flex: '1 1 320px', minWidth: 280 }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 14px', borderRadius: 100, background: 'rgba(200,149,108,0.14)', border: '1px solid rgba(200,149,108,0.3)', marginBottom: 18 }}>
-                  <PiDeviceMobileBold size={13} color={T.gold} />
-                  <span style={{ fontSize: 11, color: T.gold, fontWeight: 700, letterSpacing: 1.5 }}>ANDROID APP · v1.0</span>
+        {/* ── COMPARISON ───────────────────────────────────── */}
+        <section id="compare" className="bg-muted/40 py-20 sm:py-28">
+          <Container size="5xl">
+            <Reveal>
+              <SectionHeading
+                align="center"
+                eyebrow="Why Ride Mitra"
+                title={<>Not a cab app with a student sticker.</>}
+                className="mb-12"
+              />
+            </Reveal>
+            <Reveal delay={0.1}>
+              <Panel inset="none" className="overflow-hidden">
+                <div className="grid grid-cols-[1.6fr_0.7fr_0.7fr] items-center bg-navy px-5 py-4 text-white sm:grid-cols-[2fr_1fr_1fr] sm:px-8">
+                  <span className="font-display text-sm font-bold uppercase tracking-wide text-accent">
+                    Ride Mitra vs. cab apps
+                  </span>
+                  <span className="text-center font-display text-sm font-bold">Ride Mitra</span>
+                  <span className="text-center text-sm font-semibold text-white/60">Cab apps</span>
                 </div>
-                <h2 style={{ fontSize: 'clamp(28px, 5vw, 42px)', fontWeight: 900, color: 'white', fontFamily: FONT.heading, letterSpacing: '-0.03em', lineHeight: 1.08, marginBottom: 14 }}>
-                  Take Ride Mitra<br /><span style={{ color: T.gold }}>with you.</span>
-                </h2>
-                <p style={{ fontSize: 15.5, color: 'rgba(255,255,255,0.65)', lineHeight: 1.6, maxWidth: 440, marginBottom: 24 }}>
-                  Install the app for live tracking, one-tap SOS and upfront fares on the move. Free · works on Android 7.0 and up.
-                </p>
-                <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <a href={APK_URL} download style={{ textDecoration: 'none' }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '16px 28px', borderRadius: 12, background: T.gold, color: '#20130A', fontSize: 16, fontWeight: 800, fontFamily: FONT.body }}>
-                      <PiDownloadSimpleBold size={19} /> Download APK
+                {COMPARE.map((row, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      "grid grid-cols-[1.6fr_0.7fr_0.7fr] items-center px-5 py-4 sm:grid-cols-[2fr_1fr_1fr] sm:px-8",
+                      i % 2 === 1 && "bg-muted/50",
+                    )}
+                  >
+                    <span className="pr-3 text-sm font-medium text-foreground">{row[0]}</span>
+                    <span className="flex justify-center">
+                      <Check className="size-5 text-success" />
                     </span>
-                  </a>
-                  <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.45)' }}>~86 MB · direct install</span>
-                </div>
-              </div>
-              <div style={{ flex: '0 0 auto', textAlign: 'center' }}>
-                <div style={{ padding: 14, borderRadius: 16, background: '#FFFFFF', display: 'inline-block' }}>
-                  <QRCodeSVG value={APK_URL} size={132} fgColor={T.navy} bgColor="#FFFFFF" level="M" />
-                </div>
-                <div style={{ marginTop: 12, fontSize: 12.5, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Scan to install on your phone</div>
-              </div>
-            </div>
-          </div>
+                    <span className="flex justify-center text-muted-foreground">
+                      {row[2] ? <Check className="size-5 text-success" /> : <span className="text-lg">—</span>}
+                    </span>
+                  </div>
+                ))}
+              </Panel>
+            </Reveal>
+          </Container>
         </section>
 
-        {/* CTA */}
-        <section style={{ padding: '80px 24px 100px' }} className="mobile-padding">
-          <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-            <div style={{ padding: 'clamp(44px, 8vw, 72px) 40px', borderRadius: 24, textAlign: 'center', background: '#16233F', border: '1px solid rgba(200,149,108,0.22)' }}>
-              <h2 style={{ fontSize: 'clamp(32px, 6vw, 54px)', fontWeight: 900, color: 'white', fontFamily: FONT.heading, letterSpacing: '-0.035em', lineHeight: 1.05, marginBottom: 18 }}>
-                Your ride is <span style={{ color: T.gold }}>waiting.</span>
-              </h2>
-              <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.65)', maxWidth: 500, margin: '0 auto 32px', lineHeight: 1.6 }}>
-                Verify your JC Bose UST account and start sharing rides across campus in minutes.
-              </p>
-              <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <MagneticButton onClick={goPortal}>Choose Your Portal <PiArrowRightBold size={16} /></MagneticButton>
-                <MagneticButton variant="ghost" onClick={() => navigate('/rides')}>Browse Rides</MagneticButton>
-              </div>
-            </div>
-          </div>
+        {/* ── SEE IT IN MOTION (VideoReveal) ───────────────── */}
+        <section className="py-20 sm:py-28">
+          <Container size="6xl">
+            <Reveal>
+              <SectionHeading
+                align="center"
+                eyebrow="See it in motion"
+                title="Campus rides, in twenty seconds."
+                className="mb-10"
+              />
+            </Reveal>
+            <Reveal delay={0.1}>
+              <VideoReveal src="/launch.mp4" poster="/launch-poster.jpg" className="group block">
+                <div className="relative aspect-video w-full overflow-hidden rounded-3xl border border-border shadow-lg">
+                  <img
+                    src="/launch-poster.jpg"
+                    alt="Ride Mitra film"
+                    className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 grid place-items-center bg-navy/30">
+                    <span className="grid size-16 place-items-center rounded-full bg-accent text-navy shadow-xl">
+                      <Play className="size-6 fill-current" />
+                    </span>
+                  </div>
+                </div>
+              </VideoReveal>
+            </Reveal>
+          </Container>
         </section>
 
-        {/* FOOTER */}
-        <footer style={{ padding: '36px 24px 32px', borderTop: '1px solid rgba(255,255,255,0.06)', background: '#0B1428' }}>
-          <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Logo size={28} light /><LogoText light />
-              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginLeft: 12 }}>© 2026 · Made for JC Bose UST</span>
+        {/* ── GET THE APP ──────────────────────────────────── */}
+        <section id="get-app" className="py-20 sm:py-28">
+          <Container size="6xl">
+            <Panel inset="none" className="overflow-hidden border-accent/30">
+              <div className="grid items-center gap-8 p-8 sm:p-12 lg:grid-cols-[1.3fr_0.7fr]">
+                <div>
+                  <Badge tone="accent" icon={<Download />}>
+                    Android app · v1.0
+                  </Badge>
+                  <h2 className="mt-5 font-display text-3xl font-extrabold leading-tight tracking-tight text-foreground sm:text-4xl">
+                    Take Ride Mitra <span className="text-accent">with you.</span>
+                  </h2>
+                  <p className="mt-4 max-w-md text-muted-foreground">
+                    Live tracking, one-tap SOS and upfront fares on the move. Free — works on
+                    Android 7.0 and up.
+                  </p>
+                  <div className="mt-6 flex flex-wrap items-center gap-4">
+                    <Magnetic>
+                      <a
+                        href={APK_URL}
+                        download
+                        className={cn(buttonVariants({ variant: "accent", size: "lg" }))}
+                      >
+                        <Download className="size-4" /> Download APK
+                      </a>
+                    </Magnetic>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      ~86 MB · direct install
+                    </span>
+                  </div>
+                </div>
+                <div className="justify-self-center text-center">
+                  <div className="inline-block rounded-3xl border border-border bg-card p-4 shadow-md">
+                    <QRCodeSVG value={APK_URL} size={148} fgColor="#1B2B4B" bgColor="#FFFFFF" level="M" />
+                  </div>
+                  <div className="mt-3 text-sm font-medium text-muted-foreground">
+                    Scan to install
+                  </div>
+                </div>
+              </div>
+            </Panel>
+          </Container>
+        </section>
+
+        {/* ── CLOSING CTA ──────────────────────────────────── */}
+        <section className="pb-28 pt-4">
+          <Container size="6xl">
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-light px-6 py-20 text-center text-white sm:py-24">
+              <RevealGroup className="relative z-10">
+                <RevealItem>
+                  <h2 className="mx-auto max-w-3xl font-display text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl">
+                    Your ride is <span className="text-accent">waiting.</span>
+                  </h2>
+                </RevealItem>
+                <RevealItem>
+                  <p className="mx-auto mt-5 max-w-xl text-lg text-white/70">
+                    Verify your JC Bose UST account and start sharing rides across campus in minutes.
+                  </p>
+                </RevealItem>
+                <RevealItem>
+                  <div className="mt-9 flex flex-wrap justify-center gap-3">
+                    <MagneticButton size="lg" variant="accent" onClick={() => navigate("/portal")}>
+                      Choose your portal <ArrowRight className="size-4" />
+                    </MagneticButton>
+                    <MagneticButton
+                      size="lg"
+                      variant="secondary"
+                      className="border-white/25 text-white hover:border-accent hover:text-accent"
+                      onClick={() => navigate("/rides")}
+                    >
+                      Browse rides
+                    </MagneticButton>
+                  </div>
+                </RevealItem>
+              </RevealGroup>
             </div>
-            <div style={{ display: 'flex', gap: 24 }}>
-              <Link to="/privacy" style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, textDecoration: 'none' }}>Privacy</Link>
-              <Link to="/terms" style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, textDecoration: 'none' }}>Terms</Link>
-              <a href="mailto:hello@ridemitra.app" style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, textDecoration: 'none' }}>Contact</a>
+          </Container>
+        </section>
+
+        {/* ── FOOTER ───────────────────────────────────────── */}
+        <footer className="border-t border-border py-10">
+          <Container size="7xl" className="flex flex-wrap items-center justify-between gap-6">
+            <div className="flex items-center gap-2.5">
+              <Logo size={30} />
+              <span className="font-display text-lg font-extrabold tracking-tight text-foreground">
+                Ride<span className="text-accent">Mitra</span>
+              </span>
+              <span className="ml-3 text-sm text-muted-foreground">
+                © {year} · Made for JC Bose UST
+              </span>
             </div>
-          </div>
+            <nav className="flex gap-6 text-sm text-muted-foreground">
+              <Link to="/privacy" className="transition-colors hover:text-foreground">
+                Privacy
+              </Link>
+              <Link to="/terms" className="transition-colors hover:text-foreground">
+                Terms
+              </Link>
+              <a href="mailto:hello@ridemitra.app" className="transition-colors hover:text-foreground">
+                Contact
+              </a>
+            </nav>
+          </Container>
         </footer>
-      </div>
-    </>
+      </main>
+    </SmoothScroll>
   );
 }
