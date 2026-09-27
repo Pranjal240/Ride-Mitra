@@ -1,11 +1,11 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuthStore } from './hooks/useStore';
 import { useRealtimeNotifications } from './hooks/useRealtime';
 import { ToastContainer } from './components/common';
 import Header from './components/common/Header';
-import { CursorSpotlight, CommandPalette, MobileBottomNav, CommandHint } from './components/common/GlobalUI';
+import { CommandPalette, MobileBottomNav, CommandHint } from './components/common/GlobalUI';
 import LiveAnnouncements from './components/common/LiveAnnouncements';
 import { ScrollProgress } from './components/common/Interactive3D';
 import AuthCallback from './components/auth/AuthCallback';
@@ -32,87 +32,16 @@ import Terms from './pages/Terms';
 import T from './lib/theme';
 import { cleanupPastRides } from './lib/api';
 
-/* ---- Live Cursor Trail Hook ---- */
-function useCursorTrail() {
-  const glowRef = useRef<HTMLDivElement>(null);
-  const ringRef = useRef<HTMLDivElement>(null);
-  const rafRef = useRef<number>(0);
-  const mousePos = useRef({ x: -100, y: -100 });
-  const currentPos = useRef({ x: -100, y: -100 });
-
-  const animate = useCallback(() => {
-    const glow = glowRef.current;
-    const ring = ringRef.current;
-    if (!glow || !ring) return;
-
-    currentPos.current.x += (mousePos.current.x - currentPos.current.x) * 0.15;
-    currentPos.current.y += (mousePos.current.y - currentPos.current.y) * 0.15;
-
-    glow.style.left = `${mousePos.current.x}px`;
-    glow.style.top = `${mousePos.current.y}px`;
-    ring.style.left = `${currentPos.current.x}px`;
-    ring.style.top = `${currentPos.current.y}px`;
-
-    rafRef.current = requestAnimationFrame(animate);
-  }, []);
-
-  useEffect(() => {
-    const isMobile = window.matchMedia('(pointer: coarse)').matches;
-    if (isMobile) return;
-
-    const handleMove = (e: MouseEvent) => {
-      mousePos.current = { x: e.clientX, y: e.clientY };
-    };
-
-    const handleOver = (e: MouseEvent) => {
-      const target = e.target;
-      if (!(target instanceof HTMLElement)) {
-        ringRef.current?.classList.remove('hovering');
-        return;
-      }
-      if (target.closest('button, a, [role="button"], input, textarea, select')) {
-        ringRef.current?.classList.add('hovering');
-      } else {
-        ringRef.current?.classList.remove('hovering');
-      }
-    };
-
-    document.addEventListener('mousemove', handleMove);
-    document.addEventListener('mouseover', handleOver);
-    rafRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      document.removeEventListener('mousemove', handleMove);
-      document.removeEventListener('mouseover', handleOver);
-      cancelAnimationFrame(rafRef.current);
-    };
-  }, [animate]);
-
-  const isMobile = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
-  if (isMobile) return null;
-
-  return (
-    <>
-      <div ref={glowRef} className="cursor-glow" />
-      <div ref={ringRef} className="cursor-ring" />
-    </>
-  );
-}
-
 /* ---- Protected Route ---- */
 function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
   const { user, loading } = useAuthStore();
   if (loading) return (
     <div style={{
       minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center',
-      background: 'radial-gradient(ellipse at top, #152240 0%, #0A1128 60%, #050914 100%)',
-      position: 'relative', overflow: 'hidden',
+      background: '#0F1A33',
     }}>
-      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16, position: 'relative', zIndex: 2 }}>
-        <div style={{ position: 'relative', width: 56, height: 56 }}>
-          <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'radial-gradient(circle, rgba(200,149,108,0.3), transparent 70%)', filter: 'blur(14px)' }} />
-          <div style={{ position: 'absolute', inset: 4, border: `3px solid rgba(200,149,108,0.15)`, borderTopColor: T.gold, borderRadius: '50%', animation: 'spin-slow 0.8s linear infinite' }} />
-        </div>
+      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16 }}>
+        <div style={{ width: 48, height: 48, border: `3px solid rgba(200,149,108,0.2)`, borderTopColor: T.gold, borderRadius: '50%', animation: 'spin-slow 0.8s linear infinite' }} />
         <p style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: 12, fontFamily: "'Poppins',sans-serif", letterSpacing: 2, textTransform: 'uppercase' }}>Loading</p>
       </div>
     </div>
@@ -145,13 +74,9 @@ export default function App() {
 
   useRealtimeNotifications(user?.id);
 
-  const cursorTrail = useCursorTrail();
-
   return (
     <div style={{ minHeight: '100vh', background: T.bg, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}>
-      <CursorSpotlight />
       <ScrollProgress />
-      {cursorTrail}
       {user && <LiveAnnouncements />}
       {user && <Header />}
       <CommandPalette />
