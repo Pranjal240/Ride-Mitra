@@ -75,7 +75,7 @@ export function IntroFilm({
         )}
       </AnimatePresence>
 
-      {/* film opens from the logo via clip-path */}
+      {/* film opens from the logo via clip-path (Skiper 67 pattern) */}
       <motion.div
         initial={{ clipPath: "inset(44% 44% 44% 44% round 24px)", opacity: 0 }}
         animate={
@@ -85,6 +85,13 @@ export function IntroFilm({
         }
         transition={{ duration: 1, type: "spring", stiffness: 90, damping: 20 }}
         className="absolute inset-0"
+        style={{
+          // poster fills the frame the instant the clip-path opens, so the morph
+          // never flashes empty dark bars while the video buffers.
+          backgroundImage: `url(${poster})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
       >
         <video
           src={src}
@@ -99,7 +106,7 @@ export function IntroFilm({
           }}
           onPlaying={() => setReady(true)}
           onEnded={finish}
-          className="size-full object-contain"
+          className="size-full object-cover"
         />
       </motion.div>
 

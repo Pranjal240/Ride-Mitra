@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   ArrowLeft,
   Calendar,
@@ -23,6 +22,7 @@ import { calculateRoute } from "@/lib/maps";
 import { dashboardPath } from "@/lib/roles";
 import type { Ride, Review } from "@/types";
 import { Badge, Button, Container, PageShell, Panel } from "@/components/ui/primitives";
+import { Reveal, RevealGroup, RevealItem } from "@/components/ui/scroll-reveal";
 import { cn } from "@/lib/utils";
 
 interface RazorpayResponse {
@@ -182,19 +182,22 @@ export default function BookRide() {
           <ArrowLeft className="size-4" /> Back
         </button>
 
-        <Panel inset="none" className="mb-5 overflow-hidden">
-          <MapView
-            markers={markers}
-            route={routeCoords.length > 0 ? routeCoords : undefined}
-            center={ride.from_location ? [ride.from_location.lat, ride.from_location.lng] : undefined}
-            zoom={12}
-            height="320px"
-          />
-        </Panel>
+        <Reveal>
+          <Panel inset="none" className="mb-5 overflow-hidden">
+            <MapView
+              markers={markers}
+              route={routeCoords.length > 0 ? routeCoords : undefined}
+              center={ride.from_location ? [ride.from_location.lat, ride.from_location.lng] : undefined}
+              zoom={12}
+              height="320px"
+            />
+          </Panel>
+        </Reveal>
 
         <div className="grid gap-5 lg:grid-cols-[1fr_360px] lg:items-start">
           {/* left */}
-          <div className="space-y-4">
+          <RevealGroup className="space-y-4">
+            <RevealItem>
             <Panel className="flex items-center gap-4">
               <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-navy to-navy-light font-display text-xl font-bold text-white">
                 {ride.driver?.profile_photo ? (
@@ -212,7 +215,9 @@ export default function BookRide() {
                 </p>
               </div>
             </Panel>
+            </RevealItem>
 
+            <RevealItem>
             <Panel>
               <div className="flex items-start gap-3">
                 <div className="flex flex-col items-center gap-1 pt-1">
@@ -243,8 +248,10 @@ export default function BookRide() {
                 </Badge>
               </div>
             </Panel>
+            </RevealItem>
 
             {reviews.length > 0 && (
+              <RevealItem>
               <Panel>
                 <h3 className="mb-3 font-display font-bold text-foreground">Driver reviews</h3>
                 <div className="space-y-2.5">
@@ -261,8 +268,9 @@ export default function BookRide() {
                   ))}
                 </div>
               </Panel>
+              </RevealItem>
             )}
-          </div>
+          </RevealGroup>
 
           {/* right — sticky booking */}
           <div className="lg:sticky lg:top-20">
