@@ -1,3 +1,6 @@
+<!-- ⚠️ SUPERSEDED (2026-09-27): This "Ride Mitra V3" design token file (blue #3B82F6 palette) is
+     retired. The single source of truth is design-system/MASTER.md, per docs/prd/WEBSITE_PRD.md.
+     Where this file conflicts with MASTER.md, MASTER.md wins. Retained for history only. -->
 ---
 name: Ride Mitra V3
 colors:

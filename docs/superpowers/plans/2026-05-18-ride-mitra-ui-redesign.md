@@ -1,4 +1,8 @@
 # Ride Mitra UI/UX Redesign Implementation Plan
+
+> **⚠️ SUPERSEDED (2026-09-27).** This plan is superseded by `docs/prd/WEBSITE_PRD.md`,
+> `docs/prompts/WEBSITE_BUILD_PROMPT.md`, and the design system in `design-system/MASTER.md`.
+> Where this document conflicts with those, they win. Retained for history only.
 > **For agentic workers:** REQUIRED: Use superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Implement the Ride Mitra UI redesign, map route tracking, date filter fixes, and live SOS location.

@@ -1,5 +1,9 @@
 # Ride Mitra UI/UX Redesign & Core Features Spec
 
+> **⚠️ SUPERSEDED (2026-09-27).** This spec is superseded by `docs/prd/WEBSITE_PRD.md`,
+> `docs/prompts/WEBSITE_BUILD_PROMPT.md`, and the design system in `design-system/MASTER.md`.
+> Where this document conflicts with those, they win. Retained for history only.
+
 ## 1. Overview
 The goal of this redesign is to completely transform the Ride Mitra web app from a static, basic UI into a highly premium, lively, and fully responsive platform. The update introduces vibrant themes, glassmorphism, fluid animations, and solidifies core missing functionalities like live map routing and emergency location broadcasting.
 
