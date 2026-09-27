@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Ride Mitra — Intro</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <link href="assets/fonts/fonts.css" rel="stylesheet" />
+    <style>
+      :root {
+        --ivory: #f7f5f1;
+        --ivory-2: #efe9df;
+        --ink: #17223b;      /* readable navy text */
+        --navy: #1b2b4b;     /* primary navy surface */
+        --gold: #c8956c;     /* decoration only (pins, lines, borders) */
+        --gold-ink: #a67a50; /* gold TEXT on ivory (large only) */
+        --gold-soft: #f5e6d3;
+        --border: #e3dccf;
+        --muted: #5a5f52;
+        --success: #3f7d5b;
+        --danger: #c0533b;
+        --card: #ffffff;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 1920px; height: 1080px; overflow: hidden;
+        background: var(--ivory);
+        font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+      }
+      .display { font-family: "Bricolage Grotesque", "Plus Jakarta Sans", sans-serif; }
+      .mono { font-family: "JetBrains Mono", monospace; }
+
+      #root { position: relative; width: 1920px; height: 1080px; background: var(--ivory); }
+      .scene {
+        position: absolute; inset: 0;
+        width: 1920px; height: 1080px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        opacity: 0;
+      }
+      /* soft page vignette so ivory reads as a designed surface */
+      .bg-wash {
+        position: absolute; inset: 0;
+        background:
+          radial-gradient(1200px 700px at 50% 34%, #ffffff 0%, rgba(255,255,255,0) 60%),
+          radial-gradient(1400px 900px at 78% 96%, var(--ivory-2) 0%, rgba(239,233,223,0) 55%);
+        pointer-events: none;
+      }
+
+      /* ── Scene 1 : hook ── */
+      .eyebrow {
+        display: inline-flex; align-items: center; gap: 14px;
+        padding: 12px 26px; border-radius: 999px;
+        background: var(--gold-soft); color: var(--navy);
+        font-weight: 600; font-size: 24px; letter-spacing: 0.14em; text-transform: uppercase;
+        border: 1px solid #ecd8bf;
+      }
+      .eyebrow .dot { width: 10px; height: 10px; border-radius: 999px; background: var(--gold); display: inline-block; }
+      .hero {
+        margin-top: 40px; text-align: center;
+        font-weight: 800; font-size: 168px; line-height: 0.92; letter-spacing: -0.03em;
+      }
+      .hero .line { display: block; }
+      .hero .l1 { color: var(--ink); }
+      .hero .l2 { color: var(--gold-ink); }
+      .hero .ch { display: inline-block; will-change: transform, opacity; }
+      .hero .sp { display: inline-block; width: 0.28em; }
+
+      /* ── Scene 2 : what it is ── */
+      .brandrow { display: flex; align-items: center; gap: 34px; }
+      .wordmark { font-weight: 800; font-size: 96px; letter-spacing: -0.03em; color: var(--ink); }
+      .wordmark .m { color: var(--gold-ink); }
+      .lede {
+        margin-top: 44px; max-width: 1180px; text-align: center;
+        font-size: 42px; line-height: 1.34; font-weight: 500; color: var(--ink);
+      }
+      .lede .hl { color: var(--gold-ink); font-weight: 700; }
+
+      /* ── Scene 3 : booking flow ── */
+      .mapwrap {
+        position: relative; width: 1560px; height: 812px; border-radius: 40px;
+        background:
+          linear-gradient(0deg, #f2ede4, #f7f4ee);
+        border: 1px solid var(--border);
+        box-shadow: 0 40px 90px -50px rgba(23,34,59,0.45);
+        overflow: hidden;
+      }
+      .maplabel {
+        position: absolute; top: 34px; left: 40px;
+        font-weight: 600; font-size: 24px; letter-spacing: 0.02em; color: var(--muted);
+        display: flex; align-items: center; gap: 10px;
+      }
+      .pin-label {
+        position: absolute; font-weight: 700; font-size: 26px; color: var(--ink);
+        background: #ffffff; padding: 8px 16px; border-radius: 12px; border: 1px solid var(--border);
+        box-shadow: 0 12px 26px -16px rgba(23,34,59,0.5);
+        white-space: nowrap;
+      }
+      .ridecard {
+        position: absolute; right: 56px; top: 150px; width: 560px;
+        background: var(--card); border: 1px solid var(--border); border-radius: 28px;
+        padding: 34px; box-shadow: 0 40px 80px -40px rgba(23,34,59,0.55);
+      }
+      .rc-route { display: flex; gap: 18px; }
+      .rc-rail { display: flex; flex-direction: column; align-items: center; padding-top: 8px; }
+      .rc-rail .d1 { width: 16px; height: 16px; border-radius: 999px; background: var(--gold); }
+      .rc-rail .ln { width: 3px; flex: 1; min-height: 44px; background: var(--border); margin: 6px 0; }
+      .rc-rail .d2 { width: 16px; height: 16px; border-radius: 999px; background: var(--navy); }
+      .rc-stop { font-size: 30px; font-weight: 700; color: var(--ink); }
+      .rc-sub { font-size: 22px; color: var(--muted); margin-top: 4px; }
+      .rc-gap { height: 30px; }
+      .rc-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 26px; padding-top: 26px; border-top: 1px solid var(--border); }
+      .rc-seats { font-size: 26px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 10px; }
+      .rc-price { font-size: 46px; font-weight: 700; color: var(--ink); }
+      .rc-driver { display: flex; align-items: center; gap: 14px; margin-top: 26px; }
+      .rc-ava { width: 52px; height: 52px; border-radius: 999px; background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 24px; }
+      .rc-dname { font-size: 24px; font-weight: 700; color: var(--ink); }
+      .rc-dmeta { font-size: 20px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+      .rc-verified { display: inline-flex; align-items: center; gap: 6px; color: var(--success); font-weight: 700; }
+      .rc-btn {
+        margin-top: 30px; width: 100%; height: 76px; border-radius: 18px; background: var(--navy);
+        color: #fff; font-weight: 700; font-size: 28px; display: flex; align-items: center; justify-content: center; gap: 12px;
+      }
+      .rc-btn.done { background: var(--success); }
+      .cursor { position: absolute; left: 0; top: 0; z-index: 30; filter: drop-shadow(0 6px 10px rgba(23,34,59,0.35)); }
+
+      /* ── Scene 4 : roles ── */
+      .heading { font-weight: 700; font-size: 76px; letter-spacing: -0.02em; color: var(--ink); text-align: center; }
+      .rolewrap { display: flex; gap: 40px; margin-top: 56px; }
+      .rolecard { width: 600px; height: 400px; border-radius: 32px; padding: 46px; display: flex; flex-direction: column; justify-content: space-between; }
+      .rolecard.user { background: var(--navy); color: #fff; }
+      .rolecard.svc { background: var(--card); border: 2px solid var(--gold); color: var(--ink); }
+      .role-ico { width: 84px; height: 84px; border-radius: 22px; display: flex; align-items: center; justify-content: center; }
+      .rolecard.user .role-ico { background: rgba(255,255,255,0.12); }
+      .rolecard.svc .role-ico { background: var(--gold-soft); }
+      .role-t { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 52px; letter-spacing: -0.02em; }
+      .role-s { font-size: 28px; font-weight: 500; }
+      .rolecard.user .role-s { color: #c9d2e4; }
+      .rolecard.svc .role-s { color: var(--muted); }
+
+      /* ── Scene 5 : trust ── */
+      .chips { display: flex; gap: 30px; margin-top: 60px; }
+      .chip {
+        display: flex; align-items: center; gap: 18px;
+        padding: 26px 40px; border-radius: 22px; background: var(--card);
+        border: 1px solid var(--border); box-shadow: 0 30px 60px -44px rgba(23,34,59,0.5);
+      }
+      .chip .ci { width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: var(--gold-soft); }
+      .chip.sos .ci { background: #f7dcd3; }
+      .chip .cl { font-size: 34px; font-weight: 700; color: var(--ink); }
+
+      /* ── Scene 6 : outro ── */
+      .outro { display: flex; flex-direction: column; align-items: center; }
+      .glow {
+        position: absolute; width: 900px; height: 900px; border-radius: 999px;
+        background: radial-gradient(circle, rgba(200,149,108,0.28) 0%, rgba(200,149,108,0) 62%);
+        top: 90px; opacity: 0;
+      }
+      .outro .wordmark { font-size: 128px; margin-top: 30px; }
+      .tagline { margin-top: 26px; font-size: 46px; font-weight: 600; color: var(--ink); letter-spacing: 0.01em; }
+      .outro-foot { margin-top: 22px; font-size: 26px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+      .rule { width: 120px; height: 4px; border-radius: 2px; background: var(--gold); margin-top: 34px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="root" data-start="0" data-duration="20" data-width="1920" data-height="1080">
+      <div class="bg-wash"></div>
+
+      <!-- ══════════ SCENE 1 — HOOK ══════════ -->
+      <section id="s1" class="clip scene" data-start="0" data-duration="4.3" data-track-index="1">
+        <div class="eyebrow"><span class="dot"></span>JC Bose University · YMCA Faridabad</div>
+        <h1 class="hero display">
+          <span class="line l1" data-text="Share the ride."></span>
+          <span class="line l2" data-text="Skip the wait."></span>
+        </h1>
+      </section>
+
+      <!-- ══════════ SCENE 2 — WHAT IT IS ══════════ -->
+      <section id="s2" class="clip scene" data-start="4.0" data-duration="3.8" data-track-index="1">
+        <div class="brandrow">
+          <span id="s2logo"></span>
+          <span class="wordmark display">Ride<span class="m">Mitra</span></span>
+        </div>
+        <p class="lede">The <span class="hl">carpool network</span> built only for J.C. Bose University students &amp; staff.</p>
+      </section>
+
+      <!-- ══════════ SCENE 3 — BOOKING FLOW ══════════ -->
+      <section id="s3" class="clip scene" data-start="7.4" data-duration="4.4" data-track-index="1">
+        <div class="mapwrap">
+          <div class="maplabel">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5a5f52" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z"/><path d="M9 3v15M15 6v15"/></svg>
+            Live route · Faridabad
+          </div>
+          <!-- route + pins -->
+          <svg id="mapsvg" width="1560" height="812" viewBox="0 0 1560 812" fill="none" style="position:absolute;inset:0;">
+            <!-- faint road grid -->
+            <g stroke="#e3dccf" stroke-width="3">
+              <path d="M0 250 H1560" opacity="0.7"/>
+              <path d="M0 560 H1560" opacity="0.7"/>
+              <path d="M470 0 V812" opacity="0.7"/>
+              <path d="M1050 0 V812" opacity="0.7"/>
+              <path d="M0 120 L1560 120" opacity="0.25"/>
+            </g>
+            <!-- route -->
+            <path id="route" d="M250 640 C 420 560, 470 430, 640 400 S 940 330, 1120 220"
+                  stroke="#c8956c" stroke-width="9" stroke-linecap="round" fill="none" stroke-dasharray="1400" stroke-dashoffset="1400"/>
+            <!-- pickup pin -->
+            <g id="pin-a" transform="translate(250 640)">
+              <circle r="20" fill="#c8956c"/><circle r="8" fill="#fff"/>
+            </g>
+            <!-- campus pin -->
+            <g id="pin-b" transform="translate(1120 220)">
+              <path d="M0 -34 C 18 -34 30 -22 30 -6 C 30 14 0 40 0 40 C 0 40 -30 14 -30 -6 C -30 -22 -18 -34 0 -34 Z" fill="#1b2b4b"/>
+              <circle cx="0" cy="-6" r="11" fill="#f7f5f1"/>
+            </g>
+          </svg>
+          <div id="lbl-a" class="pin-label" style="left:150px; top:690px;">Sector 6 Gate</div>
+          <div id="lbl-b" class="pin-label" style="left:900px; top:150px;">J.C. Bose UST</div>
+
+          <!-- ride card -->
+          <div id="ridecard" class="ridecard">
+            <div class="rc-route">
+              <div class="rc-rail"><span class="d1"></span><span class="ln"></span><span class="d2"></span></div>
+              <div style="flex:1;">
+                <div class="rc-stop">Sector 6 Gate</div>
+                <div class="rc-sub">Pickup · 8:40 AM</div>
+                <div class="rc-gap"></div>
+                <div class="rc-stop">J.C. Bose UST</div>
+                <div class="rc-sub">Main gate · 9:05 AM</div>
+              </div>
+            </div>
+            <div class="rc-meta">
+              <div class="rc-seats">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#17223b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
+                3 seats
+              </div>
+              <div class="rc-price mono">₹40</div>
+            </div>
+            <div class="rc-driver">
+              <div class="rc-ava">A</div>
+              <div>
+                <div class="rc-dname">Aarav S.</div>
+                <div class="rc-dmeta">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#c8956c"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 18.9 5.9 21.4l1.4-6.8L2.2 9.9l6.9-.8L12 2z"/></svg>
+                  4.9 · <span class="rc-verified">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3f7d5b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                    Verified
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div id="rc-btn" class="rc-btn">Book seat</div>
+          </div>
+
+          <!-- cursor -->
+          <svg id="cursor" class="cursor" width="46" height="46" viewBox="0 0 24 24" fill="#17223b" stroke="#ffffff" stroke-width="1.4">
+            <path d="M4 2l7 18 2.5-7L21 10.5 4 2z"/>
+          </svg>
+        </div>
+      </section>
+
+      <!-- ══════════ SCENE 4 — ROLES ══════════ -->
+      <section id="s4" class="clip scene" data-start="11.4" data-duration="3.4" data-track-index="1">
+        <div class="heading display" id="s4head">One account. Two ways to move.</div>
+        <div class="rolewrap">
+          <div id="roleA" class="rolecard user">
+            <div class="role-ico">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div>
+              <div class="role-t">Ride as a User.</div>
+              <div class="role-s">Book a seat, split the fare.</div>
+            </div>
+          </div>
+          <div id="roleB" class="rolecard svc">
+            <div class="role-ico">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#a67a50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17l-1.5-5.5A2 2 0 0 1 6.4 9h11.2a2 2 0 0 1 1.9 2.5L18 17"/><path d="M7 9l1-4h8l1 4"/><circle cx="7.5" cy="17.5" r="1.6" fill="#a67a50"/><circle cx="16.5" cy="17.5" r="1.6" fill="#a67a50"/></svg>
+            </div>
+            <div>
+              <div class="role-t">Offer seats as a Service.</div>
+              <div class="role-s">List your trip, fill the empty seats.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════ SCENE 5 — TRUST ══════════ -->
+      <section id="s5" class="clip scene" data-start="14.4" data-duration="3.4" data-track-index="1">
+        <div class="heading display" id="s5head">Safe by design.</div>
+        <div class="chips">
+          <div id="chip1" class="chip">
+            <span class="ci"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#a67a50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></span>
+            <span class="cl">Verified campus ID</span>
+          </div>
+          <div id="chip2" class="chip">
+            <span class="ci"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#a67a50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.7-7-11a7 7 0 0 1 14 0c0 4.3-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
+            <span class="cl">Live-tracked trips</span>
+          </div>
+          <div id="chip3" class="chip sos">
+            <span class="ci"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#c0533b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.6l-8 13.8A2 2 0 0 0 4 20.4h16a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+            <span class="cl">One-tap SOS</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════ SCENE 6 — OUTRO ══════════ -->
+      <section id="s6" class="clip scene" data-start="17.4" data-duration="2.6" data-track-index="1">
+        <div class="glow" id="glow"></div>
+        <div class="outro">
+          <span id="s6logo"></span>
+          <span class="wordmark display">Ride<span class="m">Mitra</span></span>
+          <div class="rule" id="rule"></div>
+          <div class="tagline" id="tagline">Your campus, carpooled.</div>
+          <div class="outro-foot">JC Bose University · YMCA Faridabad</div>
+        </div>
+      </section>
+
+      <!-- Silent motion graphic — no audio (plays muted as the on-load logo-morph intro) -->
+
+      <!-- ══════════ TIMELINE ══════════ -->
+      <script>
+        (function () {
+          /* Ride Mitra brand logo mark (car + map pin), from src/components/common/Logo.tsx */
+          function logoSVG(size) {
+            return (
+              '<svg width="' + size + '" height="' + size + '" viewBox="0 0 48 48" fill="none">' +
+              '<circle cx="24" cy="24" r="23" fill="#1b2b4b" stroke="#1b2b4b" stroke-width="2"/>' +
+              '<path d="M12 28h24v4c0 1.1-.9 2-2 2H14c-1.1 0-2-.9-2-2v-4z" fill="#c8956c"/>' +
+              '<path d="M14 28l3-8h14l3 8" fill="#1b2b4b" stroke="#c8956c" stroke-width="1.5"/>' +
+              '<path d="M18.5 22h4.5v6h-6.5l2-6z" fill="rgba(255,255,255,0.14)"/>' +
+              '<path d="M25 22h4.5l2 6H25v-6z" fill="rgba(255,255,255,0.10)"/>' +
+              '<circle cx="17" cy="32" r="2.5" fill="#1b2b4b" stroke="#c8956c" stroke-width="1.5"/>' +
+              '<circle cx="31" cy="32" r="2.5" fill="#1b2b4b" stroke="#c8956c" stroke-width="1.5"/>' +
+              '<path d="M24 8c-2.8 0-5 2.2-5 5 0 3.5 5 8 5 8s5-4.5 5-8c0-2.8-2.2-5-5-5z" fill="#c8956c"/>' +
+              '<circle cx="24" cy="13" r="2" fill="#1b2b4b"/>' +
+              '</svg>'
+            );
+          }
+          document.getElementById("s2logo").innerHTML = logoSVG(132);
+          document.getElementById("s6logo").innerHTML = logoSVG(168);
+
+          /* Split hero lines into per-character spans (deterministic) */
+          function splitChars(el) {
+            var txt = el.getAttribute("data-text") || "";
+            el.textContent = "";
+            var spans = [];
+            for (var i = 0; i < txt.length; i++) {
+              var c = txt[i];
+              var s = document.createElement("span");
+              if (c === " ") { s.className = "sp"; }
+              else { s.className = "ch"; s.textContent = c; }
+              el.appendChild(s);
+              if (c !== " ") spans.push(s);
+            }
+            return spans;
+          }
+          var l1 = document.querySelector("#s1 .l1");
+          var l2 = document.querySelector("#s1 .l2");
+          var chars1 = splitChars(l1);
+          var chars2 = splitChars(l2);
+
+          var tl = gsap.timeline({ paused: true });
+
+          /* Scene container helper: fade a scene in at `t`, out at `outT` */
+          function sceneIn(sel, t) { tl.to(sel, { opacity: 1, duration: 0.45, ease: "power2.out" }, t); }
+          function sceneOut(sel, t) { tl.to(sel, { opacity: 0, duration: 0.35, ease: "power2.in" }, t); }
+
+          var allChars = chars1.concat(chars2);
+          /* initial states at t=0 */
+          tl.set(allChars, { opacity: 0, y: 46, rotationX: -55 }, 0);
+          tl.set("#s1 .eyebrow", { opacity: 0, y: 20 }, 0);
+
+          /* ───── SCENE 1 (0.0 – 4.3) ───── */
+          sceneIn("#s1", 0.15);
+          tl.to("#s1 .eyebrow", { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.25);
+          tl.to(chars1, { opacity: 1, y: 0, rotationX: 0, duration: 0.6, ease: "power3.out", stagger: 0.032 }, 0.55);
+          tl.to(chars2, { opacity: 1, y: 0, rotationX: 0, duration: 0.6, ease: "power3.out", stagger: 0.034 }, 1.25);
+          sceneOut("#s1", 3.95);
+
+          /* ───── SCENE 2 (4.0 – 7.8) ───── */
+          tl.set("#s2 .brandrow", { opacity: 0, y: 26, scale: 0.92 }, 0);
+          tl.set("#s2 .lede", { opacity: 0, y: 24 }, 0);
+          sceneIn("#s2", 4.0);
+          tl.to("#s2 .brandrow", { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "back.out(1.4)" }, 4.1);
+          tl.to("#s2 .lede", { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 4.5);
+          sceneOut("#s2", 7.45);
+
+          /* ───── SCENE 3 (7.4 – 11.8) ───── */
+          tl.set("#route", { opacity: 1 }, 0);
+          tl.set(["#pin-a", "#pin-b"], { opacity: 0, scale: 0, transformOrigin: "center center" }, 0);
+          tl.set(["#lbl-a", "#lbl-b"], { opacity: 0, y: 10 }, 0);
+          tl.set("#ridecard", { opacity: 0, x: 90 }, 0);
+          tl.set("#cursor", { opacity: 0, x: 980, y: 250 }, 0);
+          tl.set("#rc-btn", { backgroundColor: "#1b2b4b" }, 0);
+          sceneIn("#s3", 7.45);
+          tl.to("#pin-a", { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)" }, 7.7);
+          tl.to("#lbl-a", { opacity: 1, y: 0, duration: 0.35 }, 7.8);
+          tl.to("#route", { strokeDashoffset: 0, duration: 1.1, ease: "power2.inOut" }, 7.9);
+          tl.to("#pin-b", { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(2)" }, 8.85);
+          tl.to("#lbl-b", { opacity: 1, y: 0, duration: 0.35 }, 8.95);
+          tl.to("#ridecard", { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" }, 8.5);
+          /* cursor moves to Book seat + taps */
+          tl.to("#cursor", { opacity: 1, duration: 0.2 }, 9.5);
+          tl.to("#cursor", { x: 1300, y: 690, duration: 0.7, ease: "power2.inOut" }, 9.6);
+          tl.to("#cursor", { scale: 0.82, duration: 0.1, ease: "power2.in" }, 10.15);
+          tl.to("#cursor", { scale: 1, duration: 0.12, ease: "power2.out" }, 10.25);
+          tl.to("#rc-btn", { scale: 0.97, duration: 0.1 }, 10.15);
+          tl.to("#rc-btn", { scale: 1, duration: 0.12 }, 10.25);
+          /* confirm state — seek-safe set (innerText + color swap) */
+          tl.set("#rc-btn", { innerText: "Booked  ✓", backgroundColor: "#3f7d5b" }, 10.45);
+          tl.fromTo("#rc-btn", { scale: 1 }, { scale: 1.04, duration: 0.14, ease: "power2.out", yoyo: true, repeat: 1 }, 10.45);
+          sceneOut("#s3", 11.45);
+
+          /* ───── SCENE 4 (11.4 – 14.8) ───── */
+          tl.set("#s4head", { opacity: 0, y: 22 }, 0);
+          tl.set("#roleA", { opacity: 0, y: 40 }, 0);
+          tl.set("#roleB", { opacity: 0, y: 40 }, 0);
+          sceneIn("#s4", 11.45);
+          tl.to("#s4head", { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 11.5);
+          tl.to("#roleA", { opacity: 1, y: 0, duration: 0.55, ease: "back.out(1.3)" }, 11.7);   // card 1
+          tl.to("#roleB", { opacity: 1, y: 0, duration: 0.55, ease: "back.out(1.3)" }, 12.25);  // card 2
+          sceneOut("#s4", 14.45);
+
+          /* ───── SCENE 5 (14.4 – 17.8) ───── */
+          tl.set("#s5head", { opacity: 0, y: 22 }, 0);
+          tl.set(["#chip1", "#chip2", "#chip3"], { opacity: 0, y: 34, scale: 0.9 }, 0);
+          sceneIn("#s5", 14.45);
+          tl.to("#s5head", { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 14.5);
+          // beat-grid: chips snapped to beats 15.02 / 16.02 / 17.02
+          tl.to("#chip1", { opacity: 1, y: 0, scale: 1, duration: 0.42, ease: "back.out(1.6)" }, 15.02); // beat-grid: 15.02s
+          tl.to("#chip2", { opacity: 1, y: 0, scale: 1, duration: 0.42, ease: "back.out(1.6)" }, 16.02); // beat-grid: 16.02s
+          tl.to("#chip3", { opacity: 1, y: 0, scale: 1, duration: 0.42, ease: "back.out(1.6)" }, 17.02); // beat-grid: 17.02s
+          sceneOut("#s5", 17.45);
+
+          /* ───── SCENE 6 (17.4 – 20.0) ───── */
+          tl.set("#s6logo", { opacity: 0, scale: 0.4, rotation: -12, transformOrigin: "center center" }, 0);
+          tl.set("#s6 .wordmark", { opacity: 0, y: 26 }, 0);
+          tl.set("#rule", { scaleX: 0, transformOrigin: "center center" }, 0);
+          tl.set("#tagline", { opacity: 0, y: 18 }, 0);
+          tl.set("#s6 .outro-foot", { opacity: 0 }, 0);
+          tl.set("#glow", { opacity: 0, scale: 0.7, transformOrigin: "center center" }, 0);
+          sceneIn("#s6", 17.45);
+          // beat-locked: 17.52s — logo slam on the strong cue
+          tl.to("#glow", { opacity: 1, scale: 1, duration: 0.6, ease: "power2.out" }, 17.5);
+          tl.to("#s6logo", { opacity: 1, scale: 1, rotation: 0, duration: 0.55, ease: "back.out(1.7)" }, 17.52); // beat-locked: 17.52s
+          tl.to("#s6 .wordmark", { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 17.9);
+          tl.to("#rule", { scaleX: 1, duration: 0.5, ease: "power2.out" }, 18.2);
+          tl.to("#tagline", { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 18.4);
+          tl.to("#s6 .outro-foot", { opacity: 1, duration: 0.5, ease: "power2.out" }, 18.7);
+          // gentle glow breathe (deterministic stand-in for audio-reactive; RMS helper unavailable)
+          tl.to("#glow", { scale: 1.08, duration: 0.8, ease: "sine.inOut", yoyo: true, repeat: 2 }, 18.1);
+
+          window.__timelines = window.__timelines || {};
+          window.__timelines["root"] = tl;
+        })();
+      </script>
+    </div>
+  </body>
+</html>
