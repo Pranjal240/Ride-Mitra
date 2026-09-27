@@ -1,329 +1,378 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { PiShieldCheckBold, PiMapPinBold, PiCheckCircleBold, PiArrowLeftBold, PiGoogleLogoBold, PiPhoneBold, PiEnvelopeBold, PiUserBold } from 'react-icons/pi';
-import { RiAdminLine, RiCarLine, RiUserSmileLine } from 'react-icons/ri';
-import { useAuthStore } from '../hooks/useStore';
-import { supabase } from '../lib/supabase';
-import Logo, { LogoText } from '../components/common/Logo';
-import T, { FONT } from '../lib/theme';
+import { useState, useEffect } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { ArrowLeft, Check, Mail, MapPin, Phone, ShieldCheck } from "lucide-react";
 
-// Theme imported from shared file
+import { useAuthStore } from "@/hooks/useStore";
+import { supabase } from "@/lib/supabase";
+import Logo from "@/components/common/Logo";
+import { SmoothInput } from "@/components/ui/smooth-input";
+import { Button, type BadgeTone } from "@/components/ui/primitives";
+import { cn } from "@/lib/utils";
 
-type Role = 'student' | 'driver' | 'admin';
+type Role = "student" | "driver" | "admin";
+
+function GoogleIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1Z" />
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z" />
+      <path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84Z" />
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38Z" />
+    </svg>
+  );
+}
+
+const ROLE_META: Record<
+  Role,
+  { label: string; tone: BadgeTone; title: string; sub: string; dot: string; badges: string[] }
+> = {
+  student: {
+    label: "Rider",
+    tone: "info",
+    title: "Sign in as a Rider",
+    sub: "Search verified drivers, split fares, and track every trip live from your JC Bose UST portal.",
+    dot: "bg-info",
+    badges: ["Verified campus email only", "Live ride tracking + SOS", "Split fares at the pump"],
+  },
+  driver: {
+    label: "Driver",
+    tone: "accent",
+    title: "Sign in as a Driver",
+    sub: "Offer seats on trips you're already making. Cover fuel, meet peers, get paid instantly.",
+    dot: "bg-accent",
+    badges: ["Vehicle & licence verification", "Post rides in under a minute", "Fair, capped payouts"],
+  },
+  admin: {
+    label: "Admin",
+    tone: "danger",
+    title: "Sign in as Admin",
+    sub: "University staff console — driver verification, SOS command centre, and community reports.",
+    dot: "bg-danger",
+    badges: ["Verify driver documents", "Respond to live SOS alerts", "Community & audit logs"],
+  },
+};
+
+const TAB_ACTIVE: Record<Role, string> = {
+  student: "border-info text-info",
+  driver: "border-accent text-accent-strong",
+  admin: "border-danger text-danger",
+};
 
 export default function Login() {
   const [searchParams] = useSearchParams();
-  const initialRole = (searchParams.get('role') as Role) || 'student';
+  const initialRole = (searchParams.get("role") as Role) || "student";
   const [role, setRole] = useState<Role>(
-    ['student', 'driver', 'admin'].includes(initialRole) ? initialRole : 'student'
+    ["student", "driver", "admin"].includes(initialRole) ? initialRole : "student",
   );
   useEffect(() => {
-    const r = searchParams.get('role') as Role;
-    if (r && ['student', 'driver', 'admin'].includes(r)) setRole(r);
+    const r = searchParams.get("role") as Role;
+    if (r && ["student", "driver", "admin"].includes(r)) setRole(r);
   }, [searchParams]);
-  useEffect(() => { window.scrollTo(0, 0); }, []);
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState(['','','','','','']);
-  const [otpHash, setOtpHash] = useState('');
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otpHash, setOtpHash] = useState("");
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<'choose'|'otp'>('choose');
+  const [step, setStep] = useState<"choose" | "otp">("choose");
   const { setSelectedRole } = useAuthStore();
   const navigate = useNavigate();
+  const reduce = useReducedMotion();
 
   async function handleGoogle() {
     setLoading(true);
     setSelectedRole(role);
-    localStorage.setItem('selectedRole', role);
+    localStorage.setItem("selectedRole", role);
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider: "google",
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
-    if (error) { alert(error.message); setLoading(false); }
+    if (error) {
+      alert(error.message);
+      setLoading(false);
+    }
   }
 
   async function handleSendOtp() {
-    if (!phone || phone.length < 10) return alert('Enter a valid 10-digit phone number');
+    if (!phone || phone.length < 10) return alert("Enter a valid 10-digit phone number");
     setLoading(true);
     try {
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
       const res = await fetch(`${SUPABASE_URL}/functions/v1/send-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to send OTP');
+      if (!res.ok) throw new Error(data.error || "Failed to send OTP");
       setOtpHash(data.otp_hash);
-      setStep('otp');
-    } catch (e: any) { alert(e.message); }
+      setStep("otp");
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to send OTP");
+    }
     setLoading(false);
   }
 
   async function handleVerifyOtp() {
-    const code = otp.join('');
-    if (code.length < 6) return alert('Enter 6-digit OTP');
+    const code = otp.join("");
+    if (code.length < 6) return alert("Enter 6-digit OTP");
     setLoading(true);
     try {
       if (btoa(code) === otpHash) {
         setSelectedRole(role);
-        localStorage.setItem('selectedRole', role);
+        localStorage.setItem("selectedRole", role);
         const { error } = await supabase.auth.signInWithOtp({ phone: `+91${phone}` });
         if (error) throw error;
-        navigate('/');
+        navigate("/");
       } else {
-        alert('Invalid OTP. Please try again.');
+        alert("Invalid OTP. Please try again.");
       }
-    } catch (e: any) { alert(e.message); }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Verification failed");
+    }
     setLoading(false);
   }
 
   function handleOtpInput(idx: number, val: string) {
     if (val.length > 1) return;
-    const n = [...otp]; n[idx] = val; setOtp(n);
-    if (val && idx < 5) document.getElementById(`otp-${idx+1}`)?.focus();
+    const n = [...otp];
+    n[idx] = val;
+    setOtp(n);
+    if (val && idx < 5) document.getElementById(`otp-${idx + 1}`)?.focus();
   }
   function handleOtpKey(idx: number, e: React.KeyboardEvent) {
-    if (e.key === 'Backspace' && !otp[idx] && idx > 0) document.getElementById(`otp-${idx-1}`)?.focus();
+    if (e.key === "Backspace" && !otp[idx] && idx > 0) document.getElementById(`otp-${idx - 1}`)?.focus();
   }
 
-  const tabs: { key: Role; label: string; icon: React.ReactNode; color: string }[] = [
-    { key:'student', label:'Rider', icon:<RiUserSmileLine size={16}/>, color:T.blue },
-    { key:'driver', label:'Driver', icon:<RiCarLine size={16}/>, color:T.green },
-    { key:'admin', label:'Admin', icon:<RiAdminLine size={16}/>, color:T.red },
-  ];
-
-  const roleTheme: Record<Role, { title: string; accent: string; sub: string; badges: { t: string; color: string; icon: React.ReactNode }[] }> = {
-    student: {
-      title: 'Sign in as a Rider',
-      accent: T.blue,
-      sub: 'Search verified drivers, split fares, and track every trip live from your JC Bose UST portal.',
-      badges: [
-        { t:'Verified campus email only', color:T.green, icon:<PiShieldCheckBold size={16}/> },
-        { t:'Live ride tracking + SOS', color:T.blue, icon:<PiMapPinBold size={16}/> },
-        { t:'Split fares at the pump', color:T.green, icon:<PiCheckCircleBold size={16}/> },
-      ],
-    },
-    driver: {
-      title: 'Sign in as a Driver',
-      accent: T.green,
-      sub: 'Offer seats on trips you\'re already making. Cover fuel, meet peers, and get paid instantly.',
-      badges: [
-        { t:'Vehicle & licence verification', color:T.green, icon:<PiShieldCheckBold size={16}/> },
-        { t:'Post rides in under a minute', color:T.blue, icon:<PiMapPinBold size={16}/> },
-        { t:'Instant in-app payouts', color:T.green, icon:<PiCheckCircleBold size={16}/> },
-      ],
-    },
-    admin: {
-      title: 'Sign in as Admin',
-      accent: T.red,
-      sub: 'University staff dashboard — driver verification, SOS command centre, and community reports.',
-      badges: [
-        { t:'Verify new driver documents', color:T.red, icon:<PiShieldCheckBold size={16}/> },
-        { t:'Respond to live SOS alerts', color:T.red, icon:<PiMapPinBold size={16}/> },
-        { t:'Community & ride audit logs', color:T.red, icon:<PiCheckCircleBold size={16}/> },
-      ],
-    },
-  };
-  const rt = roleTheme[role];
+  const meta = ROLE_META[role];
+  const tabs: Role[] = ["student", "driver", "admin"];
 
   return (
-    <div style={{ minHeight:'100vh', display:'flex', position:'relative', overflow:'hidden', overflowX:'hidden' }}>
-      {/* Left Gradient Panel */}
-      <div className="mobile-hide" style={{ flex:'1 1 50%', background:T.heroGrad,
-        display:'flex', flexDirection:'column', justifyContent:'center', padding:'60px 48px', position:'relative', overflow:'hidden' }}>
-        {/* Animated orbs */}
-        <motion.div animate={{ scale:[1,1.3,1], opacity:[0.1,0.2,0.1] }} transition={{ duration:8,repeat:Infinity }}
-          style={{ position:'absolute', width:300, height:300, borderRadius:'50%', background:'radial-gradient(circle,rgba(255,255,255,0.1),transparent 70%)', top:'-10%', right:'-10%' }}/>
-        <motion.div animate={{ scale:[1,1.2,1], opacity:[0.08,0.15,0.08] }} transition={{ duration:12,repeat:Infinity }}
-          style={{ position:'absolute', width:250, height:250, borderRadius:'50%', background:'radial-gradient(circle,rgba(255,255,255,0.08),transparent 70%)', bottom:'10%', left:'-5%' }}/>
-        {/* Grid pattern */}
-        <div style={{ position:'absolute', inset:0, opacity:0.03, backgroundImage:'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize:'28px 28px' }}/>
-        {/* Floating shapes */}
-        <motion.div animate={{ y:[-15,15,-15], rotate:[0,90,0] }} transition={{ duration:10,repeat:Infinity }}
-          style={{ position:'absolute', top:'18%', right:'20%', width:40, height:40, borderRadius:10, border:'2px solid rgba(255,255,255,0.08)', transform:'rotate(45deg)' }}/>
-        <motion.div animate={{ y:[10,-10,10] }} transition={{ duration:6,repeat:Infinity }}
-          style={{ position:'absolute', bottom:'30%', right:'35%', width:8, height:8, borderRadius:'50%', background:T.orange, opacity:0.4 }}/>
-        <motion.div animate={{ x:[-10,10,-10] }} transition={{ duration:8,repeat:Infinity }}
-          style={{ position:'absolute', top:'60%', left:'15%', width:12, height:12, borderRadius:'50%', background:T.red, opacity:0.3 }}/>
-
-        <motion.div initial={{ opacity:0,y:30 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.8 }} style={{ position:'relative', zIndex:2 }}>
-          <Link to="/" style={{ display:'inline-flex', alignItems:'center', gap:6, color:'rgba(255,255,255,0.6)', textDecoration:'none', fontSize:13, marginBottom:36, transition:'all 0.3s' }}
-            onMouseEnter={e=>{e.currentTarget.style.color='white';}} onMouseLeave={e=>{e.currentTarget.style.color='rgba(255,255,255,0.6)';}}>
-            <PiArrowLeftBold size={14}/> Back to Home
+    <div className="grid min-h-dvh lg:grid-cols-2">
+      {/* Left — brand / role panel */}
+      <div className="relative hidden overflow-hidden bg-gradient-to-br from-navy to-navy-light p-12 text-white lg:flex lg:flex-col lg:justify-center">
+        <div className="pointer-events-none absolute -right-20 -top-20 size-80 rounded-full bg-white/5 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 left-10 size-64 rounded-full bg-accent/10 blur-3xl" />
+        <div className="relative">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 text-sm text-white/60 transition-colors hover:text-white"
+          >
+            <ArrowLeft className="size-4" /> Back to home
           </Link>
-          <div style={{
-            display:'inline-flex', alignItems:'center', gap:7, padding:'5px 12px', borderRadius:100,
-            background: `${rt.accent}22`, border: `1px solid ${rt.accent}55`, marginBottom:20,
-          }}>
-            <div style={{ width:6, height:6, borderRadius:'50%', background: rt.accent, boxShadow:`0 0 8px ${rt.accent}` }}/>
-            <span style={{ fontSize:11, color:'white', fontWeight:700, letterSpacing:1.5, textTransform:'uppercase' }}>
-              JC Bose UST · {role === 'student' ? 'Rider' : role === 'driver' ? 'Driver' : 'Admin'} Portal
+
+          <div className="mt-9 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5">
+            <span className={cn("size-1.5 rounded-full", meta.dot)} />
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-white/80">
+              JC Bose UST · {meta.label} Portal
             </span>
-          </div>
-          <h1 key={role} style={{ fontSize:'clamp(28px,4vw,44px)', fontWeight:800, color:'white', lineHeight:1.15, fontFamily:FONT.heading, animation: 'slideUp 0.5s cubic-bezier(0.2, 0.9, 0.25, 1)' }}>
-            {rt.title.split(' as ')[0]} as<br/>
-            <span style={{ color: rt.accent }}>
-              a {rt.title.split(' as ')[1] || 'user'}
-            </span>
-          </h1>
-          <p key={`sub-${role}`} style={{ color:'rgba(255,255,255,0.65)', fontSize:15, marginTop:14, maxWidth:340, lineHeight:1.7, animation: 'slideUp 0.6s cubic-bezier(0.2, 0.9, 0.25, 1)' }}>
-            {rt.sub}
-          </p>
-        </motion.div>
-
-        {/* Feature badges */}
-        <motion.div key={`badges-${role}`} initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ delay:0.2 }}
-          style={{ display:'flex', flexDirection:'column', gap:10, marginTop:36, position:'relative', zIndex:2 }}>
-          {rt.badges.map((f,i)=>(
-            <motion.div key={i} initial={{ opacity:0,x:-20 }} animate={{ opacity:1,x:0 }} transition={{ delay:0.6+i*0.1 }}
-              whileHover={{ x:6, background:'rgba(27,43,75,0.08)' }}
-              style={{ display:'inline-flex', alignItems:'center', gap:10, padding:'10px 16px', borderRadius:12, width:'fit-content',
-                background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.06)', transition:'all 0.3s', cursor:'default' }}>
-              <div style={{ color:f.color }}>{f.icon}</div>
-              <span style={{ fontSize:13, color:'rgba(255,255,255,0.6)' }}>{f.t}</span>
-            </motion.div>
-          ))}
-        </motion.div>
-      </div>
-
-      {/* Right — Login Card */}
-      <div className="mobile-login-right" style={{ flex:'1 1 50%', display:'flex', alignItems:'center', justifyContent:'center', padding:40, background:T.bg, position:'relative', overflowX:'hidden' }}>
-        {/* Subtle bg blob */}
-        <div style={{ position:'absolute', width:300, height:300, borderRadius:'50%', background:`radial-gradient(circle,${T.blue50},transparent 70%)`, top:'10%', right:'10%', pointerEvents:'none' }}/>
-
-        <motion.div initial={{ opacity:0,scale:0.95,y:20 }} animate={{ opacity:1,scale:1,y:0 }} transition={{ duration:0.6,delay:0.2 }}
-          className="mobile-login-card"
-          style={{ width:'100%', maxWidth:420, background:T.surface, borderRadius:24, overflow:'hidden',
-            boxShadow:`0 20px 60px rgba(27,43,75,0.08)`, border:`1px solid ${T.border}`, position:'relative', zIndex:2 }}>
-
-          {/* Card header — role-accent gradient */}
-          <div className="mobile-login-header" style={{
-            background: `linear-gradient(135deg, ${T.navy} 0%, ${rt.accent} 140%)`,
-            padding:'28px 32px', textAlign:'center', position:'relative', overflow:'hidden',
-            transition: 'background 0.4s',
-          }}>
-            <div style={{ position:'absolute', width:120, height:120, borderRadius:'50%', background:`${rt.accent}22`, top:-40, right:-30, filter:'blur(20px)' }}/>
-            <div style={{ position:'absolute', width:80, height:80, borderRadius:'50%', background:'rgba(255,255,255,0.06)', bottom:-24, left:20, filter:'blur(16px)' }}/>
-            <motion.div initial={{ scale:0.8,opacity:0 }} animate={{ scale:1,opacity:1 }} transition={{ delay:0.3 }}>
-              <Logo size={44} light/>
-            </motion.div>
-            <motion.h2 key={`h2-${role}`} initial={{ opacity:0,y:8 }} animate={{ opacity:1,y:0 }} transition={{ delay:0.15 }}
-              style={{ color:'white', fontSize:22, fontWeight:700, marginTop:8, fontFamily:FONT.heading }}>
-              {role === 'student' ? 'Rider Sign In' : role === 'driver' ? 'Driver Sign In' : 'Admin Sign In'}
-            </motion.h2>
-            <motion.p initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.5 }}
-              style={{ color:'rgba(255,255,255,0.6)', fontSize:12, marginTop:2, letterSpacing:1.5 }}>JC BOSE UNIVERSITY · YMCA</motion.p>
-          </div>
-
-          {/* Role tabs */}
-          <div className="mobile-login-tabs" style={{ display:'flex', padding:'0 32px', borderBottom:`1px solid ${T.border}` }}>
-            {tabs.map(t=>(
-              <motion.button key={t.key} whileTap={{ scale:0.95 }} onClick={()=>setRole(t.key)}
-                style={{ flex:1, padding:'14px 0', fontSize:13, fontWeight:600, cursor:'pointer', border:'none',
-                  borderBottom: role===t.key ? `2px solid ${t.color}` : '2px solid transparent',
-                  background:'transparent', color: role===t.key ? t.color : T.muted, transition:'all 0.3s', fontFamily:'inherit',
-                  display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
-                {t.icon} {t.label}
-              </motion.button>
-            ))}
           </div>
 
           <AnimatePresence mode="wait">
-            <motion.div key={step} initial={{ opacity:0,x:step==='otp'?20:-20 }} animate={{ opacity:1,x:0 }} exit={{ opacity:0,x:step==='otp'?-20:20 }}
-              className="mobile-login-body"
-              style={{ padding:'24px 32px 32px' }}>
-
-              {step === 'choose' ? (<>
-                {/* Google */}
-                <motion.button whileHover={{ scale:1.01, boxShadow:`0 6px 24px rgba(27,43,75,0.1)` }} whileTap={{ scale:0.98 }}
-                  onClick={handleGoogle} disabled={loading}
-                  style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:10, padding:'13px', borderRadius:14,
-                    border:`1.5px solid ${T.border}`, background:T.surface, cursor:'pointer', fontSize:14, fontWeight:600, color:T.text,
-                    transition:'all 0.3s', fontFamily:'inherit' }}>
-                  {loading ? <Spin/> : <PiGoogleLogoBold size={18} color="#4285F4"/>}
-                  Continue with Google
-                </motion.button>
-
-                {/* Divider */}
-                <div style={{ display:'flex', alignItems:'center', gap:12, margin:'20px 0' }}>
-                  <div style={{ flex:1, height:1, background:`linear-gradient(90deg,transparent,${T.border})` }}/>
-                  <span style={{ fontSize:12, color:T.muted, whiteSpace:'nowrap' }}>or with phone</span>
-                  <div style={{ flex:1, height:1, background:`linear-gradient(90deg,${T.border},transparent)` }}/>
-                </div>
-
-                {/* Phone input */}
-                <div style={{ display:'flex', gap:8 }}>
-                  <div style={{ padding:'12px 10px', borderRadius:12, background:T.bg, fontSize:14, fontWeight:600, color:T.text, border:`1px solid ${T.border}`, whiteSpace:'nowrap' }}>+91</div>
-                  <input value={phone} onChange={e=>setPhone(e.target.value.replace(/\D/g,'').slice(0,10))} placeholder="Phone Number" maxLength={10} aria-label="Phone number"
-                    style={{ flex:1, padding:'12px 14px', borderRadius:12, border:`1px solid ${T.border}`, background:T.bg, fontSize:14, outline:'none', color:T.text, fontFamily:'inherit', transition:'all 0.3s' }}
-                    onFocus={e=>{e.currentTarget.style.borderColor=T.navy;e.currentTarget.style.boxShadow=`0 0 0 3px ${T.navy}18`;}}
-                    onBlur={e=>{e.currentTarget.style.borderColor=T.border;e.currentTarget.style.boxShadow='none';}}/>
-                </div>
-
-                <motion.button whileHover={{ scale:1.02, boxShadow:`0 8px 24px ${T.navy}30` }} whileTap={{ scale:0.97 }}
-                  onClick={handleSendOtp} disabled={loading||phone.length<10}
-                  style={{ width:'100%', padding:'14px', borderRadius:14, border:'none',
-                    background: phone.length>=10 ? `linear-gradient(135deg, ${rt.accent}, ${T.navy})` : T.border,
-                    cursor: phone.length>=10?'pointer':'not-allowed', fontSize:14, fontWeight:700, color:'white', marginTop:12, fontFamily:'inherit',
-                    transition:'all 0.3s', opacity: phone.length>=10?1:0.5 }}>
-                  {loading ? <Spin light/> : <>Send OTP <PiPhoneBold size={14} style={{marginLeft:4}}/></>}
-                </motion.button>
-              </>) : (<>
-                {/* OTP step */}
-                <button onClick={()=>{setStep('choose');setOtp(['','','','','','']);}}
-                  style={{ display:'flex', alignItems:'center', gap:4, fontSize:13, color:T.navy, background:'none', border:'none', cursor:'pointer', marginBottom:16, fontFamily:'inherit' }}>
-                  <PiArrowLeftBold size={14}/> Change number
-                </button>
-                <p style={{ fontSize:14, color:T.textSec, marginBottom:4 }}>OTP sent to <strong style={{color:T.text}}>+91 {phone}</strong></p>
-                <p style={{ fontSize:12, color:T.muted, marginBottom:16 }}>Enter the 6-digit verification code</p>
-                <div className="mobile-otp-row" style={{ display:'flex', gap:8, justifyContent:'center', marginBottom:16 }}>
-                  {otp.map((d,i)=>(
-                    <motion.input key={i} id={`otp-${i}`} value={d} onChange={e=>handleOtpInput(i,e.target.value)}
-                      onKeyDown={e=>handleOtpKey(i,e)} maxLength={1} aria-label={`OTP digit ${i+1}`}
-                      initial={{ opacity:0,y:10 }} animate={{ opacity:1,y:0 }} transition={{ delay:i*0.06 }}
-                      className="mobile-otp-input"
-                      style={{ width:48, height:54, textAlign:'center', fontSize:22, fontWeight:700, borderRadius:14,
-                        border:`1.5px solid ${T.border}`, background:T.bg, outline:'none', color:T.text, fontFamily:'inherit', transition:'all 0.3s' }}
-                      onFocus={e=>{e.currentTarget.style.borderColor=T.navy;e.currentTarget.style.boxShadow=`0 0 0 3px ${T.navy}18`;}}
-                      onBlur={e=>{e.currentTarget.style.borderColor=T.border;e.currentTarget.style.boxShadow='none';}}/>
-                  ))}
-                </div>
-                <motion.button whileHover={{ scale:1.02, boxShadow:`0 8px 28px ${T.dark}25` }} whileTap={{ scale:0.97 }}
-                  onClick={handleVerifyOtp} disabled={loading||otp.join('').length<6}
-                  style={{ width:'100%', padding:'14px', borderRadius:14, border:'none',
-                    background:`linear-gradient(135deg, ${rt.accent}, ${T.navy})`,
-                    cursor:'pointer', fontSize:15, fontWeight:700, color:'white', fontFamily:'inherit', transition:'all 0.3s' }}>
-                  {loading ? <Spin light/> : 'Verify & Login'}
-                </motion.button>
-                <button onClick={handleSendOtp} style={{ width:'100%', marginTop:10, background:'none', border:'none', color:T.navy, fontSize:13, cursor:'pointer', fontFamily:'inherit', fontWeight:500, transition:'all 0.3s' }}
-                  onMouseEnter={e=>{e.currentTarget.style.textDecoration='underline';}}
-                  onMouseLeave={e=>{e.currentTarget.style.textDecoration='none';}}>
-                  Resend OTP
-                </button>
-              </>)}
-
-              <p style={{ fontSize:11, color:T.muted, textAlign:'center', marginTop:20 }}>
-                <PiEnvelopeBold size={11} style={{verticalAlign:'middle',marginRight:4}}/>Only @jcboseust.ac.in emails allowed
-              </p>
-              <div style={{ display:'flex', justifyContent:'center', gap:16, marginTop:12 }}>
-                <Link to="/terms" style={{ fontSize:12, color:T.textSec, textDecoration:'none', transition:'color 0.3s' }}
-                  onMouseEnter={e=>{e.currentTarget.style.color=T.navy;}} onMouseLeave={e=>{e.currentTarget.style.color=T.textSec;}}>
-                  Terms of Service
-                </Link>
-                <Link to="/privacy" style={{ fontSize:12, color:T.textSec, textDecoration:'none', transition:'color 0.3s' }}
-                  onMouseEnter={e=>{e.currentTarget.style.color=T.navy;}} onMouseLeave={e=>{e.currentTarget.style.color=T.textSec;}}>
-                  Privacy Policy
-                </Link>
-              </div>
-            </motion.div>
+            <motion.h1
+              key={role}
+              initial={reduce ? undefined : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduce ? undefined : { opacity: 0, y: -12 }}
+              transition={{ duration: 0.35 }}
+              className="mt-6 font-display text-4xl font-extrabold leading-[1.1] tracking-tight"
+            >
+              {meta.title}
+            </motion.h1>
           </AnimatePresence>
-        </motion.div>
+          <p className="mt-4 max-w-sm leading-relaxed text-white/65">{meta.sub}</p>
+
+          <ul className="mt-9 flex flex-col gap-3">
+            {meta.badges.map((b, i) => (
+              <motion.li
+                key={b}
+                initial={reduce ? undefined : { opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.15 + i * 0.08 }}
+                className="inline-flex w-fit items-center gap-2.5 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white/80"
+              >
+                {i === 0 ? (
+                  <ShieldCheck className="size-4 text-accent" />
+                ) : i === 1 ? (
+                  <MapPin className="size-4 text-accent" />
+                ) : (
+                  <Check className="size-4 text-accent" />
+                )}
+                {b}
+              </motion.li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* Right — login card */}
+      <div className="flex items-center justify-center bg-background p-6 sm:p-10">
+        <div className="w-full max-w-md">
+          {/* mobile-only header */}
+          <div className="mb-8 flex items-center justify-between lg:hidden">
+            <Link to="/" className="flex items-center gap-2">
+              <Logo size={30} />
+              <span className="font-display text-lg font-extrabold tracking-tight text-foreground">
+                Ride<span className="text-accent">Mitra</span>
+              </span>
+            </Link>
+            <Link to="/" className="text-sm font-semibold text-muted-foreground hover:text-foreground">
+              Back
+            </Link>
+          </div>
+
+          <div className="rounded-3xl border border-border bg-card p-7 shadow-md sm:p-8">
+            <div className="hidden lg:block">
+              <Logo size={40} />
+            </div>
+            <h2 className="mt-4 font-display text-2xl font-bold text-foreground">
+              {meta.label} sign in
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              JC Bose University of Science &amp; Technology, YMCA
+            </p>
+
+            {/* role tabs */}
+            <div className="mt-6 flex border-b border-border">
+              {tabs.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setRole(t)}
+                  className={cn(
+                    "flex-1 border-b-2 pb-3 pt-1 text-sm font-semibold transition-colors",
+                    role === t
+                      ? TAB_ACTIVE[t]
+                      : "border-transparent text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {ROLE_META[t].label}
+                </button>
+              ))}
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={step}
+                initial={reduce ? undefined : { opacity: 0, x: step === "otp" ? 16 : -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={reduce ? undefined : { opacity: 0, x: step === "otp" ? -16 : 16 }}
+                transition={{ duration: 0.25 }}
+                className="pt-6"
+              >
+                {step === "choose" ? (
+                  <>
+                    <Button
+                      variant="secondary"
+                      className="w-full"
+                      onClick={handleGoogle}
+                      loading={loading}
+                      icon={!loading ? <GoogleIcon className="size-[18px]" /> : undefined}
+                    >
+                      Continue with Google
+                    </Button>
+
+                    <div className="my-5 flex items-center gap-3">
+                      <div className="h-px flex-1 bg-border" />
+                      <span className="text-xs text-muted-foreground">or with phone</span>
+                      <div className="h-px flex-1 bg-border" />
+                    </div>
+
+                    <label htmlFor="phone" className="mb-1.5 block text-sm font-semibold text-foreground">
+                      Phone number
+                    </label>
+                    <div className="flex items-stretch gap-2">
+                      <span className="inline-flex items-center rounded-2xl border border-border bg-muted2 px-3.5 font-mono text-sm font-semibold text-foreground">
+                        +91
+                      </span>
+                      <SmoothInput
+                        id="phone"
+                        type="tel"
+                        inputMode="numeric"
+                        autoComplete="tel"
+                        placeholder="10-digit number"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                        wrapperClassName="flex-1"
+                        aria-label="Phone number"
+                      />
+                    </div>
+
+                    <Button
+                      className="mt-4 w-full"
+                      onClick={handleSendOtp}
+                      loading={loading}
+                      disabled={phone.length < 10}
+                      icon={!loading ? <Phone className="size-4" /> : undefined}
+                    >
+                      Send OTP
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStep("choose");
+                        setOtp(["", "", "", "", "", ""]);
+                      }}
+                      className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-foreground"
+                    >
+                      <ArrowLeft className="size-4" /> Change number
+                    </button>
+                    <p className="text-sm text-muted-foreground">
+                      OTP sent to <strong className="text-foreground">+91 {phone}</strong>
+                    </p>
+                    <p className="mb-4 mt-0.5 text-xs text-muted-foreground">
+                      Enter the 6-digit verification code
+                    </p>
+                    <div className="mb-4 flex justify-between gap-2">
+                      {otp.map((d, i) => (
+                        <input
+                          key={i}
+                          id={`otp-${i}`}
+                          value={d}
+                          onChange={(e) => handleOtpInput(i, e.target.value)}
+                          onKeyDown={(e) => handleOtpKey(i, e)}
+                          maxLength={1}
+                          inputMode="numeric"
+                          aria-label={`OTP digit ${i + 1}`}
+                          className="size-12 rounded-2xl border border-border bg-muted2 text-center font-mono text-xl font-bold text-foreground caret-accent outline-none transition-colors focus:border-accent focus-visible:ring-2 focus-visible:ring-ring"
+                        />
+                      ))}
+                    </div>
+                    <Button className="w-full" onClick={handleVerifyOtp} loading={loading} disabled={otp.join("").length < 6}>
+                      Verify &amp; log in
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={handleSendOtp}
+                      className="mt-3 w-full text-sm font-medium text-accent hover:underline"
+                    >
+                      Resend OTP
+                    </button>
+                  </>
+                )}
+
+                <p className="mt-6 flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground">
+                  <Mail className="size-3.5" /> Only @jcboseust.ac.in emails allowed
+                </p>
+                <div className="mt-3 flex justify-center gap-5 text-xs text-muted-foreground">
+                  <Link to="/terms" className="hover:text-foreground">
+                    Terms of Service
+                  </Link>
+                  <Link to="/privacy" className="hover:text-foreground">
+                    Privacy Policy
+                  </Link>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
     </div>
   );
-}
-
-function Spin({ light }: { light?: boolean }) {
-  return <div style={{ width:18, height:18, border:`2px solid ${light?'white':T.blue}`, borderTopColor:'transparent', borderRadius:'50%', animation:'spin-slow 0.7s linear infinite' }}/>;
 }
