@@ -78,10 +78,15 @@ export const T = {
   beige50: '#FDF6EF',
 } as const;
 
-/** Font families — Poppins for headings, a neutral system stack for body. */
+/**
+ * Font families — Ride Mitra editorial system (see design-system/MASTER.md §3).
+ * Display: Bricolage Grotesque · Body/UI: Plus Jakarta Sans · Data: JetBrains Mono.
+ * (Legacy inline-styled pages inherit the new typography through these tokens.)
+ */
 export const FONT = {
-  heading: "'Poppins', sans-serif",
-  body: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+  heading: "'Bricolage Grotesque', 'Poppins', sans-serif",
+  body: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+  mono: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace",
 } as const;
 
 export default T;

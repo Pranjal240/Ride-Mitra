@@ -4,15 +4,138 @@
    ═══════════════════════════════════════════════ */
 
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=JetBrains+Mono:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800;900&display=swap');
 
-@theme {
+/* ─────────────────────────────────────────────────────────────
+   DESIGN TOKENS — single source of truth: design-system/MASTER.md
+   Semantic tokens map to the --rm-* palette (defined for light in
+   :root and for dark under [data-theme="dark"]). This is what makes
+   bg-background / text-foreground / bg-primary / bg-muted /
+   bg-muted2 / outline-muted3 / bg-card / border-border / ring theme.
+   (--rm-* is namespaced so it never clashes with legacy :root vars
+   like --muted, which is a gray *text* color in the old system.)
+   ───────────────────────────────────────────────────────────── */
+@theme inline {
+  /* Fonts */
+  --font-display: 'Bricolage Grotesque', 'Poppins', sans-serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Semantic color tokens (the six Skiper components need + ours) */
+  --color-background: var(--rm-bg);
+  --color-foreground: var(--rm-fg);
+  --color-primary: var(--rm-primary);
+  --color-primary-foreground: var(--rm-primary-fg);
+  --color-muted: var(--rm-muted);
+  --color-muted2: var(--rm-muted-2);
+  --color-muted3: var(--rm-muted-3);
+  --color-muted-foreground: var(--rm-muted-fg);
+  --color-card: var(--rm-card);
+  --color-card-foreground: var(--rm-card-fg);
+  --color-popover: var(--rm-popover);
+  --color-popover-foreground: var(--rm-popover-fg);
+  --color-border: var(--rm-border);
+  --color-input: var(--rm-input);
+  --color-ring: var(--rm-ring);
+  --color-accent: var(--rm-accent);
+  --color-accent-strong: var(--rm-accent-strong);
+  --color-accent-soft: var(--rm-accent-soft);
+  --color-accent-foreground: var(--rm-accent-fg);
+  --color-navy: var(--rm-navy);
+  --color-navy-light: var(--rm-navy-light);
+  --color-success: var(--rm-success);
+  --color-success-soft: var(--rm-success-soft);
+  --color-warning: var(--rm-warning);
+  --color-warning-soft: var(--rm-warning-soft);
+  --color-danger: var(--rm-danger);
+  --color-danger-soft: var(--rm-danger-soft);
+  --color-info: var(--rm-info);
+  --color-info-soft: var(--rm-info-soft);
+
+  /* Brand scale (retained for migrating pages) */
   --color-brand-50: #EEF2F7;
   --color-brand-100: #D6DEE9;
   --color-brand-200: #B0BFDA;
   --color-brand-500: #1B2B4B;
   --color-brand-600: #152240;
   --color-brand-700: #0F1A33;
+
+  /* Radius scale */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-3xl: 32px;
+}
+
+/* ── Palette: LIGHT (default) ── */
+:root {
+  --rm-bg:            #F7F5F1;
+  --rm-fg:            #17223B;
+  --rm-primary:       #1B2B4B;
+  --rm-primary-fg:    #FFFFFF;
+  --rm-muted:         #ECE7DE;
+  --rm-muted-2:       #E7E0D4;
+  --rm-muted-3:       #C8956C;
+  --rm-muted-fg:      #5A5F52;
+  --rm-card:          #FFFFFF;
+  --rm-card-fg:       #17223B;
+  --rm-popover:       #FFFFFF;
+  --rm-popover-fg:    #17223B;
+  --rm-border:        #E3DCCF;
+  --rm-input:         #E7E0D4;
+  --rm-ring:          #C8956C;
+  --rm-accent:        #C8956C;
+  --rm-accent-strong: #A67A50;
+  --rm-accent-soft:   #F5E6D3;
+  --rm-accent-fg:     #1B2B4B;
+  --rm-navy:          #1B2B4B;
+  --rm-navy-light:    #2C4A7C;
+  --rm-success:       #3E8E5F;
+  --rm-success-soft:  #E3F2E8;
+  --rm-warning:       #C77D2E;
+  --rm-warning-soft:  #FDF0DC;
+  --rm-danger:        #C6463F;
+  --rm-danger-soft:   #FAE5E5;
+  --rm-info:          #3D6AA6;
+  --rm-info-soft:     #E1ECF7;
+}
+
+/* ── Palette: DARK (manual, via <html data-theme="dark">). Defined and
+      AA-verified per MASTER.md §2.5; opt-in so the phased migration stays
+      coherent (no half-dark pages). Flip a real toggle here later. ── */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --rm-bg:            #0F1A33;
+  --rm-fg:            #EEE9DF;
+  --rm-primary:       #D8A878;
+  --rm-primary-fg:    #0F1A33;
+  --rm-muted:         #17233F;
+  --rm-muted-2:       #1E2C4A;
+  --rm-muted-3:       #C8956C;
+  --rm-muted-fg:      #B7B2A6;
+  --rm-card:          #152240;
+  --rm-card-fg:       #EEE9DF;
+  --rm-popover:       #17233F;
+  --rm-popover-fg:    #EEE9DF;
+  --rm-border:        #26355A;
+  --rm-input:         #1E2C4A;
+  --rm-ring:          #D8A878;
+  --rm-accent:        #D8A878;
+  --rm-accent-strong: #C8956C;
+  --rm-accent-soft:   #2A2A1F;
+  --rm-accent-fg:     #0F1A33;
+  --rm-navy:          #1B2B4B;
+  --rm-navy-light:    #3B5998;
+  --rm-success:       #6BC08C;
+  --rm-success-soft:  #12301F;
+  --rm-warning:       #E4A55A;
+  --rm-warning-soft:  #33260F;
+  --rm-danger:        #E8756E;
+  --rm-danger-soft:   #331414;
+  --rm-info:          #7BA3DE;
+  --rm-info-soft:     #10233F;
 }
 
 /* ——— CSS Variables ——— */
@@ -42,8 +165,8 @@
   --text:       #2B2D42;
   --text-sec:   #6C6E7E;
   --muted:      #9CA0AD;
-  --font-h:     'Poppins', sans-serif;
-  --font-b:     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-h:     'Bricolage Grotesque', 'Poppins', sans-serif;
+  --font-b:     'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --shadow-sm:  0 1px 3px rgba(27,43,75,0.06);
   --shadow-md:  0 4px 12px rgba(27,43,75,0.08);
   --shadow-lg:  0 12px 32px rgba(27,43,75,0.12);
