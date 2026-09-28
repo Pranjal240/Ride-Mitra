@@ -224,9 +224,11 @@ export default function ServiceDashboard() {
     return Array.from({ length: 7 }, (_, i) => Math.round(base * (0.6 + 0.4 * Math.sin(i * 0.9) + i * 0.06)));
   })();
 
+  if (!user) return null;
+
   return (
     <PageShell>
-      <Container size="7xl">
+      <Container size="full">
         {/* hero */}
         <Reveal>
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-light p-7 text-white sm:p-9">

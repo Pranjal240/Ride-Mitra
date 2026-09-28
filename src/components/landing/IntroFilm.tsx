@@ -1,22 +1,25 @@
 "use client";
 
 /**
- * IntroFilm — first-load motion graphic. No loading screen: the film plays
- * immediately, full-bleed, over a dark backdrop (so there is never a white
- * flash before the first frame paints).
+ * IntroFilm — first-load motion graphic.
  *
- *  • PC / landscape  → the 16:9 film fills the viewport (object-cover).
- *  • Mobile/portrait → the landscape film is rotated 90° and sized to the
- *    viewport so it fills the whole portrait screen edge-to-edge (shown in
- *    landscape orientation, cropped via cover — no black bars).
+ * Rendered through a PORTAL to <body> so it escapes the landing's Lenis
+ * (SmoothScroll) wrapper and the route's AnimatedPage `filter` animation — both
+ * establish a containing block for `position: fixed`, which otherwise stretched
+ * this overlay to the FULL PAGE HEIGHT (you'd scroll past white to find the film
+ * playing somewhere in the middle). At <body> level `fixed inset-0` is the true
+ * viewport, so the film fills exactly one screen.
  *
- * Plays once per session, muted + autoplay + playsInline, Skip always
- * reachable, and reduced-motion skips it entirely.
+ * No loading screen: the film plays immediately over a dark backdrop (never a
+ * white flash). PC/landscape → whole 16:9 film fit to screen (contain, never a
+ * zoomed crop). Mobile/portrait → rotated 90deg + cover to fill the screen.
+ * Muted + autoplay + playsInline, Skip always reachable, plays once per session.
  */
 
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 export function IntroFilm({
   src = "/launch.mp4",
@@ -34,13 +37,19 @@ export function IntroFilm({
     window.setTimeout(onDone, 420);
   }, [onDone]);
 
-  // Kick off playback as early as possible.
+  // lock body scroll while the film owns the screen
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
   useEffect(() => {
     videoRef.current?.play().catch(() => {});
   }, []);
 
-  // Never trap the visitor: if the film can't start (autoplay blocked / slow),
-  // hand off shortly; once playing, a generous hard cap ends it.
   useEffect(() => {
     if (ready) {
       const hard = window.setTimeout(finish, 24000);
@@ -50,9 +59,9 @@ export function IntroFilm({
     return () => window.clearTimeout(bail);
   }, [ready, finish]);
 
-  return (
+  const overlay = (
     <motion.div
-      className="fixed inset-0 z-[120] overflow-hidden bg-[#070E1C]"
+      className="fixed inset-0 z-[2147483000] flex items-center justify-center overflow-hidden bg-[#070E1C]"
       animate={{ opacity: leaving ? 0 : 1 }}
       transition={{ duration: 0.42, ease: "easeInOut" }}
       style={{ pointerEvents: leaving ? "none" : "auto" }}
@@ -78,15 +87,14 @@ export function IntroFilm({
       <button
         onClick={finish}
         aria-label="Skip intro"
-        className="absolute right-5 top-[max(20px,env(safe-area-inset-top))] z-20 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2.5 font-sans text-sm font-bold text-white backdrop-blur transition-colors hover:bg-white/20"
+        className="absolute right-5 top-[max(20px,env(safe-area-inset-top))] z-10 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2.5 font-sans text-sm font-bold text-white backdrop-blur transition-colors hover:bg-white/20"
       >
         Skip <X className="size-3.5" />
       </button>
 
       <style>{`
-        /* PC / landscape: show the WHOLE 16:9 film fit to the screen — never a
-           zoomed crop. On a non-16:9 window the extra space is the dark backdrop
-           (cinematic bars), so no stray white/zoom can ever appear. */
+        /* PC / landscape: whole 16:9 film fit to the screen — never a zoomed
+           crop; any leftover space is the dark backdrop, never white. */
         .intro-film-video {
           position: absolute;
           inset: 0;
@@ -97,8 +105,7 @@ export function IntroFilm({
           will-change: transform;
         }
         /* Portrait phones: rotate the landscape film 90deg and size it to the
-           viewport so it fills the whole portrait screen in landscape
-           orientation (cover-crop, no bars). */
+           viewport so it fills the whole portrait screen (cover-crop, no bars). */
         @media (orientation: portrait) {
           .intro-film-video {
             inset: auto;
@@ -114,6 +121,9 @@ export function IntroFilm({
       `}</style>
     </motion.div>
   );
+
+  if (typeof document === "undefined") return overlay;
+  return createPortal(overlay, document.body);
 }
 
 export default IntroFilm;

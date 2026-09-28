@@ -51,8 +51,13 @@ export default function Header() {
   const location = useLocation();
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/");
+    setProfileOpen(false);
+    try {
+      await logout();
+    } catch (e) {
+      console.error("Logout failed", e);
+    }
+    navigate("/", { replace: true });
   };
 
   if (!user) return null;

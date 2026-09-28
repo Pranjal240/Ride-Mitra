@@ -28,8 +28,7 @@ import { TextRoll } from "@/components/ui/text-roll";
 import { Marquee } from "@/components/ui/marquee";
 import { CrowdCanvas } from "@/components/ui/crowd-canvas";
 import { RidePoster } from "@/components/ui/ride-illustrations";
-import { RideCarousel, type RideSlide } from "@/components/ui/ride-carousel";
-import { ParallaxGallery, type ParallaxItem } from "@/components/ui/parallax-gallery";
+import { type RideSlide } from "@/components/ui/ride-carousel";
 import { PopButton } from "@/components/ui/pop-button";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { MorphText } from "@/components/ui/morph-text";
@@ -38,13 +37,12 @@ import { SocialFlipButton } from "@/components/ui/social-flip-button";
 import {
   Badge,
   Button,
-  buttonVariants,
   Container,
   Eyebrow,
   Panel,
   SectionHeading,
 } from "@/components/ui/primitives";
-import { CursorGlow, Magnetic, MagneticButton } from "@/components/ui/cursor";
+import { CursorGlow } from "@/components/ui/cursor";
 import LiveMap from "@/components/landing/LiveMap";
 import IntroFilm from "@/components/landing/IntroFilm";
 import LandingHeader from "@/components/landing/LandingHeader";
@@ -81,13 +79,15 @@ function TiltCard({ children, className }: { children: ReactNode; className?: st
   );
 }
 
-/* ── Hover-expand row of colored ride posters (open on hover, collapse on leave) ── */
-function HoverExpandRides({ slides }: { slides: RideSlide[] }) {
+/* ── Hover-expand row of colored posters (Skiper HoverExpand: smooth
+      collapse/open morphism — the active card grows, the rest shrink). Fills
+      the page edge-to-edge. Used for both the ride types and the corridors. ── */
+function HoverExpandRides({ slides, tall }: { slides: RideSlide[]; tall?: boolean }) {
   const reduce = useReducedMotion();
   const [active, setActive] = useState(0);
   return (
     <div
-      className="mx-auto flex w-full max-w-7xl gap-2.5 px-4 sm:px-6"
+      className="mx-auto flex w-full max-w-none gap-2.5 px-4 sm:px-6 lg:gap-3.5 lg:px-10"
       onMouseLeave={() => setActive(-1)}
     >
       {slides.map((s, i) => (
@@ -98,10 +98,13 @@ function HoverExpandRides({ slides }: { slides: RideSlide[] }) {
           onMouseEnter={() => setActive(i)}
           onFocus={() => setActive(i)}
           onClick={() => setActive(i)}
-          animate={reduce ? undefined : { flexGrow: active === i ? 2.6 : 1 }}
-          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          className="h-[22rem] min-w-0 flex-1 basis-0 cursor-pointer outline-none sm:h-[26rem]"
-          style={{ flexGrow: active === i ? 2.6 : 1 }}
+          animate={reduce ? undefined : { flexGrow: active === i ? 3.2 : 1 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className={cn(
+            "min-w-0 flex-1 basis-0 cursor-pointer outline-none",
+            tall ? "h-[24rem] sm:h-[30rem]" : "h-[22rem] sm:h-[27rem]",
+          )}
+          style={{ flexGrow: active === i ? 3.2 : 1 }}
         >
           <RidePoster
             tone={s.tone}
@@ -109,7 +112,10 @@ function HoverExpandRides({ slides }: { slides: RideSlide[] }) {
             eyebrow={s.eyebrow}
             title={s.title}
             caption={active === i ? s.caption : undefined}
-            className={cn("transition-shadow duration-500", active === i ? "shadow-2xl" : "shadow-md")}
+            className={cn(
+              "transition-shadow duration-500",
+              active === i ? "shadow-2xl ring-1 ring-black/5" : "shadow-md",
+            )}
           />
         </motion.div>
       ))}
@@ -175,15 +181,13 @@ const RIDE_SLIDES: RideSlide[] = [
   { tone: "gold", kind: "suv", eyebrow: "Staff", title: "Faculty pool", caption: "Same department, same hours — ride in together." },
 ];
 
-const PARALLAX_ITEMS: ParallaxItem[] = [
-  { tone: "navy", kind: "car", title: "Sector 15 → Campus", eyebrow: "8:00 AM" },
-  { tone: "clay", kind: "scooter", title: "NIT Faridabad → Gate 2", eyebrow: "9:15 AM" },
-  { tone: "sage", kind: "bike", title: "Ballabgarh → Campus", eyebrow: "8:30 AM" },
-  { tone: "sky", kind: "suv", title: "Old Faridabad → Campus", eyebrow: "7:45 AM" },
-  { tone: "plum", kind: "car", title: "Sector 21C → Library", eyebrow: "10:00 AM" },
-  { tone: "gold", kind: "suv", title: "Neelam Chowk → Campus", eyebrow: "8:10 AM" },
-  { tone: "navy", kind: "scooter", title: "Bata Chowk → Gate 1", eyebrow: "9:00 AM" },
-  { tone: "sage", kind: "car", title: "Sector 62 → Campus", eyebrow: "8:20 AM" },
+const CORRIDOR_SLIDES: RideSlide[] = [
+  { tone: "navy", kind: "car", eyebrow: "8:00 AM", title: "Sector 15 → Campus", caption: "Four riders already share this morning run." },
+  { tone: "clay", kind: "scooter", eyebrow: "9:15 AM", title: "NIT Faridabad → Gate 2", caption: "Beat the Mathura Road jam on two wheels." },
+  { tone: "sage", kind: "bike", eyebrow: "8:30 AM", title: "Ballabgarh → Campus", caption: "A quick, fuel-split lift to the gate." },
+  { tone: "sky", kind: "suv", eyebrow: "7:45 AM", title: "Old Faridabad → Campus", caption: "The early society run fills up fast." },
+  { tone: "plum", kind: "car", eyebrow: "10:00 AM", title: "Sector 21C → Library", caption: "Late start? There's still a pool for you." },
+  { tone: "gold", kind: "suv", eyebrow: "8:10 AM", title: "Neelam Chowk → Campus", caption: "Faculty and staff ride in together." },
 ];
 
 const MARQUEE = [
@@ -329,12 +333,12 @@ export default function Landing() {
               transition={{ delay: 0.8, duration: 0.6 }}
               className="mt-7 flex flex-wrap items-center justify-center gap-3"
             >
-              <PopButton onClick={() => navigate("/portal")}>
+              <PopButton size="lg" onClick={() => navigate("/portal")}>
                 <Car className="size-4" /> Find a ride
               </PopButton>
-              <MagneticButton size="lg" variant="secondary" onClick={() => navigate("/portal")}>
+              <PopButton size="lg" variant="secondary" onClick={() => navigate("/portal")}>
                 Offer a ride <ArrowRight className="size-4" />
-              </MagneticButton>
+              </PopButton>
             </motion.div>
 
             <motion.p
@@ -423,8 +427,8 @@ export default function Landing() {
                 </p>
               </Reveal>
               <Reveal delay={0.16}>
-                <div className="mt-6 flex flex-wrap justify-center gap-3">
-                  <MagneticButton onClick={() => navigate("/portal")}>Start pooling</MagneticButton>
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                  <PopButton onClick={() => navigate("/portal")}>Start pooling</PopButton>
                   <VideoReveal src="/launch.mp4">
                     <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2.5 text-[15px] font-semibold text-foreground transition-colors hover:border-accent">
                       <Play className="size-4 fill-current" /> Watch the film
@@ -454,19 +458,21 @@ export default function Landing() {
           </Reveal>
         </section>
 
-        {/* ── CAMPUS IN MOTION — pinned parallax ── */}
-        <section className="w-full">
-          <Container size="7xl" className="pb-8 pt-4 text-center">
+        {/* ── CAMPUS IN MOTION — hover-expand corridors (collapse/open morphism) ── */}
+        <section className="w-full overflow-hidden py-4">
+          <Container size="7xl" className="pb-10 pt-4 text-center">
             <Reveal>
               <SectionHeading
                 align="center"
                 eyebrow="Campus in motion"
                 title="Real corridors, filling up every morning."
-                description="A glimpse of the routes students already share to the JC Bose gate."
+                description="Hover a corridor to open it — a glimpse of the routes students already share to the JC Bose gate."
               />
             </Reveal>
           </Container>
-          <ParallaxGallery items={PARALLAX_ITEMS} />
+          <Reveal>
+            <HoverExpandRides slides={CORRIDOR_SLIDES} tall />
+          </Reveal>
         </section>
 
         {/* ── TRUST — rebuilt: big navy statement + animated colored pillars ── */}
@@ -483,7 +489,7 @@ export default function Landing() {
             </Reveal>
           </Container>
 
-          <div className="mx-auto grid w-full max-w-[1500px] gap-4 px-4 sm:px-6 lg:grid-cols-12">
+          <div className="mx-auto grid w-full max-w-none gap-4 px-4 sm:px-6 lg:grid-cols-12 lg:gap-5 lg:px-10">
               <Reveal className="lg:col-span-5">
                 <div className="flex h-full flex-col justify-between overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-navy to-navy-light p-8 text-white">
                   <div>
@@ -561,21 +567,33 @@ export default function Landing() {
                   <span className="text-center text-sm font-semibold text-white/60">Cab apps</span>
                 </div>
                 {COMPARE.map((row, i) => (
-                  <div
+                  <motion.div
                     key={i}
+                    initial={reduce ? undefined : { opacity: 0, x: -18 }}
+                    whileInView={reduce ? undefined : { opacity: 1, x: 0 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{ duration: 0.5, delay: i * 0.07, ease: [0.22, 1, 0.36, 1] }}
                     className={cn(
-                      "grid grid-cols-[1.6fr_0.7fr_0.7fr] items-center px-5 py-4 sm:grid-cols-[2fr_1fr_1fr] sm:px-8",
+                      "group grid grid-cols-[1.6fr_0.7fr_0.7fr] items-center px-5 py-4 transition-colors hover:bg-accent-soft/50 sm:grid-cols-[2fr_1fr_1fr] sm:px-8",
                       i % 2 === 1 && "bg-muted/50",
                     )}
                   >
                     <span className="pr-3 text-sm font-medium text-foreground">{row[0]}</span>
                     <span className="flex justify-center">
-                      <Check className="size-5 text-success" />
+                      <motion.span
+                        initial={reduce ? undefined : { scale: 0, rotate: -30 }}
+                        whileInView={reduce ? undefined : { scale: 1, rotate: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ type: "spring", stiffness: 320, damping: 16, delay: i * 0.07 + 0.15 }}
+                        className="grid size-7 place-items-center rounded-full bg-success-soft text-success"
+                      >
+                        <Check className="size-4" strokeWidth={3} />
+                      </motion.span>
                     </span>
                     <span className="flex justify-center text-muted-foreground">
                       {row[2] ? <Check className="size-5 text-success" /> : <span className="text-lg">—</span>}
                     </span>
-                  </div>
+                  </motion.div>
                 ))}
               </Panel>
             </Reveal>
@@ -584,7 +602,7 @@ export default function Landing() {
 
         {/* ── HOW IT WORKS — 3D tilt steps, connected (moved near the bottom) ── */}
         <section id="how" className="py-20 sm:py-28">
-          <Container size="7xl">
+          <Container size="wide">
             <Reveal>
               <SectionHeading
                 align="center"
@@ -604,17 +622,23 @@ export default function Landing() {
                 {STEPS.map((s) => (
                   <RevealItem key={s.n}>
                     <TiltCard className="group h-full [transform-style:preserve-3d]">
-                      <div className="h-full rounded-3xl border border-border bg-card p-6 shadow-sm transition-shadow duration-300 hover:shadow-xl">
-                        <div className="flex items-center justify-between">
-                          <span className="grid size-12 place-items-center rounded-2xl bg-navy text-white transition-colors group-hover:bg-accent group-hover:text-navy">
-                            {s.icon}
-                          </span>
-                          <span className="font-mono text-2xl font-bold text-accent/30 group-hover:text-accent">
-                            {s.n}
-                          </span>
-                        </div>
-                        <h3 className="mt-5 font-display text-lg font-bold text-foreground">{s.title}</h3>
-                        <p className="mt-1.5 text-sm text-muted-foreground">{s.body}</p>
+                      <div className="relative h-full overflow-hidden rounded-3xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-xl">
+                        {/* giant watermark number */}
+                        <span className="pointer-events-none absolute -right-3 -top-6 select-none font-display text-[7rem] font-extrabold leading-none text-muted/60 transition-colors duration-300 group-hover:text-accent-soft">
+                          {s.n}
+                        </span>
+                        {/* hover gradient wash */}
+                        <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-accent/0 to-accent/0 opacity-0 transition-opacity duration-300 group-hover:from-accent/5 group-hover:to-transparent group-hover:opacity-100" />
+                        <motion.span
+                          aria-hidden
+                          animate={reduce ? undefined : { y: [0, -5, 0] }}
+                          transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+                          className="relative grid size-13 place-items-center rounded-2xl bg-navy text-white shadow-md transition-colors group-hover:bg-accent group-hover:text-navy [&>svg]:size-6"
+                        >
+                          {s.icon}
+                        </motion.span>
+                        <h3 className="relative mt-6 font-display text-lg font-bold text-foreground">{s.title}</h3>
+                        <p className="relative mt-2 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
                       </div>
                     </TiltCard>
                   </RevealItem>
@@ -674,11 +698,9 @@ export default function Landing() {
                     Android 7.0 and up.
                   </p>
                   <div className="mt-6 flex flex-wrap items-center gap-4">
-                    <Magnetic>
-                      <a href={APK_URL} download className={cn(buttonVariants({ variant: "accent", size: "lg" }))}>
-                        <Download className="size-4" /> Download APK
-                      </a>
-                    </Magnetic>
+                    <PopButton variant="accent" size="lg" href={APK_URL} download>
+                      <Download className="size-4" /> Download APK
+                    </PopButton>
                     <span className="font-mono text-xs text-muted-foreground">~86 MB · direct install</span>
                   </div>
                 </div>
@@ -709,18 +731,13 @@ export default function Landing() {
                   </p>
                 </RevealItem>
                 <RevealItem>
-                  <div className="mt-9 flex flex-wrap justify-center gap-3">
-                    <PopButton onClick={() => navigate("/portal")}>
+                  <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+                    <PopButton variant="accent" size="lg" onClick={() => navigate("/portal")}>
                       Choose your portal <ArrowRight className="size-4" />
                     </PopButton>
-                    <MagneticButton
-                      size="lg"
-                      variant="secondary"
-                      className="border-white/25 text-white hover:border-accent hover:text-accent"
-                      onClick={() => navigate("/rides")}
-                    >
+                    <PopButton variant="secondary" size="lg" onClick={() => navigate("/rides")}>
                       Browse rides
-                    </MagneticButton>
+                    </PopButton>
                   </div>
                 </RevealItem>
               </RevealGroup>

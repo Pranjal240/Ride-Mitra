@@ -75,7 +75,7 @@ export function CommandPalette() {
       { id: "find", title: "Find a ride", hint: "Search available rides", keywords: "find search ride", icon: <Search className="size-4" />, run: () => navigate("/rides/search"), section: "Rides", tone: "accent" },
       { id: "book", title: "My bookings", hint: "View your booked rides", keywords: "bookings my rides trips", icon: <CalendarCheck className="size-4" />, run: () => navigate("/bookings"), section: "Rides", tone: "success" },
       { id: "profile", title: "Profile settings", hint: "Edit your profile", keywords: "profile account settings", icon: <User className="size-4" />, run: () => navigate("/profile"), section: "Account", tone: "info" },
-      { id: "logout", title: "Sign out", hint: "End your session", keywords: "logout sign out exit", icon: <LogOut className="size-4" />, run: async () => { await logout(); navigate("/"); }, section: "Account", tone: "danger" },
+      { id: "logout", title: "Sign out", hint: "End your session", keywords: "logout sign out exit", icon: <LogOut className="size-4" />, run: async () => { try { await logout(); } catch (e) { console.error(e); } navigate("/", { replace: true }); }, section: "Account", tone: "danger" },
     ];
     if (user.user_type === "driver" || user.user_type === "both") {
       list.push(

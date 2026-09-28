@@ -20,15 +20,19 @@ export function Container({
 }: {
   className?: string;
   children: React.ReactNode;
-  size?: "4xl" | "5xl" | "6xl" | "7xl";
+  size?: "4xl" | "5xl" | "6xl" | "7xl" | "wide" | "full";
 }) {
   const max = {
     "4xl": "max-w-4xl",
     "5xl": "max-w-5xl",
     "6xl": "max-w-6xl",
     "7xl": "max-w-7xl",
+    // near edge-to-edge — fills wide monitors with comfortable side gutters
+    wide: "max-w-[1800px]",
+    full: "max-w-none",
   }[size];
-  return <div className={cn("mx-auto w-full px-4 sm:px-6", max, className)}>{children}</div>;
+  const gutter = size === "wide" || size === "full" ? "px-4 sm:px-6 lg:px-10" : "px-4 sm:px-6";
+  return <div className={cn("mx-auto w-full", gutter, max, className)}>{children}</div>;
 }
 
 /* ── Button ────────────────────────────────────────────────── */

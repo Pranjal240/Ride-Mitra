@@ -93,9 +93,11 @@ export default function AdminPanel() {
     return key === "alerts" ? k.active_alerts : key === "drivers" ? k.pending_verifications : key === "reports" ? k.open_reports : key === "support" ? k.open_support : 0;
   };
 
+  if (!user) return null;
+
   return (
     <PageShell>
-      <Container size="7xl">
+      <Container size="full">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-light p-7 text-white sm:p-9">
           <div className="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full bg-danger/15 blur-3xl" />
           <div className="relative">

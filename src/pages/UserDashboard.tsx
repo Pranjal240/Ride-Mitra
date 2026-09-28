@@ -303,9 +303,11 @@ export default function UserDashboard() {
     .sort((a, b) => b.at.getTime() - a.at.getTime())
     .slice(0, 6);
 
+  if (!user) return null;
+
   return (
     <PageShell>
-      <Container size="7xl">
+      <Container size="full">
         {/* greeting hero */}
         <Reveal>
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-light p-7 text-white sm:p-9">

@@ -27,6 +27,7 @@ import {
   MediaTimeRange,
 } from "media-chrome/react";
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 
 import { cn } from "@/lib/utils";
 
@@ -46,13 +47,13 @@ export function VideoPlayerShell({
     : { duration: 0.9, type: "spring" as const, stiffness: 100, damping: 20 };
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 md:p-8">
+    <div className="fixed inset-0 z-[2147483000] flex items-center justify-center p-4 md:p-8">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="absolute inset-0 bg-background/90 backdrop-blur-lg"
+        className="absolute inset-0 bg-navy/90 backdrop-blur-lg"
         onClick={onClose}
       />
       <motion.div
@@ -153,13 +154,20 @@ export function VideoReveal({
     y.set(e.clientY - bounds.top);
   };
 
+  const player = (
+    <AnimatePresence>
+      {open && (
+        <VideoPlayerShell src={src} poster={poster} reduce={reduce} onClose={() => setOpen(false)} />
+      )}
+    </AnimatePresence>
+  );
+
   return (
     <>
-      <AnimatePresence>
-        {open && (
-          <VideoPlayerShell src={src} poster={poster} reduce={reduce} onClose={() => setOpen(false)} />
-        )}
-      </AnimatePresence>
+      {/* portal to <body> so the fullscreen player escapes the landing's Lenis
+          wrapper + route filter (which otherwise stretch a fixed overlay to the
+          whole page height — white bars above/below, video stuck in the middle) */}
+      {typeof document !== "undefined" ? createPortal(player, document.body) : player}
 
       {children && (
         <div

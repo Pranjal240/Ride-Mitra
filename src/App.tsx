@@ -10,6 +10,7 @@ import LiveAnnouncements from './components/common/LiveAnnouncements';
 import { ScrollProgress } from './components/common/Interactive3D';
 import AuthCallback from './components/auth/AuthCallback';
 import AppBackground from './components/ui/app-background';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 /* ---- Pages ---- */
 import Landing from './pages/Landing';
@@ -80,6 +81,7 @@ export default function App() {
       <CommandHint />
       <MobileBottomNav />
       <ToastContainer />
+      <ErrorBoundary resetKey={location.pathname}>
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           {/* Public */}
@@ -121,6 +123,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AnimatePresence>
+      </ErrorBoundary>
     </div>
   );
 }

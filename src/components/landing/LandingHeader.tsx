@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import Logo from "@/components/common/Logo";
-import { buttonVariants } from "@/components/ui/primitives";
+import { PopButton } from "@/components/ui/pop-button";
 import { TextRoll } from "@/components/ui/text-roll";
 import { cn } from "@/lib/utils";
 
@@ -61,23 +61,24 @@ export function LandingHeader() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
-          <a
+        <div className="flex items-center gap-2.5">
+          <PopButton
+            variant="accent"
+            size="sm"
             href={APK_URL}
             download
-            className={cn(
-              buttonVariants({ variant: "accent", size: "sm" }),
-              "hidden sm:inline-flex",
-            )}
+            className="hidden sm:inline-flex"
           >
             <Download className="size-3.5" /> Download app
-          </a>
-          <button
+          </PopButton>
+          <PopButton
+            variant="primary"
+            size="sm"
             onClick={() => navigate("/portal")}
-            className={cn(buttonVariants({ variant: "primary", size: "sm" }), "hidden sm:inline-flex")}
+            className="hidden sm:inline-flex"
           >
             Sign in <ArrowRight className="size-3.5" />
-          </button>
+          </PopButton>
           <button
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? "Close menu" : "Open menu"}
@@ -107,23 +108,27 @@ export function LandingHeader() {
                   {n.label}
                 </a>
               ))}
-              <a
+              <PopButton
+                variant="accent"
+                size="md"
                 href={APK_URL}
                 download
                 onClick={() => setOpen(false)}
-                className={cn(buttonVariants({ variant: "accent", size: "md" }), "mt-2 w-full")}
+                className="mt-2 w-full"
               >
                 <Download className="size-4" /> Download the app
-              </a>
-              <button
+              </PopButton>
+              <PopButton
+                variant="primary"
+                size="md"
                 onClick={() => {
                   setOpen(false);
                   navigate("/portal");
                 }}
-                className={cn(buttonVariants({ variant: "primary", size: "md" }), "mt-1 w-full")}
+                className="mt-1 w-full"
               >
                 <Smartphone className="size-4" /> Sign in
-              </button>
+              </PopButton>
             </div>
           </motion.nav>
         )}
