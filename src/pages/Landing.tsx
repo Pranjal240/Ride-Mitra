@@ -507,11 +507,11 @@ export default function Landing() {
 
         {/* ── THE DAILY WAIT — heading + crowd in ONE compact panel ── */}
         <section className="relative w-full overflow-hidden">
-          <div className="relative h-[62vh] min-h-[480px] w-full">
+          <div className="relative w-full pb-[18rem] pt-16 sm:pb-[20rem] sm:pt-24 lg:pb-[24rem]">
             <CrowdCanvas className="absolute inset-0" />
             {/* top fade so the heading reads over the crowd */}
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-3/4 bg-gradient-to-b from-white/80 via-white/60 to-transparent" />
-            <div className="absolute inset-x-0 top-0 px-6 pt-16 text-center sm:pt-20">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-full bg-gradient-to-b from-white/95 via-white/50 to-transparent" />
+            <div className="relative z-10 px-6 text-center">
               <Eyebrow>The daily wait</Eyebrow>
               <Reveal>
                 <h2 className="mx-auto mt-3 max-w-4xl font-display text-[clamp(1.75rem,5vw,3.5rem)] font-extrabold leading-[1.03] tracking-tight text-foreground">
