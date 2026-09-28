@@ -1,5 +1,9 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { Autoplay, EffectCards } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css/effect-cards";
+import "swiper/css";
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
 import {
   ArrowRight,
@@ -242,29 +246,42 @@ function TrustExpand() {
             onMouseEnter={() => setActive(i)}
             onFocus={() => setActive(i)}
             onClick={() => setActive(i)}
-            animate={reduce ? undefined : { flexGrow: isActive ? 3 : 1 }}
+            layout
+            animate={
+              reduce
+                ? undefined
+                : {
+                    flexGrow: isActive ? 3 : 1,
+                  }
+            }
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            style={{ flexGrow: isActive ? 3 : 1 }}
             className={cn(
-              "group relative min-h-[7rem] min-w-0 flex-1 basis-0 cursor-pointer overflow-hidden rounded-[1.75rem] p-7 outline-none transition-shadow duration-500 lg:min-h-0",
-              isActive ? "shadow-2xl" : "shadow-md",
+              "group relative min-w-0 flex-1 basis-0 cursor-pointer overflow-hidden rounded-[1.75rem] p-6 outline-none transition-[box-shadow,height,flex-grow] duration-500 lg:min-h-0 lg:p-7",
+              isActive ? "shadow-2xl h-auto" : "shadow-md h-[4.5rem] lg:h-auto",
               TRUST_BG[c.tone],
             )}
           >
-            <motion.span
-              aria-hidden
-              animate={reduce ? undefined : { y: isActive ? [0, -5, 0] : 0 }}
-              transition={{ duration: 3.4, repeat: isActive ? Infinity : 0, ease: "easeInOut" }}
-              className="inline-grid size-12 shrink-0 place-items-center rounded-2xl bg-white/15 backdrop-blur [&>svg]:size-6"
-            >
-              {c.icon}
-            </motion.span>
+            <div className="flex items-center gap-4 lg:block lg:gap-0">
+              <motion.span
+                aria-hidden
+                animate={reduce ? undefined : { y: isActive ? [0, -5, 0] : 0 }}
+                transition={{ duration: 3.4, repeat: isActive ? Infinity : 0, ease: "easeInOut" }}
+                className="inline-grid size-10 shrink-0 place-items-center rounded-2xl bg-white/15 backdrop-blur [&>svg]:size-5 lg:size-12 lg:[&>svg]:size-6"
+              >
+                {c.icon}
+              </motion.span>
+              
+              {/* Mobile title (always visible, next to icon) */}
+              <span className={cn("font-display text-lg font-bold leading-none tracking-tight lg:hidden", isActive && "opacity-0")}>
+                {c.title}
+              </span>
+            </div>
 
             {/* collapsed (desktop only): title runs vertically as a spine label */}
             <div
               className={cn(
-                "pointer-events-none absolute inset-x-0 bottom-7 hidden justify-center",
-                !isActive && "lg:flex",
+                "pointer-events-none absolute inset-x-0 bottom-7 hidden justify-center transition-opacity duration-300",
+                !isActive ? "lg:flex lg:opacity-100" : "lg:opacity-0",
               )}
             >
               <span
@@ -275,25 +292,25 @@ function TrustExpand() {
               </span>
             </div>
 
-            {/* expanded: full copy + stats — always shown on mobile, on desktop
-                only for the active card (morphs open with the flex-grow) */}
+            {/* expanded: full copy + stats — shown when active */}
             <div
               className={cn(
-                "transition-opacity duration-300 max-lg:block",
-                isActive ? "lg:block lg:opacity-100" : "lg:hidden",
+                "transition-all duration-300",
+                isActive ? "opacity-100 translate-y-0 max-lg:mt-4" : "opacity-0 translate-y-4 max-lg:hidden lg:hidden",
               )}
             >
-              <h3 className="mt-5 font-display text-2xl font-bold leading-tight">{c.title}</h3>
-              <p className="mt-3 max-w-md text-sm leading-relaxed opacity-85">{c.body}</p>
+              <h3 className="hidden font-display text-2xl font-bold leading-tight lg:block lg:mt-5">{c.title}</h3>
+              <h3 className="font-display text-2xl font-bold leading-tight lg:hidden">{c.title}</h3>
+              <p className="mt-2 max-w-md text-sm leading-relaxed opacity-85 lg:mt-3">{c.body}</p>
               {c.stats && (
-                <div className="mt-7 grid max-w-md grid-cols-2 gap-5">
+                <div className="mt-5 grid max-w-md grid-cols-2 gap-4 lg:mt-7 lg:gap-5">
                   {c.stats.map((s) => (
                     <div key={s.label}>
-                      <div className="font-mono text-2xl font-semibold text-accent sm:text-3xl">
+                      <div className="font-mono text-xl font-semibold text-accent sm:text-2xl lg:text-3xl">
                         <AnimatedNumber value={s.num} prefix={s.prefix} suffix={s.suffix} />
                       </div>
-                      <div className="mt-1 text-sm font-semibold">{s.label}</div>
-                      <div className="text-xs opacity-60">{s.note}</div>
+                      <div className="mt-1 text-xs font-semibold lg:text-sm">{s.label}</div>
+                      <div className="text-[10px] opacity-60 lg:text-xs">{s.note}</div>
                     </div>
                   ))}
                 </div>
@@ -314,6 +331,34 @@ const COMPARE: [string, boolean, boolean][] = [
   ["In-ride chat & video support", true, false],
   ["Fare bargaining within a fair band", true, false],
 ];
+
+function MobileHeroCarousel() {
+  const reduce = useReducedMotion();
+  return (
+    <motion.div
+      initial={reduce ? undefined : { opacity: 0, y: 20 }}
+      animate={reduce ? undefined : { opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.9 }}
+      className="relative mx-auto mt-14 flex w-full max-w-[220px] justify-center lg:hidden"
+    >
+      <Swiper
+        effect="cards"
+        grabCursor={true}
+        loop={true}
+        autoplay={{ delay: 2500, disableOnInteraction: false }}
+        modules={[EffectCards, Autoplay]}
+        className="h-[310px] w-full"
+      >
+        <SwiperSlide className="rounded-[1.75rem]">
+          <RidePoster tone="clay" kind="scooter" eyebrow="2 wheels" title="Scooter pool" />
+        </SwiperSlide>
+        <SwiperSlide className="rounded-[1.75rem]">
+          <RidePoster tone="navy" kind="car" eyebrow="4 seats" title="Car pool" />
+        </SwiperSlide>
+      </Swiper>
+    </motion.div>
+  );
+}
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -460,14 +505,7 @@ export default function Landing() {
               <HeroSearch />
             </motion.div>
 
-            <div className="mt-8 grid w-full max-w-md grid-cols-2 gap-3 lg:hidden">
-              <div className="h-40">
-                <RidePoster tone="clay" kind="scooter" eyebrow="2 wheels" title="Scooter" />
-              </div>
-              <div className="h-40">
-                <RidePoster tone="navy" kind="car" eyebrow="4 seats" title="Car pool" />
-              </div>
-            </div>
+            <MobileHeroCarousel />
           </Container>
 
           <div className="mt-4 w-full border-y border-border bg-navy py-3.5">
