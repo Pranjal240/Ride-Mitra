@@ -1002,12 +1002,9 @@ export const FolderPreview = React.forwardRef<HTMLDivElement, FolderPreviewProps
         const colors = variantColors[variant];
         const sizes = sizeConfig[size];
 
-        const defaultImages = [
-            "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=200&h=200&fit=crop",
-            "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&h=200&fit=crop",
-            "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&h=200&fit=crop",
-            "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=200&h=200&fit=crop",
-        ];
+        // No stock imagery: folders never invent photos. Callers pass real
+        // previews (or use <DataFolder> for record collections).
+        const defaultImages: string[] = [];
 
         const defaultFiles = [
             { name: "docs", type: "default" as const },

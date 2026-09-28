@@ -1,20 +1,18 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion, useReducedMotion } from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
   Bookmark,
   Calendar,
   Car,
   Clock,
-  Globe,
+  History,
   Leaf,
   MapPin,
-  MessageCircle,
   Navigation,
   Plus,
   Search,
-  ShieldCheck,
   Star,
   Trash2,
   TrendingUp,
@@ -49,8 +47,9 @@ import {
 } from "@/components/ui/primitives";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/scroll-reveal";
 import { cn } from "@/lib/utils";
-import FolderPreview, { FolderVariant } from "@/components/ui/folder-preview";
-import { StaggeredGrid } from "@/components/ui/staggered-grid";
+import DataFolder from "@/components/ui/data-folder";
+import { PopButton } from "@/components/ui/pop-button";
+import { Sparkbars } from "@/components/ui/dashboard";
 
 const TILE: Record<BadgeTone, string> = {
   neutral: "bg-muted text-foreground",
@@ -121,26 +120,6 @@ function ScoreRing({ value }: { value: number }) {
   );
 }
 
-/** Token-driven savings sparkline (bars). */
-function Sparkbars({ values }: { values: number[] }) {
-  const max = Math.max(...values, 1);
-  return (
-    <div className="flex h-28 items-end gap-2">
-      {values.map((v, i) => (
-        <motion.div
-          key={i}
-          initial={{ height: 0 }}
-          whileInView={{ height: `${(v / max) * 100}%` }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: i * 0.05 }}
-          className="flex-1 rounded-t-md bg-gradient-to-t from-accent/40 to-accent"
-          title={`₹${Math.round(v)}`}
-        />
-      ))}
-    </div>
-  );
-}
-
 const TRENDING = [
   { from: "Sector 15", to: "JC Bose UST", count: 42 },
   { from: "NIT Faridabad", to: "JC Bose UST", count: 31 },
@@ -194,9 +173,9 @@ function RideCard({ ride }: { ride: Ride }) {
 export default function UserDashboard() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
-  const reduce = useReducedMotion();
   const [rides, setRides] = useState<Ride[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [allBookings, setAllBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [time, setTime] = useState(new Date());
   const [isSOSOpen, setIsSOSOpen] = useState(false);
@@ -225,6 +204,7 @@ export default function UserDashboard() {
         ]);
         const now = new Date();
         setRides(r.filter((ride: Ride) => new Date(ride.departure_time) > now).slice(0, 6));
+        setAllBookings(b);
         setBookings(
           b
             .filter((booking: Booking) => {
@@ -262,17 +242,72 @@ export default function UserDashboard() {
     { label: "Rating", custom: (user as unknown as { rating?: number })?.rating?.toFixed(1) || "—", tone: "warning", icon: <Star className="size-5" /> },
   ];
 
-  const quickActions = [
-    { label: "Find a ride", desc: "Search your corridor", to: "/rides/search", tone: "info" as BadgeTone, icon: <Search className="size-5" />, variant: "hari" as FolderVariant },
-    { label: "Offer a ride", desc: "Share your trip", to: "/rides/create", tone: "success" as BadgeTone, icon: <Plus className="size-5" />, variant: "kubera" as FolderVariant },
-    { label: "My bookings", desc: `${bookings.length} active`, to: "/bookings", tone: "warning" as BadgeTone, icon: <Calendar className="size-5" />, variant: "ravi" as FolderVariant },
-    { label: "Messages", desc: "Chat with drivers", to: "/bookings", tone: "accent" as BadgeTone, icon: <MessageCircle className="size-5" />, variant: "shakti" as FolderVariant },
+  const rideAddr = (r?: Ride, which: "from" | "to" = "to") => {
+    if (!r) return undefined;
+    const loc = which === "to" ? r.to_location : r.from_location;
+    return typeof loc === "object" ? loc?.address : (loc as unknown as string);
+  };
+
+  const historyBookings = allBookings.filter((b) => {
+    const ride = (b as unknown as { ride?: Ride }).ride;
+    return b.status === "completed" || (ride ? new Date(ride.departure_time) < time : false);
+  });
+
+  // Data collections shown as folders (real records only — never stock images).
+  const collections = [
+    {
+      key: "bookings",
+      title: "My Bookings",
+      tone: "clay" as const,
+      icon: <Calendar />,
+      count: bookings.length,
+      countLabel: "upcoming",
+      to: "/bookings",
+      items: bookings.slice(0, 3).map((b) => {
+        const ride = (b as unknown as { ride?: Ride }).ride;
+        return { title: rideAddr(ride, "to") ? `→ ${rideAddr(ride, "to")}` : "Booked ride", sub: `${b.status} · ₹${b.total_price ?? 0}` };
+      }),
+      emptyLabel: "No upcoming bookings",
+    },
+    {
+      key: "history",
+      title: "Ride History",
+      tone: "navy" as const,
+      icon: <History />,
+      count: historyBookings.length,
+      countLabel: "completed",
+      to: "/bookings",
+      items: historyBookings.slice(0, 3).map((b) => {
+        const ride = (b as unknown as { ride?: Ride }).ride;
+        return { title: rideAddr(ride, "to") ? `→ ${rideAddr(ride, "to")}` : "Past ride", sub: `₹${b.total_price ?? 0}` };
+      }),
+      emptyLabel: "No completed rides yet",
+    },
+    {
+      key: "saved",
+      title: "Saved Routes",
+      tone: "gold" as const,
+      icon: <Bookmark />,
+      count: saved.length,
+      countLabel: "saved",
+      to: "/rides/search",
+      items: saved.slice(0, 3).map((r) => ({
+        title: r.label || r.from_location.address || "Route",
+        sub: r.to_location.address ? `→ ${r.to_location.address}` : undefined,
+      })),
+      emptyLabel: "Bookmark a route to save it",
+    },
   ];
 
   const savingsSeries =
     bookings.length > 0
       ? Array.from({ length: 7 }, (_, i) => Math.max(20, (bookings[i]?.total_price || [80, 60, 120, 90, 140, 70, 180][i]) * 0.6))
       : [80, 60, 120, 90, 140, 70, 180];
+  const savingsLabels = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(time);
+    d.setDate(d.getDate() - (6 - i));
+    return format(d, "EEE");
+  });
 
   const handleSaveEmergency = async () => {
     if (!emergencyPhone || !user) return;
@@ -362,22 +397,39 @@ export default function UserDashboard() {
           ))}
         </RevealGroup>
 
-        {/* quick actions using FolderPreview */}
-        <RevealGroup className="mt-8 mb-8 grid gap-6 grid-cols-2 lg:grid-cols-4 place-items-center">
-          {quickActions.map((a) => (
-            <RevealItem key={a.label} className="w-full flex justify-center">
-              <FolderPreview
-                variant={a.variant}
-                size="lg"
-                label={
-                  <div className="flex flex-col items-center gap-1 mt-2">
-                    <span className="font-display font-bold text-foreground text-sm flex items-center gap-2">
-                      {a.icon} {a.label}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{a.desc}</span>
-                  </div>
-                }
-                onClick={() => navigate(a.to)}
+        {/* primary actions */}
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <PopButton
+            variant="primary"
+            size="lg"
+            className="w-full justify-center"
+            onClick={() => navigate("/rides/search")}
+          >
+            <Search className="size-5" /> Find a ride
+          </PopButton>
+          <PopButton
+            variant="accent"
+            size="lg"
+            className="w-full justify-center"
+            onClick={() => navigate("/rides/create")}
+          >
+            <Plus className="size-5" /> Offer a ride
+          </PopButton>
+        </div>
+
+        {/* data collections (folders open their pages; hover reveals real records) */}
+        <RevealGroup className="mt-6 mb-2 grid gap-5 grid-cols-2 lg:grid-cols-3">
+          {collections.map((c) => (
+            <RevealItem key={c.key} className="w-full">
+              <DataFolder
+                title={c.title}
+                tone={c.tone}
+                icon={c.icon}
+                count={c.count}
+                countLabel={c.countLabel}
+                items={c.items}
+                emptyLabel={c.emptyLabel}
+                onClick={() => navigate(c.to)}
               />
             </RevealItem>
           ))}
@@ -462,7 +514,7 @@ export default function UserDashboard() {
                 <span className="text-xs text-muted-foreground">vs. private cab</span>
               </div>
               <p className="mb-4 text-sm text-muted-foreground">Estimated fuel-split savings</p>
-              <Sparkbars values={savingsSeries} />
+              <Sparkbars values={savingsSeries} labels={savingsLabels} format={(n) => `₹${Math.round(n)}`} />
             </Panel>
           </Reveal>
           <Reveal delay={0.05}>
@@ -607,29 +659,6 @@ export default function UserDashboard() {
           </Panel>
         </Reveal>
 
-        {/* platform features with StaggeredGrid */}
-        <div className="mt-12 w-full max-w-full overflow-hidden rounded-3xl bg-background border border-border">
-          <StaggeredGrid 
-            centerText="Safe"
-            images={[
-              "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=400&fit=crop",
-              "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=400&fit=crop",
-              "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=400&fit=crop",
-              "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=400&fit=crop",
-              "https://images.unsplash.com/photo-1506869640319-fea1a275303c?w=400&h=400&fit=crop"
-            ]}
-            bentoItems={[
-              { id: 1, title: "Verified only", subtitle: "Trust", description: "Campus email + document check for every user.", icon: <ShieldCheck className="size-5" /> },
-              { id: 2, title: "Live tracking", subtitle: "Safety", description: "Real-time GPS on every ride, shared with contacts.", icon: <Navigation className="size-5" /> },
-              { id: 3, title: "Campus routes", subtitle: "Focus", description: "Tuned for the JC Bose gate → city corridors.", icon: <Globe className="size-5" /> },
-              { id: 4, title: "Corridor match", subtitle: "Efficiency", description: "Only rides travelling your direction show up.", icon: <Zap className="size-5" /> }
-            ]}
-            credits={{
-              madeBy: { text: "Ride Mitra", href: "#" },
-              moreDemos: { text: "Learn More", href: "#" }
-            }}
-          />
-        </div>
       </Container>
 
       <SOSModal isOpen={isSOSOpen} onClose={() => setIsSOSOpen(false)} />

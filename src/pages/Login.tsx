@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ArrowLeft, Check, Mail, MapPin, Phone, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Check, FlaskConical, Mail, MapPin, Phone, ShieldCheck } from "lucide-react";
 
 import { useAuthStore } from "@/hooks/useStore";
 import { supabase } from "@/lib/supabase";
+import { dashboardPath } from "@/lib/roles";
+import type { User } from "@/types";
 import Logo from "@/components/common/Logo";
 import { SmoothInput } from "@/components/ui/smooth-input";
 import { Button, type BadgeTone } from "@/components/ui/primitives";
@@ -78,9 +80,38 @@ export default function Login() {
   const [otpHash, setOtpHash] = useState("");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<"choose" | "otp">("choose");
-  const { setSelectedRole } = useAuthStore();
+  const { setSelectedRole, setUser } = useAuthStore();
   const navigate = useNavigate();
   const reduce = useReducedMotion();
+
+  // Demo/test login for local UI verification. Shown in dev, or on any build via
+  // the ?demo=1 flag. It injects a mock profile into the store (no Supabase
+  // session), so protected dashboards render with their empty/live states — no
+  // real account and no access to anyone's data.
+  const demoEnabled = import.meta.env.DEV || searchParams.has("demo");
+
+  function loginAsDemo(type: "student" | "driver" | "admin") {
+    const meta = {
+      student: { name: "Test User", email: "test.user@jcboseust.ac.in" },
+      driver: { name: "Test Service", email: "test.service@jcboseust.ac.in" },
+      admin: { name: "Test Admin", email: "test.admin@jcboseust.ac.in" },
+    }[type];
+    const mock: User = {
+      id: `demo-${type}`,
+      email: meta.email,
+      full_name: meta.name,
+      phone: "+91 99999 99999",
+      user_type: type,
+      profile_complete: 100,
+      profile_photo: null,
+      created_at: new Date().toISOString(),
+      emergency_contact_phone: null,
+      admin_approved: true,
+    };
+    setSelectedRole(type);
+    setUser(mock);
+    navigate(dashboardPath(type), { replace: true });
+  }
 
   async function handleGoogle() {
     setLoading(true);
@@ -375,6 +406,35 @@ export default function Login() {
               </motion.div>
             </AnimatePresence>
           </div>
+
+          {demoEnabled && (
+            <div className="mt-5 rounded-3xl border border-dashed border-accent/50 bg-accent-soft/40 p-5">
+              <p className="flex items-center gap-2 text-sm font-bold text-foreground">
+                <FlaskConical className="size-4 text-accent-strong" /> Test login (demo preview)
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Tour the dashboards with a sample account — no real data, nothing saved.
+              </p>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {(
+                  [
+                    { key: "student", label: "User" },
+                    { key: "driver", label: "Service" },
+                    { key: "admin", label: "Admin" },
+                  ] as const
+                ).map((d) => (
+                  <button
+                    key={d.key}
+                    type="button"
+                    onClick={() => loginAsDemo(d.key)}
+                    className="rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-semibold text-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-md active:translate-y-0"
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

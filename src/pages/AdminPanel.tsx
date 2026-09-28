@@ -49,7 +49,6 @@ import { SmoothInput } from "@/components/ui/smooth-input";
 import { Badge, Button, Container, PageShell, Panel, buttonVariants, type BadgeTone } from "@/components/ui/primitives";
 import { CountUp, ScoreRing, Sparkbars, toneTile } from "@/components/ui/dashboard";
 import { cn } from "@/lib/utils";
-import FolderPreview, { FolderVariant } from "@/components/ui/folder-preview";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 type TabKey = "overview" | "users" | "drivers" | "rides" | "alerts" | "reports" | "support" | "announcements" | "audit";
@@ -154,22 +153,23 @@ export default function AdminPanel() {
   );
 }
 
-function StatTile({ icon, label, value, tone, format: fmt, variant }: { icon: ReactNode; label: string; value: number; tone: BadgeTone; format?: (n: number) => string; variant: FolderVariant }) {
+function StatTile({ icon, label, value, tone, format: fmt }: { icon: ReactNode; label: string; value: number; tone: BadgeTone; format?: (n: number) => string }) {
   return (
-    <div className="w-full flex justify-center py-4">
-      <FolderPreview
-        variant={variant}
-        size="lg"
-        label={
-          <div className="flex flex-col items-center gap-1 mt-2">
-            <span className="font-display font-bold text-foreground text-sm flex items-center gap-2">
-              {icon} {label}
-            </span>
-            <span className="mt-1 font-mono text-xl font-bold text-foreground">{fmt ? fmt(value) : <CountUp value={value} />}</span>
-          </div>
-        }
-      />
-    </div>
+    <motion.div
+      whileHover={{ y: -4 }}
+      transition={{ type: "spring", stiffness: 300, damping: 24 }}
+      className="flex items-center justify-between rounded-3xl border border-border bg-card/70 p-5 shadow-sm backdrop-blur-md transition-colors hover:border-accent/50"
+    >
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="mt-1.5 font-mono text-2xl font-bold text-foreground sm:text-3xl">
+          {fmt ? fmt(value) : <CountUp value={value} />}
+        </p>
+      </div>
+      <span className={toneTile(tone, "size-12 [&>svg]:size-5")} aria-hidden>
+        {icon}
+      </span>
+    </motion.div>
   );
 }
 
@@ -186,13 +186,13 @@ function OverviewTab({ loading, data }: { loading: boolean; data: AdminAnalytics
   const completeRate = k.total_bookings === 0 ? 0 : Math.round((k.paid_bookings / k.total_bookings) * 100);
   return (
     <div className="space-y-4">
-      <div className="grid gap-6 grid-cols-2 lg:grid-cols-3 place-items-center mb-8">
-        <StatTile icon={<Users />} label="Total users" value={k.total_users} tone="info" variant="devi" />
-        <StatTile icon={<IdCard />} label="Service providers" value={k.drivers} tone="success" variant="nandi" />
-        <StatTile icon={<Car />} label="Active rides" value={k.active_rides} tone="accent" variant="rudras" />
-        <StatTile icon={<ShieldCheck />} label="Completed" value={k.completed_rides} tone="success" variant="kubera" />
-        <StatTile icon={<IndianRupee />} label="Revenue" value={k.total_revenue} tone="accent" format={(n) => `₹${n.toFixed(0)}`} variant="ravi" />
-        <StatTile icon={<ShieldCheck />} label="Pending KYC" value={k.pending_verifications} tone="warning" variant="hari" />
+      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
+        <StatTile icon={<Users />} label="Total users" value={k.total_users} tone="info" />
+        <StatTile icon={<IdCard />} label="Service providers" value={k.drivers} tone="success" />
+        <StatTile icon={<Car />} label="Active rides" value={k.active_rides} tone="accent" />
+        <StatTile icon={<ShieldCheck />} label="Completed" value={k.completed_rides} tone="success" />
+        <StatTile icon={<IndianRupee />} label="Revenue" value={k.total_revenue} tone="accent" format={(n) => `₹${n.toFixed(0)}`} />
+        <StatTile icon={<ShieldCheck />} label="Pending KYC" value={k.pending_verifications} tone="warning" />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_340px]">

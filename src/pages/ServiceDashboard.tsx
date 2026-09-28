@@ -2,12 +2,10 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
-  ArrowRight,
   Bell,
   Car,
   Check,
   Clock,
-  Home,
   MapPin,
   MessageCircle,
   Plus,
@@ -48,7 +46,8 @@ import {
 import { Sparkbars, toneTile } from "@/components/ui/dashboard";
 import { Reveal } from "@/components/ui/scroll-reveal";
 import { cn } from "@/lib/utils";
-import FolderPreview, { FolderVariant } from "@/components/ui/folder-preview";
+import DataFolder from "@/components/ui/data-folder";
+import { PopButton } from "@/components/ui/pop-button";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
@@ -205,11 +204,55 @@ export default function ServiceDashboard() {
     setSendingChat(false);
   };
 
-  const quickActions = [
-    { icon: <Plus className="size-5" />, label: "Create ride", path: "/rides/create", tone: "success" as BadgeTone, variant: "nandi" as FolderVariant },
-    { icon: <Car className="size-5" />, label: "My rides", path: "/service", tone: "info" as BadgeTone, variant: "devi" as FolderVariant },
-    { icon: <ShieldCheck className="size-5" />, label: "Verification", path: "/verification", tone: "warning" as BadgeTone, variant: "rudras" as FolderVariant },
-    { icon: <Home className="size-5" />, label: "Home", path: "/", tone: "accent" as BadgeTone, variant: "ardra" as FolderVariant },
+  const scrollToId = (id: string) =>
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  const pendingCount = bookingRequests.filter((b) => b.status === "pending").length;
+  const rideAddr = (r?: Ride) => (r?.to_location && typeof r.to_location === "object" ? r.to_location.address : undefined);
+
+  // Data collections shown as folders (real records only — never stock images).
+  const collections = [
+    {
+      key: "rides",
+      title: "My Rides",
+      tone: "navy" as const,
+      icon: <Car />,
+      count: rides.length,
+      countLabel: "active",
+      items: rides.slice(0, 3).map((r) => ({
+        title: rideAddr(r) ? `→ ${rideAddr(r)}` : "Active ride",
+        sub: `₹${r.price_per_seat ?? 0} · ${r.seats_available ?? 0} seats`,
+      })),
+      emptyLabel: "No active rides",
+      onClick: () => scrollToId("active-rides"),
+    },
+    {
+      key: "requests",
+      title: "Booking Requests",
+      tone: "clay" as const,
+      icon: <Bell />,
+      count: pendingCount,
+      countLabel: "pending",
+      items: bookingRequests.slice(0, 3).map((b) => {
+        const rider = (b as unknown as { rider?: { full_name?: string } }).rider;
+        return { title: rider?.full_name || "Rider", sub: `${b.status} · ₹${b.total_price ?? 0}` };
+      }),
+      emptyLabel: "No booking requests",
+      onClick: () => scrollToId("booking-requests"),
+    },
+    {
+      key: "verification",
+      title: "Verification",
+      tone: "gold" as const,
+      icon: <ShieldCheck />,
+      count: verification ? 1 : 0,
+      countLabel: "on file",
+      items: verification
+        ? [{ title: `Status: ${verification.verification_status}`, sub: verification.vehicle_number || verification.license_number || undefined }]
+        : [],
+      emptyLabel: "Not submitted yet",
+      onClick: () => navigate("/verification"),
+    },
   ];
 
   const statCards: { label: string; value: string; tone: BadgeTone; icon: React.ReactNode }[] = [
@@ -292,23 +335,32 @@ export default function ServiceDashboard() {
           </Reveal>
         )}
 
-        {/* quick actions */}
-        <div className="mt-8 mb-8 grid gap-6 grid-cols-2 lg:grid-cols-4 place-items-center">
-          {quickActions.map((a) => (
-            <div key={a.label} className="w-full flex justify-center">
-              <FolderPreview
-                variant={a.variant}
-                size="lg"
-                label={
-                  <div className="flex flex-col items-center gap-1 mt-2">
-                    <span className="font-display font-bold text-foreground text-sm flex items-center gap-2">
-                      {a.icon} {a.label}
-                    </span>
-                  </div>
-                }
-                onClick={() => navigate(a.path)}
-              />
-            </div>
+        {/* primary action */}
+        <div className="mt-6">
+          <PopButton
+            variant="accent"
+            size="lg"
+            className="w-full justify-center sm:w-auto"
+            onClick={() => navigate("/rides/create")}
+          >
+            <Plus className="size-5" /> Create a ride
+          </PopButton>
+        </div>
+
+        {/* data collections (folders open their records; hover reveals real data) */}
+        <div className="mt-6 mb-2 grid gap-5 grid-cols-2 lg:grid-cols-3">
+          {collections.map((c) => (
+            <DataFolder
+              key={c.key}
+              title={c.title}
+              tone={c.tone}
+              icon={c.icon}
+              count={c.count}
+              countLabel={c.countLabel}
+              items={c.items}
+              emptyLabel={c.emptyLabel}
+              onClick={c.onClick}
+            />
           ))}
         </div>
 
@@ -335,30 +387,16 @@ export default function ServiceDashboard() {
               <span className="text-xs text-muted-foreground">estimated</span>
             </div>
             <p className="mb-4 text-sm text-muted-foreground">Based on active rides</p>
-            <Sparkbars values={earnings} />
+            <Sparkbars
+              values={earnings}
+              labels={Array.from({ length: 7 }, (_, i) => format(new Date(Date.now() - (6 - i) * 86400000), "EEE"))}
+              format={(n) => `₹${Math.round(n)}`}
+            />
           </Panel>
         </Reveal>
 
-        {/* create ride CTA */}
-        {isVerified && (
-          <Reveal>
-            <Link to="/rides/create" className="mt-4 block">
-              <div className="flex items-center gap-4 rounded-3xl bg-gradient-to-br from-accent to-accent-strong p-6 text-navy shadow-md transition-transform hover:-translate-y-0.5">
-                <span className="grid size-14 place-items-center rounded-2xl bg-white/20">
-                  <Plus className="size-6" />
-                </span>
-                <div className="flex-1">
-                  <h3 className="font-display text-xl font-bold">Create a new ride</h3>
-                  <p className="text-sm text-navy/80">Offer a ride to your campus community</p>
-                </div>
-                <ArrowRight className="size-5" />
-              </div>
-            </Link>
-          </Reveal>
-        )}
-
         {/* active rides */}
-        <div className="mt-8">
+        <div id="active-rides" className="mt-8 scroll-mt-24">
           <h2 className="mb-4 flex items-center gap-2 font-display text-2xl font-bold text-foreground">
             <Car className="size-6 text-accent" /> My active rides
           </h2>
@@ -442,7 +480,7 @@ export default function ServiceDashboard() {
 
         {/* booking requests */}
         {bookingRequests.length > 0 && (
-          <div className="mt-8">
+          <div id="booking-requests" className="mt-8 scroll-mt-24">
             <h2 className="mb-4 flex items-center gap-2 font-display text-2xl font-bold text-foreground">
               <Bell className="size-6 text-accent" /> Booking requests
               <Badge tone="warning">{bookingRequests.filter((b) => b.status === "pending").length} pending</Badge>

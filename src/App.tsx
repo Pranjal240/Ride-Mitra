@@ -11,6 +11,7 @@ import { ScrollProgress } from './components/common/Interactive3D';
 import AuthCallback from './components/auth/AuthCallback';
 import AppBackground from './components/ui/app-background';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import { KineticTextLoader } from './components/ui/kinetic-loader';
 
 /* ---- Pages ---- */
 import Landing from './pages/Landing';
@@ -37,9 +38,8 @@ import { dashboardPath } from './lib/roles';
 function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
   const { user, loading } = useAuthStore();
   if (loading) return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background">
-      <span className="size-12 animate-spin rounded-full border-[3px] border-accent/25 border-t-accent" />
-      <p className="font-sans text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Loading</p>
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-4">
+      <KineticTextLoader text="Loading" className="scale-90 sm:scale-100" />
     </div>
   );
   if (!user) return <Navigate to="/" replace />;

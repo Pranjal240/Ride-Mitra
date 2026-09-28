@@ -2,7 +2,7 @@
 
 /** Shared dashboard primitives (tone tiles, count-up, sparkbars, score ring). */
 
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -80,21 +80,82 @@ export function ScoreRing({ value, size = 96 }: { value: number; size?: number }
   );
 }
 
-export function Sparkbars({ values, className }: { values: number[]; className?: string }) {
+/**
+ * Interactive, cursor-reactive bar chart. Bars grow in on mount, the bar under
+ * the cursor lifts + glows and shows a value tooltip, and an optional label
+ * appears under each column. Token-driven, responsive, reduced-motion aware.
+ */
+export function Sparkbars({
+  values,
+  labels,
+  format = (n) => String(Math.round(n)),
+  className,
+}: {
+  values: number[];
+  labels?: string[];
+  format?: (n: number) => string;
+  className?: string;
+}) {
+  const reduce = useReducedMotion();
+  const [active, setActive] = useState<number | null>(null);
   const max = Math.max(...values, 1);
+
   return (
-    <div className={cn("flex h-28 items-end gap-2", className)}>
-      {values.map((v, i) => (
-        <motion.div
-          key={i}
-          initial={{ height: 0 }}
-          whileInView={{ height: `${(v / max) * 100}%` }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: i * 0.05 }}
-          className="flex-1 rounded-t-md bg-gradient-to-t from-accent/40 to-accent"
-          title={`${Math.round(v)}`}
-        />
-      ))}
+    <div
+      className={cn("relative flex h-32 items-end gap-1.5 sm:gap-2", labels && "pb-5", className)}
+      onMouseLeave={() => setActive(null)}
+    >
+      {values.map((v, i) => {
+        const pct = Math.max((v / max) * 100, 3);
+        const isActive = active === i;
+        return (
+          <div
+            key={i}
+            className="group relative flex h-full flex-1 cursor-pointer items-end"
+            onMouseEnter={() => setActive(i)}
+            onFocus={() => setActive(i)}
+            tabIndex={0}
+            role="img"
+            aria-label={`${format(v)}${labels?.[i] ? ` · ${labels[i]}` : ""}`}
+          >
+            <AnimatePresence>
+              {isActive && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 6, scale: 0.9 }}
+                  transition={{ duration: 0.18 }}
+                  className="pointer-events-none absolute -top-1 left-1/2 z-20 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-lg bg-navy px-2.5 py-1 text-xs font-bold text-white shadow-lg"
+                >
+                  {format(v)}
+                  {labels?.[i] && <span className="ml-1 font-normal text-white/60">{labels[i]}</span>}
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <motion.div
+              initial={reduce ? false : { height: 0 }}
+              animate={{ height: `${pct}%` }}
+              transition={{ duration: 0.6, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
+              className={cn(
+                "w-full origin-bottom rounded-t-lg transition-[transform,box-shadow,background-color] duration-200",
+                isActive
+                  ? "scale-y-[1.03] bg-gradient-to-t from-accent-strong to-accent shadow-[0_0_20px_rgba(200,149,108,0.45)]"
+                  : "bg-gradient-to-t from-accent/25 to-accent/70",
+              )}
+            />
+            {labels?.[i] && (
+              <span
+                className={cn(
+                  "absolute -bottom-5 left-1/2 -translate-x-1/2 truncate text-[10px] font-medium transition-colors",
+                  isActive ? "text-foreground" : "text-muted-foreground",
+                )}
+              >
+                {labels[i]}
+              </span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
