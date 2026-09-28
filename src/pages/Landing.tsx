@@ -31,6 +31,9 @@ import { RidePoster } from "@/components/ui/ride-illustrations";
 import { RideCarousel, type RideSlide } from "@/components/ui/ride-carousel";
 import { ParallaxGallery, type ParallaxItem } from "@/components/ui/parallax-gallery";
 import { WaveGridBackground } from "@/components/ui/wave-grid-background";
+import { PopButton } from "@/components/ui/pop-button";
+import { AnimatedNumber } from "@/components/ui/animated-number";
+import { MorphText } from "@/components/ui/morph-text";
 import {
   Badge,
   Button,
@@ -200,10 +203,10 @@ const MARQUEE = [
 ];
 
 const STATS = [
-  { v: "100%", label: "Drivers verified", note: "Licence + college ID" },
-  { v: "100%", label: "Rides tracked", note: "Live GPS + SOS" },
-  { v: "₹0", label: "Surge & commission", note: "Split real fuel only" },
-  { v: "1", label: "Campus, closed", note: "@jcboseust.ac.in" },
+  { num: 100, prefix: "", suffix: "%", label: "Drivers verified", note: "Licence + college ID" },
+  { num: 100, prefix: "", suffix: "%", label: "Rides tracked", note: "Live GPS + SOS" },
+  { num: 0, prefix: "₹", suffix: "", label: "Surge & commission", note: "Split real fuel only" },
+  { num: 1, prefix: "", suffix: "", label: "Campus, closed", note: "@jcboseust.ac.in" },
 ];
 
 /* Trust pillars — varied tones, animated (rebuilt) */
@@ -339,13 +342,24 @@ export default function Landing() {
               transition={{ delay: 0.8, duration: 0.6 }}
               className="mt-7 flex flex-wrap items-center justify-center gap-3"
             >
-              <MagneticButton size="lg" onClick={() => navigate("/portal")} icon={<Car className="size-4" />}>
-                Find a ride
-              </MagneticButton>
+              <PopButton onClick={() => navigate("/portal")}>
+                <Car className="size-4" /> Find a ride
+              </PopButton>
               <MagneticButton size="lg" variant="secondary" onClick={() => navigate("/portal")}>
                 Offer a ride <ArrowRight className="size-4" />
               </MagneticButton>
             </motion.div>
+
+            <motion.p
+              initial={reduce ? undefined : { opacity: 0 }}
+              animate={reduce ? undefined : { opacity: 1 }}
+              transition={{ delay: 0.85, duration: 0.6 }}
+              className="mt-5 text-base font-medium text-muted-foreground"
+            >
+              The pool built for{" "}
+              <MorphText words={["students", "staff", "faculty", "you"]} textClassName="font-extrabold" /> at
+              JC Bose UST.
+            </motion.p>
 
             <motion.div
               initial={reduce ? undefined : { opacity: 0 }}
@@ -500,8 +514,8 @@ export default function Landing() {
                   <div className="mt-8 grid grid-cols-2 gap-6">
                     {STATS.map((s) => (
                       <div key={s.label}>
-                        <div className="font-mono text-2xl font-semibold tabular-nums text-accent sm:text-3xl">
-                          {s.v}
+                        <div className="font-mono text-2xl font-semibold text-accent sm:text-3xl">
+                          <AnimatedNumber value={s.num} prefix={s.prefix} suffix={s.suffix} />
                         </div>
                         <div className="mt-1 text-sm font-semibold text-white">{s.label}</div>
                         <div className="text-xs text-white/55">{s.note}</div>
@@ -709,9 +723,9 @@ export default function Landing() {
                 </RevealItem>
                 <RevealItem>
                   <div className="mt-9 flex flex-wrap justify-center gap-3">
-                    <MagneticButton size="lg" variant="accent" onClick={() => navigate("/portal")}>
+                    <PopButton onClick={() => navigate("/portal")}>
                       Choose your portal <ArrowRight className="size-4" />
-                    </MagneticButton>
+                    </PopButton>
                     <MagneticButton
                       size="lg"
                       variant="secondary"
