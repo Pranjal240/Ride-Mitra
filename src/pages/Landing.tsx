@@ -835,33 +835,31 @@ export default function Landing() {
         </section>
 
         {/* ── CLOSING CTA ── */}
-        <section className="pt-4">
-          <Container size="6xl">
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-light px-6 py-20 text-center text-white sm:py-24">
-              <RevealGroup className="relative z-10">
-                <RevealItem>
-                  <h2 className="mx-auto max-w-3xl font-display text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl">
-                    Your ride is <span className="text-accent">waiting.</span>
-                  </h2>
-                </RevealItem>
-                <RevealItem>
-                  <p className="mx-auto mt-5 max-w-xl text-lg text-white/70">
-                    Verify your JC Bose UST account and start sharing rides across campus in minutes.
-                  </p>
-                </RevealItem>
-                <RevealItem>
-                  <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-                    <PopButton variant="accent" size="lg" onClick={() => navigate("/portal")}>
-                      Choose your portal <ArrowRight className="size-4" />
-                    </PopButton>
-                    <PopButton variant="secondary" size="lg" onClick={() => navigate("/rides")}>
-                      Browse rides
-                    </PopButton>
-                  </div>
-                </RevealItem>
-              </RevealGroup>
-            </div>
-          </Container>
+        <section className="relative overflow-hidden bg-navy pt-20 pb-10 text-center text-white sm:pt-24">
+          <div className="mx-auto w-full max-w-6xl px-6">
+            <RevealGroup className="relative z-10">
+              <RevealItem>
+                <h2 className="mx-auto max-w-3xl font-display text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl">
+                  Your ride is <span className="text-accent">waiting.</span>
+                </h2>
+              </RevealItem>
+              <RevealItem>
+                <p className="mx-auto mt-5 max-w-xl text-lg text-white/70">
+                  Verify your JC Bose UST account and start sharing rides across campus in minutes.
+                </p>
+              </RevealItem>
+              <RevealItem>
+                <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+                  <PopButton variant="accent" size="lg" onClick={() => navigate("/portal")}>
+                    Choose your portal <ArrowRight className="size-4" />
+                  </PopButton>
+                  <PopButton variant="secondary" size="lg" onClick={() => navigate("/rides")}>
+                    Browse rides
+                  </PopButton>
+                </div>
+              </RevealItem>
+            </RevealGroup>
+          </div>
         </section>
 
         {/* ── FOOTER ── */}
