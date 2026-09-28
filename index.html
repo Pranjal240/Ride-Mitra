@@ -13,10 +13,12 @@
     <title>Ride Mitra - Campus Carpooling</title>
     <style>
       :root { color-scheme: light; }
-      html { background: #0F1A33; }
-      body { background: #F8F6F1; color: #2B2D42; margin: 0; padding: 0; }
+      /* html is the light fallback behind the app-wide animated grid; body MUST
+         be transparent or its background paints OVER the negative-z grid layer. */
+      html { background: #F1EADD; }
+      body { background: transparent; color: #2B2D42; margin: 0; padding: 0; }
       ::-webkit-scrollbar { width: 6px; }
-      ::-webkit-scrollbar-track { background: #F8F6F1; }
+      ::-webkit-scrollbar-track { background: #F1EADD; }
       ::-webkit-scrollbar-thumb { background: #E4E5E9; border-radius: 10px; }
       ::-webkit-scrollbar-thumb:hover { background: #C8956C; }
 

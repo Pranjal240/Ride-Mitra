@@ -133,7 +133,7 @@ export default function RolePortal() {
                 </ul>
                 <PopButton
                   variant="primary"
-                  size="md"
+                  size="lg"
                   className="mt-7 w-full"
                   onClick={() => navigate(`/login?role=${role.key}`)}
                 >

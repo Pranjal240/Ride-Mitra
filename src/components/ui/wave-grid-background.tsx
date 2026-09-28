@@ -167,7 +167,8 @@ export function WaveGridBackground({
     let size = getSize();
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(colorBase).multiplyScalar(0.82);
+    // darker gaps than the cube tops = the grid reads clearly (per the source).
+    scene.background = new THREE.Color(sceneBg).multiplyScalar(0.6);
 
     const alphaRange = Math.PI * 0.03;
     const betaRange = Math.PI * 0.05;
@@ -360,7 +361,7 @@ export function WaveGridBackground({
       return;
     }
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.95;
+    renderer.toneMappingExposure = 1.7;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.setClearColor("#808080");
@@ -410,7 +411,6 @@ export function WaveGridBackground({
       trailUniforms.uMaxHeight.value = p.waveMaxHeight;
       colorUniforms.uColorBase.value.set(p.colorBase);
       colorUniforms.uColorHigh.value.set(p.colorHigh);
-      scene.background = new THREE.Color(p.colorBase).multiplyScalar(0.82);
       updateTrail(delta);
       lerpedMouse.x += (mouse.x - lerpedMouse.x) * 0.04;
       lerpedMouse.y += (mouse.y - lerpedMouse.y) * 0.04;

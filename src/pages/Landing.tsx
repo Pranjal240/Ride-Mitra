@@ -246,7 +246,7 @@ function TrustExpand() {
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             style={{ flexGrow: isActive ? 3 : 1 }}
             className={cn(
-              "group relative min-w-0 flex-1 basis-0 cursor-pointer overflow-hidden rounded-[1.75rem] p-7 outline-none transition-shadow duration-500",
+              "group relative min-h-[7rem] min-w-0 flex-1 basis-0 cursor-pointer overflow-hidden rounded-[1.75rem] p-7 outline-none transition-shadow duration-500 lg:min-h-0",
               isActive ? "shadow-2xl" : "shadow-md",
               TRUST_BG[c.tone],
             )}
@@ -259,32 +259,46 @@ function TrustExpand() {
             >
               {c.icon}
             </motion.span>
-            <h3 className="mt-5 font-display text-xl font-bold leading-tight">{c.title}</h3>
-            <AnimatePresence initial={false}>
-              {isActive && (
-                <motion.div
-                  initial={reduce ? undefined : { opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={reduce ? undefined : { opacity: 0 }}
-                  transition={{ duration: 0.35, delay: 0.1 }}
-                >
-                  <p className="mt-3 max-w-md text-sm leading-relaxed opacity-85">{c.body}</p>
-                  {c.stats && (
-                    <div className="mt-7 grid max-w-md grid-cols-2 gap-5">
-                      {c.stats.map((s) => (
-                        <div key={s.label}>
-                          <div className="font-mono text-2xl font-semibold text-accent sm:text-3xl">
-                            <AnimatedNumber value={s.num} prefix={s.prefix} suffix={s.suffix} />
-                          </div>
-                          <div className="mt-1 text-sm font-semibold">{s.label}</div>
-                          <div className="text-xs opacity-60">{s.note}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </motion.div>
+
+            {/* collapsed (desktop only): title runs vertically as a spine label */}
+            <div
+              className={cn(
+                "pointer-events-none absolute inset-x-0 bottom-7 hidden justify-center",
+                !isActive && "lg:flex",
               )}
-            </AnimatePresence>
+            >
+              <span
+                className="font-display text-lg font-bold leading-none tracking-tight opacity-90"
+                style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+              >
+                {c.title}
+              </span>
+            </div>
+
+            {/* expanded: full copy + stats — always shown on mobile, on desktop
+                only for the active card (morphs open with the flex-grow) */}
+            <div
+              className={cn(
+                "transition-opacity duration-300 max-lg:block",
+                isActive ? "lg:block lg:opacity-100" : "lg:hidden",
+              )}
+            >
+              <h3 className="mt-5 font-display text-2xl font-bold leading-tight">{c.title}</h3>
+              <p className="mt-3 max-w-md text-sm leading-relaxed opacity-85">{c.body}</p>
+              {c.stats && (
+                <div className="mt-7 grid max-w-md grid-cols-2 gap-5">
+                  {c.stats.map((s) => (
+                    <div key={s.label}>
+                      <div className="font-mono text-2xl font-semibold text-accent sm:text-3xl">
+                        <AnimatedNumber value={s.num} prefix={s.prefix} suffix={s.suffix} />
+                      </div>
+                      <div className="mt-1 text-sm font-semibold">{s.label}</div>
+                      <div className="text-xs opacity-60">{s.note}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </motion.div>
         );
       })}

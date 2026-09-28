@@ -209,8 +209,8 @@ export default function Login() {
       </div>
 
       {/* Right — login card (translucent so the app-wide grid shows around it) */}
-      <div className="flex items-center justify-center bg-white/40 p-6 sm:p-10">
-        <div className="w-full max-w-md">
+      <div className="flex items-center justify-center bg-white/25 p-6 sm:p-10">
+        <div className="w-full max-w-lg">
           {/* mobile-only header */}
           <div className="mb-8 flex items-center justify-between lg:hidden">
             <Link to="/" className="flex items-center gap-2">
@@ -224,14 +224,14 @@ export default function Login() {
             </Link>
           </div>
 
-          <div className="rounded-3xl border border-border bg-card p-7 shadow-md sm:p-8">
+          <div className="rounded-[1.75rem] border border-border bg-card p-8 shadow-lg sm:p-10">
             <div className="hidden lg:block">
-              <Logo size={40} />
+              <Logo size={48} />
             </div>
-            <h2 className="mt-4 font-display text-2xl font-bold text-foreground">
+            <h2 className="mt-5 font-display text-3xl font-extrabold tracking-tight text-foreground">
               {meta.label} sign in
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1.5 text-base text-muted-foreground">
               JC Bose University of Science &amp; Technology, YMCA
             </p>
 
@@ -267,10 +267,11 @@ export default function Login() {
                   <>
                     <Button
                       variant="secondary"
-                      className="w-full"
+                      size="lg"
+                      className="w-full text-base"
                       onClick={handleGoogle}
                       loading={loading}
-                      icon={!loading ? <GoogleIcon className="size-[18px]" /> : undefined}
+                      icon={!loading ? <GoogleIcon className="size-5" /> : undefined}
                     >
                       Continue with Google
                     </Button>
@@ -302,7 +303,8 @@ export default function Login() {
                     </div>
 
                     <Button
-                      className="mt-4 w-full"
+                      size="lg"
+                      className="mt-5 w-full text-base"
                       onClick={handleSendOtp}
                       loading={loading}
                       disabled={phone.length < 10}

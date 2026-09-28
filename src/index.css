@@ -188,11 +188,16 @@
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* light fallback behind the app-wide animated grid (see AppBackground) */
+    background: #F1EADD;
   }
 
   body {
     font-family: var(--font-b);
-    background: var(--bg);
+    /* MUST be transparent — an opaque body background paints ABOVE the
+       negative-z grid layer (because html carries the page background), which
+       hid the animated grid across the whole app. */
+    background: transparent;
     color: var(--text);
     line-height: 1.6;
     overflow-x: hidden;
