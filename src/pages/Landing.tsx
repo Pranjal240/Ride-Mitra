@@ -30,6 +30,7 @@ import { CrowdCanvas } from "@/components/ui/crowd-canvas";
 import { RidePoster } from "@/components/ui/ride-illustrations";
 import { RideCarousel, type RideSlide } from "@/components/ui/ride-carousel";
 import { ParallaxGallery, type ParallaxItem } from "@/components/ui/parallax-gallery";
+import { WaveGridBackground } from "@/components/ui/wave-grid-background";
 import {
   Badge,
   Button,
@@ -80,6 +81,42 @@ function TiltCard({ children, className }: { children: ReactNode; className?: st
     >
       {children}
     </motion.div>
+  );
+}
+
+/* ── Hover-expand row of colored ride posters (open on hover, collapse on leave) ── */
+function HoverExpandRides({ slides }: { slides: RideSlide[] }) {
+  const reduce = useReducedMotion();
+  const [active, setActive] = useState(0);
+  return (
+    <div
+      className="mx-auto flex w-full max-w-7xl gap-2.5 px-4 sm:px-6"
+      onMouseLeave={() => setActive(-1)}
+    >
+      {slides.map((s, i) => (
+        <motion.div
+          key={i}
+          role="button"
+          tabIndex={0}
+          onMouseEnter={() => setActive(i)}
+          onFocus={() => setActive(i)}
+          onClick={() => setActive(i)}
+          animate={reduce ? undefined : { flexGrow: active === i ? 2.6 : 1 }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          className="h-[22rem] min-w-0 flex-1 basis-0 cursor-pointer outline-none sm:h-[26rem]"
+          style={{ flexGrow: active === i ? 2.6 : 1 }}
+        >
+          <RidePoster
+            tone={s.tone}
+            kind={s.kind}
+            eyebrow={s.eyebrow}
+            title={s.title}
+            caption={active === i ? s.caption : undefined}
+            className={cn("transition-shadow duration-500", active === i ? "shadow-2xl" : "shadow-md")}
+          />
+        </motion.div>
+      ))}
+    </div>
   );
 }
 
@@ -221,9 +258,17 @@ export default function Landing() {
   return (
     <SmoothScroll>
       {showIntro && <IntroFilm onDone={endIntro} />}
+
+      {/* animated grid background — pinned to the viewport, cursor-reactive */}
+      <div aria-hidden className="pointer-events-none fixed left-0 top-0 -z-20 h-screen w-screen">
+        <WaveGridBackground className="h-full w-full" waveAmplitude={0.32} colorHigh="#c8956c" />
+      </div>
+      {/* readability veil so text stays legible while empty areas show the grid */}
+      <div aria-hidden className="pointer-events-none fixed left-0 top-0 -z-10 h-screen w-screen bg-white/60" />
+
       <LandingHeader />
 
-      <main className="overflow-x-hidden text-foreground" style={{ background: PAGE_BG }}>
+      <main className="relative z-0 overflow-x-hidden text-foreground">
         {/* ── HERO ── */}
         <section className="relative overflow-hidden pt-24 sm:pt-28">
           <CursorGlow size={420} />
@@ -355,7 +400,7 @@ export default function Landing() {
 
         {/* ── THE DAILY WAIT — heading + crowd in ONE compact panel ── */}
         <section className="relative w-full overflow-hidden">
-          <div className="relative h-[74vh] min-h-[540px] w-full">
+          <div className="relative h-[62vh] min-h-[480px] w-full">
             <CrowdCanvas className="absolute inset-0" />
             {/* top fade so the heading reads over the crowd */}
             <div className="pointer-events-none absolute inset-x-0 top-0 h-3/4 bg-gradient-to-b from-white via-white/85 to-transparent" />
@@ -395,13 +440,13 @@ export default function Landing() {
                 align="center"
                 eyebrow="However you travel"
                 title="A pool for every kind of trip."
-                description="Car, scooter, bike or the weekend society run — tap a card or drag to explore."
+                description="Car, scooter, bike or the weekend society run — hover a card to open it."
                 className="mb-12"
               />
             </Reveal>
           </Container>
           <Reveal>
-            <RideCarousel slides={RIDE_SLIDES} />
+            <HoverExpandRides slides={RIDE_SLIDES} />
           </Reveal>
         </section>
 

@@ -77,9 +77,9 @@ export function LiveMap({ className }: { className?: string }) {
         center={center as [number, number]}
         zoom={zoom}
         scrollWheelZoom={false}
-        dragging={false}
-        doubleClickZoom={false}
-        zoomControl={false}
+        dragging={true}
+        doubleClickZoom={true}
+        zoomControl={true}
         attributionControl={false}
         style={{ width: "100%", height: "100%", background: "transparent" }}
       >
