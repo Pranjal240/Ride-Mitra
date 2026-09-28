@@ -35,11 +35,13 @@ export function AnimatedFooter({
         ref.current.style.setProperty("--gx", `${glowX.current}px`);
         ref.current.style.setProperty("--gy", `${e.clientY - r.top}px`);
       }}
-      className={cn(
-        "relative isolate overflow-hidden bg-navy text-white",
-        className,
-      )}
+      className={cn("relative isolate bg-navy text-white lg:pb-0", className)}
     >
+      {/* Overscroll blocker for mobile */}
+      <div className="absolute top-full left-0 right-0 h-[50vh] bg-navy lg:hidden" />
+      
+      {/* Glow clipping container */}
+      <div className="relative overflow-hidden w-full">
       {/* cursor glow */}
       <div
         aria-hidden
@@ -51,8 +53,9 @@ export function AnimatedFooter({
       />
 
       {/* content row */}
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-wrap items-start justify-between gap-8 px-6 pb-20 pt-10">
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-wrap items-start justify-between gap-8 px-6 py-10">
         {children}
+      </div>
       </div>
     </footer>
   );
