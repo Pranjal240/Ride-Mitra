@@ -131,24 +131,41 @@ export default function RideSearch() {
     }
   }
 
+  // Ride Mitra is a POOLING network, not a cab app: nothing is shown until the
+  // rider searches a real pickup/destination, and only rides whose driver posted
+  // the same corridor (both endpoints near the searched route) appear.
+  const hasSearch = useMemo(
+    () =>
+      Boolean(
+        (fromCoords && (fromCoords[0] !== 0 || fromCoords[1] !== 0)) ||
+          fromName.trim() ||
+          (toCoords && (toCoords[0] !== 0 || toCoords[1] !== 0)) ||
+          toName.trim(),
+      ),
+    [fromCoords, toCoords, fromName, toName],
+  );
+
+  const CORRIDOR_KM = 3; // tight radius — same corridor, not "anywhere within 10 km"
+
   const filtered = useMemo(() => {
+    if (!hasSearch) return []; // no rider has to see anything until they search a route
     return rides.filter((r) => {
       if (dateFilter && !r.departure_time.startsWith(dateFilter)) return false;
       let matchFrom = true;
       let matchTo = true;
       if (fromCoords && (fromCoords[0] !== 0 || fromCoords[1] !== 0) && r.from_location) {
-        matchFrom = getDistance(fromCoords, [r.from_location.lat, r.from_location.lng]) <= 10;
-      } else if (fromName) {
-        matchFrom = (r.from_location?.address || "").toLowerCase().includes(fromName.toLowerCase());
+        matchFrom = getDistance(fromCoords, [r.from_location.lat, r.from_location.lng]) <= CORRIDOR_KM;
+      } else if (fromName.trim()) {
+        matchFrom = (r.from_location?.address || "").toLowerCase().includes(fromName.trim().toLowerCase());
       }
       if (toCoords && (toCoords[0] !== 0 || toCoords[1] !== 0) && r.to_location) {
-        matchTo = getDistance(toCoords, [r.to_location.lat, r.to_location.lng]) <= 10;
-      } else if (toName) {
-        matchTo = (r.to_location?.address || "").toLowerCase().includes(toName.toLowerCase());
+        matchTo = getDistance(toCoords, [r.to_location.lat, r.to_location.lng]) <= CORRIDOR_KM;
+      } else if (toName.trim()) {
+        matchTo = (r.to_location?.address || "").toLowerCase().includes(toName.trim().toLowerCase());
       }
       return matchFrom && matchTo;
     });
-  }, [rides, fromCoords, toCoords, fromName, toName, dateFilter]);
+  }, [rides, fromCoords, toCoords, fromName, toName, dateFilter, hasSearch]);
 
   const markers = useMemo<MapMarker[]>(() => {
     const m: MapMarker[] = [];
@@ -323,19 +340,37 @@ export default function RideSearch() {
         </div>
 
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {loading ? "Searching…" : `${filtered.length} ride${filtered.length !== 1 ? "s" : ""} found`}
+          {loading
+            ? "Searching…"
+            : !hasSearch
+              ? "Search your route to see pooled rides"
+              : `${filtered.length} ride${filtered.length !== 1 ? "s" : ""} on your corridor`}
         </p>
 
         <div className="space-y-3">
           {loading ? (
             [1, 2, 3].map((i) => <div key={i} className="h-28 animate-pulse rounded-2xl border border-border bg-muted" />)
+          ) : !hasSearch ? (
+            <Panel className="flex flex-col items-center py-12 text-center">
+              <span className="grid size-14 place-items-center rounded-2xl bg-accent-soft text-accent-strong">
+                <Crosshair className="size-6" />
+              </span>
+              <p className="mt-4 font-display font-bold text-foreground">Where are you headed?</p>
+              <p className="mt-1 max-w-xs text-sm text-muted-foreground">
+                Enter your pickup and destination. We only show rides a verified member has already
+                posted along your corridor — no cabs, no strangers.
+              </p>
+            </Panel>
           ) : filtered.length === 0 ? (
             <Panel className="flex flex-col items-center py-12 text-center">
               <span className="grid size-14 place-items-center rounded-2xl bg-accent-soft text-accent-strong">
                 <Car className="size-6" />
               </span>
-              <p className="mt-4 font-display font-bold text-foreground">No rides found</p>
-              <p className="mt-1 text-sm text-muted-foreground">Try adjusting your search or check back later.</p>
+              <p className="mt-4 font-display font-bold text-foreground">No one's posted this corridor yet</p>
+              <p className="mt-1 max-w-xs text-sm text-muted-foreground">
+                Nobody has offered this exact route yet. Try a nearby gate, another time, or offer the
+                ride yourself.
+              </p>
             </Panel>
           ) : (
             filtered.map((ride, i) => (
