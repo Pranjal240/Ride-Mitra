@@ -4,6 +4,8 @@ import { Autoplay, EffectCards } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css/effect-cards";
 import "swiper/css";
+import useEmblaCarousel from "embla-carousel-react";
+import EmblaAutoplay from "embla-carousel-autoplay";
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
 import {
   ArrowRight,
@@ -89,39 +91,66 @@ function TiltCard({ children, className }: { children: ReactNode; className?: st
 function HoverExpandRides({ slides, tall }: { slides: RideSlide[]; tall?: boolean }) {
   const [active, setActive] = useState(0);
   return (
-    <div
-      className={cn(
-        "mx-auto flex w-full max-w-none flex-col gap-2.5 px-4 sm:px-6 lg:flex-row lg:gap-3.5 lg:px-10 h-auto",
-        tall ? "lg:h-[24rem] xl:h-[30rem]" : "lg:h-[22rem] xl:h-[27rem]"
-      )}
-      onMouseLeave={() => setActive(-1)}
-    >
-      {slides.map((s, i) => {
-        const isActive = active === i;
-        return (
-          <div
-            key={i}
-            role="button"
-            tabIndex={0}
-            onMouseEnter={() => setActive(i)}
-            onFocus={() => setActive(i)}
-            onClick={() => setActive(i)}
-            className={cn(
-              "group relative min-w-0 cursor-pointer overflow-hidden rounded-[1.75rem] outline-none transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
-              isActive ? "h-[20rem] lg:h-auto lg:flex-[3.2] shadow-2xl ring-1 ring-black/5" : "h-[4.5rem] lg:h-auto lg:flex-1 shadow-md",
-            )}
-          >
-            <RidePoster
-              tone={s.tone}
-              kind={s.kind}
-              eyebrow={s.eyebrow}
-              title={s.title}
-              caption={isActive ? s.caption : undefined}
-            />
-          </div>
-        );
-      })}
-    </div>
+    <>
+      {/* Desktop Horizontal Accordion */}
+      <div
+        className={cn(
+          "mx-auto hidden w-full max-w-none gap-3.5 px-10 lg:flex lg:flex-row",
+          tall ? "lg:h-[24rem] xl:h-[30rem]" : "lg:h-[22rem] xl:h-[27rem]"
+        )}
+        onMouseLeave={() => setActive(-1)}
+      >
+        {slides.map((s, i) => {
+          const isActive = active === i;
+          return (
+            <div
+              key={i}
+              role="button"
+              tabIndex={0}
+              onMouseEnter={() => setActive(i)}
+              onFocus={() => setActive(i)}
+              onClick={() => setActive(i)}
+              className={cn(
+                "group relative min-w-0 min-h-0 cursor-pointer overflow-hidden rounded-[1.75rem] outline-none transition-[flex-grow,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                isActive ? "flex-[3.2] shadow-2xl ring-1 ring-black/5" : "flex-1 shadow-md",
+              )}
+            >
+              <RidePoster
+                tone={s.tone}
+                kind={s.kind}
+                eyebrow={s.eyebrow}
+                title={s.title}
+                caption={isActive ? s.caption : undefined}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Mobile Swiper Cards (Skiper 48 style) */}
+      <div className="flex w-full items-center justify-center overflow-hidden py-4 lg:hidden">
+        <Swiper
+          effect="cards"
+          grabCursor={true}
+          loop={true}
+          autoplay={{ delay: 2500, disableOnInteraction: false }}
+          modules={[EffectCards, Autoplay]}
+          className="h-[380px] w-[260px] sm:w-[320px]"
+        >
+          {slides.map((s, i) => (
+            <SwiperSlide key={i} className="rounded-[1.75rem]">
+              <RidePoster
+                tone={s.tone}
+                kind={s.kind}
+                eyebrow={s.eyebrow}
+                title={s.title}
+                caption={s.caption}
+              />
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
+    </>
   );
 }
 
@@ -229,86 +258,146 @@ const TRUST_BG: Record<string, string> = {
 function TrustExpand() {
   const reduce = useReducedMotion();
   const [active, setActive] = useState(0);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: "center" }, [
+    EmblaAutoplay({ delay: 3000, stopOnInteraction: true }),
+  ]);
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    setCurrent(emblaApi.selectedScrollSnap());
+    emblaApi.on("select", () => {
+      setCurrent(emblaApi.selectedScrollSnap());
+    });
+  }, [emblaApi]);
+
   return (
-    <div
-      className="mx-auto flex w-full max-w-none flex-col gap-3 px-4 sm:px-6 h-auto lg:h-[28rem] lg:flex-row lg:gap-3.5 lg:px-10"
-      onMouseLeave={() => setActive(0)}
-    >
-      {TRUST_CARDS.map((c, i) => {
-        const isActive = active === i;
-        return (
-          <div
-            key={c.title}
-            role="button"
-            tabIndex={0}
-            onMouseEnter={() => setActive(i)}
-            onFocus={() => setActive(i)}
-            onClick={() => setActive(i)}
-            className={cn(
-              "group relative min-w-0 cursor-pointer overflow-hidden rounded-[1.75rem] p-5 outline-none transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] lg:p-7",
-              isActive ? "h-[30rem] lg:h-auto lg:flex-[4] shadow-2xl" : "h-[4.5rem] lg:h-auto lg:flex-1 shadow-md",
-              TRUST_BG[c.tone],
-            )}
-          >
-            <div className="flex items-center gap-4 lg:block lg:gap-0">
-              <motion.span
-                aria-hidden
-                animate={reduce ? undefined : { y: isActive ? [0, -5, 0] : 0 }}
-                transition={{ duration: 3.4, repeat: isActive ? Infinity : 0, ease: "easeInOut" }}
-                className="inline-grid size-10 shrink-0 place-items-center rounded-2xl bg-white/15 backdrop-blur [&>svg]:size-5 lg:size-12 lg:[&>svg]:size-6"
-              >
-                {c.icon}
-              </motion.span>
-              
-              {/* Mobile title (always visible, next to icon) */}
-              <span className={cn("font-display text-lg font-bold leading-none tracking-tight lg:hidden transition-opacity duration-300", isActive && "opacity-0")}>
-                {c.title}
-              </span>
-            </div>
-
-            {/* collapsed (desktop only): title runs vertically as a spine label */}
+    <>
+      {/* Desktop Horizontal Accordion */}
+      <div
+        className="mx-auto hidden w-full max-w-none gap-3.5 px-10 lg:flex lg:h-[28rem] lg:flex-row"
+        onMouseLeave={() => setActive(0)}
+      >
+        {TRUST_CARDS.map((c, i) => {
+          const isActive = active === i;
+          return (
             <div
+              key={c.title}
+              role="button"
+              tabIndex={0}
+              onMouseEnter={() => setActive(i)}
+              onFocus={() => setActive(i)}
+              onClick={() => setActive(i)}
               className={cn(
-                "pointer-events-none absolute inset-x-0 bottom-7 hidden justify-center transition-opacity duration-300",
-                !isActive ? "lg:flex lg:opacity-100" : "lg:opacity-0",
+                "group relative min-w-0 min-h-0 cursor-pointer overflow-hidden rounded-[1.75rem] p-7 outline-none transition-[flex-grow,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                isActive ? "flex-[4] shadow-2xl" : "flex-1 shadow-md",
+                TRUST_BG[c.tone],
               )}
             >
-              <span
-                className="font-display text-3xl font-bold leading-none tracking-tight opacity-90"
-                style={{ writingMode: "vertical-lr", transform: "rotate(180deg)" }}
-              >
-                {c.title}
-              </span>
-            </div>
+              <div className="block">
+                <motion.span
+                  aria-hidden
+                  animate={reduce ? undefined : { y: isActive ? [0, -5, 0] : 0 }}
+                  transition={{ duration: 3.4, repeat: isActive ? Infinity : 0, ease: "easeInOut" }}
+                  className="inline-grid size-12 shrink-0 place-items-center rounded-2xl bg-white/15 backdrop-blur [&>svg]:size-6"
+                >
+                  {c.icon}
+                </motion.span>
+              </div>
 
-            {/* expanded: full copy + stats — shown when active */}
-            <div
-              className={cn(
-                "transition-all duration-300 overflow-hidden",
-                isActive ? "opacity-100 translate-y-0 max-lg:mt-3" : "opacity-0 translate-y-4 max-lg:hidden lg:hidden",
-              )}
-            >
-              <h3 className="hidden font-display text-2xl font-bold leading-tight lg:block lg:mt-5">{c.title}</h3>
-              <h3 className="font-display text-2xl font-bold leading-tight lg:hidden">{c.title}</h3>
-              <p className="mt-2 max-w-md text-sm leading-relaxed opacity-85 lg:mt-3">{c.body}</p>
-              {c.stats && (
-                <div className="mt-4 grid max-w-md grid-cols-2 gap-3 lg:mt-7 lg:gap-5">
-                  {c.stats.map((s) => (
-                    <div key={s.label}>
-                      <div className="font-mono text-xl font-semibold text-accent sm:text-2xl lg:text-3xl">
-                        <AnimatedNumber value={s.num} prefix={s.prefix} suffix={s.suffix} />
+              {/* collapsed (desktop only): title runs vertically as a spine label */}
+              <div
+                className={cn(
+                  "pointer-events-none absolute inset-x-0 bottom-7 flex justify-center transition-opacity duration-300",
+                  !isActive ? "opacity-100" : "opacity-0",
+                )}
+              >
+                <span
+                  className="font-display text-3xl font-bold leading-none tracking-tight opacity-90"
+                  style={{ writingMode: "vertical-lr", transform: "rotate(180deg)" }}
+                >
+                  {c.title}
+                </span>
+              </div>
+
+              {/* expanded: full copy + stats — shown when active */}
+              <div
+                className={cn(
+                  "transition-all duration-300 overflow-hidden",
+                  isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 hidden",
+                )}
+              >
+                <h3 className="font-display text-2xl font-bold leading-tight mt-5">{c.title}</h3>
+                <p className="mt-3 max-w-md text-sm leading-relaxed opacity-85">{c.body}</p>
+                {c.stats && (
+                  <div className="mt-7 grid max-w-md grid-cols-2 gap-5">
+                    {c.stats.map((s) => (
+                      <div key={s.label}>
+                        <div className="font-mono text-xl font-semibold text-accent sm:text-2xl lg:text-3xl">
+                          <AnimatedNumber value={s.num} prefix={s.prefix} suffix={s.suffix} />
+                        </div>
+                        <div className="mt-0.5 text-xs font-semibold lg:text-sm">{s.label}</div>
+                        <div className="text-[10px] opacity-60 lg:text-xs">{s.note}</div>
                       </div>
-                      <div className="mt-0.5 text-xs font-semibold lg:text-sm">{s.label}</div>
-                      <div className="text-[10px] opacity-60 lg:text-xs">{s.note}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+
+      {/* Mobile Embla Carousel (Skiper 54 style) */}
+      <div className="overflow-hidden lg:hidden py-4 w-full" ref={emblaRef}>
+        <div className="flex w-full items-center">
+          {TRUST_CARDS.map((c, i) => {
+            const isActive = current === i;
+            return (
+              <div
+                key={c.title}
+                className="relative min-w-0 flex-[0_0_88%] pl-4 sm:flex-[0_0_65%]"
+              >
+                <motion.div
+                  initial={false}
+                  animate={{
+                    clipPath: !isActive ? "inset(8% 0 8% 0 round 1.75rem)" : "inset(0 0 0 0 round 1.75rem)",
+                    opacity: !isActive ? 0.6 : 1,
+                  }}
+                  transition={{ duration: 0.5 }}
+                  className={cn(
+                    "h-[32rem] overflow-hidden rounded-[1.75rem] p-6 shadow-md transition-[box-shadow] flex flex-col",
+                    isActive && "shadow-2xl",
+                    TRUST_BG[c.tone]
+                  )}
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="inline-grid size-12 shrink-0 place-items-center rounded-2xl bg-white/15 backdrop-blur [&>svg]:size-6">
+                      {c.icon}
+                    </span>
+                  </div>
+                  <h3 className="mt-6 font-display text-3xl font-bold leading-tight">{c.title}</h3>
+                  <p className="mt-4 max-w-md text-base leading-relaxed opacity-85">{c.body}</p>
+                  {c.stats && (
+                    <div className="mt-auto pt-4 grid grid-cols-2 gap-4">
+                      {c.stats.map((s) => (
+                        <div key={s.label}>
+                          <div className="font-mono text-2xl font-semibold text-accent">
+                            <AnimatedNumber value={s.num} prefix={s.prefix} suffix={s.suffix} />
+                          </div>
+                          <div className="mt-1 text-sm font-semibold">{s.label}</div>
+                          <div className="text-[11px] opacity-60">{s.note}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </>
   );
 }
 
