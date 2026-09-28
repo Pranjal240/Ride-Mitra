@@ -46,7 +46,7 @@ export function IntroFilm({
   }, [finish]);
   useEffect(() => {
     if (ready) return;
-    const stall = window.setTimeout(finish, 6500);
+    const stall = window.setTimeout(finish, 5500);
     return () => window.clearTimeout(stall);
   }, [ready, finish]);
 
@@ -57,19 +57,27 @@ export function IntroFilm({
       transition={{ duration: 0.42, ease: "easeInOut" }}
       style={{ pointerEvents: leaving ? "none" : "auto" }}
     >
-      {/* logo, visible before the film opens */}
+      {/* logo — stays until the video is actually playing so buffering never
+          shows a blank/white frame; then fades as the film takes over */}
       <AnimatePresence>
-        {!opened && (
+        {!ready && (
           <motion.div
             initial={{ opacity: 0, scale: 0.86 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.1 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute z-10 flex flex-col items-center gap-4"
+            className="absolute z-20 flex flex-col items-center gap-4"
           >
             <Logo size={72} light />
             <span className="font-display text-2xl font-extrabold tracking-tight text-white">
               Ride<span className="text-accent">Mitra</span>
+            </span>
+            <span className="mt-2 h-1 w-16 overflow-hidden rounded-full bg-white/15">
+              <motion.span
+                className="block h-full w-1/2 rounded-full bg-accent"
+                animate={{ x: ["-100%", "220%"] }}
+                transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+              />
             </span>
           </motion.div>
         )}
@@ -106,8 +114,11 @@ export function IntroFilm({
           }}
           onPlaying={() => setReady(true)}
           onEnded={finish}
+          onError={() => window.setTimeout(finish, 1400)}
           className="size-full object-cover"
         />
+        {/* legibility scrim so a light first frame never reads as a blank flash */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#07101F]/45 via-transparent to-[#07101F]/25" />
       </motion.div>
 
       <button

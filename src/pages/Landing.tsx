@@ -3,7 +3,6 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
-  Bike,
   Car,
   Check,
   Clock,
@@ -16,7 +15,6 @@ import {
   Play,
   Route,
   ShieldCheck,
-  Users,
   Wallet,
   Zap,
 } from "lucide-react";
@@ -24,10 +22,14 @@ import { QRCodeSVG } from "qrcode.react";
 
 import { SmoothScroll } from "@/components/ui/smooth-scroll";
 import { Field } from "@/components/ui/smooth-input";
-import { HoverExpandGallery, type GalleryItem } from "@/components/ui/hover-expand";
-import { ScrollReveal, Reveal, RevealGroup, RevealItem } from "@/components/ui/scroll-reveal";
+import { Reveal, RevealGroup, RevealItem } from "@/components/ui/scroll-reveal";
 import { VideoReveal } from "@/components/ui/video-reveal";
-import { TrafficHero } from "@/components/ui/traffic-hero";
+import { TextRoll } from "@/components/ui/text-roll";
+import { Marquee } from "@/components/ui/marquee";
+import { CrowdCanvas } from "@/components/ui/crowd-canvas";
+import { RidePoster } from "@/components/ui/ride-illustrations";
+import { RideCarousel, type RideSlide } from "@/components/ui/ride-carousel";
+import { ParallaxGallery, type ParallaxItem } from "@/components/ui/parallax-gallery";
 import {
   Badge,
   Button,
@@ -38,7 +40,7 @@ import {
   SectionHeading,
   type BadgeTone,
 } from "@/components/ui/primitives";
-import { CursorGlow, Magnetic, MagneticButton, MouseParallax } from "@/components/ui/cursor";
+import { CursorGlow, Magnetic, MagneticButton } from "@/components/ui/cursor";
 import LiveMap from "@/components/landing/LiveMap";
 import IntroFilm from "@/components/landing/IntroFilm";
 import LandingHeader from "@/components/landing/LandingHeader";
@@ -47,47 +49,6 @@ import { cn } from "@/lib/utils";
 
 const APK_URL =
   "https://github.com/Pranjal240/Ride-Mitra/releases/latest/download/RideMitra.apk";
-
-/* ── On-load character reveal for the hero headline ──────────── */
-function HeroTitle() {
-  const reduce = useReducedMotion();
-  const lines: { text: string; accent?: boolean }[] = [
-    { text: "Share the ride." },
-    { text: "Skip the wait.", accent: true },
-  ];
-
-  return (
-    <h1 className="font-display text-[clamp(2.75rem,9vw,7rem)] font-extrabold leading-[0.95] tracking-[-0.03em] text-foreground">
-      {lines.map((line, li) => {
-        const chars = [...line.text];
-        return (
-          <span key={li} className={cn("block", line.accent && "text-accent")}>
-            {chars.map((ch, ci) =>
-              reduce ? (
-                <span key={ci}>{ch}</span>
-              ) : (
-                <motion.span
-                  key={ci}
-                  className="inline-block"
-                  initial={{ opacity: 0, y: "0.6em", rotateX: -40 }}
-                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                  transition={{
-                    delay: 0.15 + li * 0.28 + ci * 0.028,
-                    duration: 0.62,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  style={{ transformOrigin: "bottom" }}
-                >
-                  {ch === " " ? " " : ch}
-                </motion.span>
-              ),
-            )}
-          </span>
-        );
-      })}
-    </h1>
-  );
-}
 
 /* ── Hero route search (SmoothInput showcase) ────────────────── */
 function HeroSearch() {
@@ -100,7 +61,7 @@ function HeroSearch() {
         e.preventDefault();
         navigate("/rides");
       }}
-      className="flex w-full max-w-2xl flex-col gap-2.5 rounded-3xl border border-border bg-card p-2.5 shadow-md sm:flex-row sm:items-center"
+      className="flex w-full max-w-2xl flex-col gap-2.5 rounded-3xl border border-border bg-card p-2.5 text-left shadow-md sm:flex-row sm:items-center"
     >
       <div className="sm:flex-1">
         <Field
@@ -129,37 +90,43 @@ function HeroSearch() {
   );
 }
 
-const STEPS: GalleryItem[] = [
-  {
-    tag: "01",
-    title: "Verify with campus email",
-    caption: "Sign in with your JC Bose UST Google account. One-time check — no paperwork.",
-    icon: <GraduationCap />,
-  },
-  {
-    tag: "02",
-    title: "Match on your corridor",
-    caption: "We surface only rides already travelling your route, in your direction.",
-    icon: <Route />,
-  },
-  {
-    tag: "03",
-    title: "Agree the fare",
-    caption: "A fair, distance-capped price. Counter-offer if you like — no surge, ever.",
-    icon: <Wallet />,
-  },
-  {
-    tag: "04",
-    title: "Track, chat, arrive",
-    caption: "Live GPS the whole way, in-app chat, one-tap SOS. Split at the pump.",
-    icon: <Navigation />,
-  },
+/* How pooling works — four steps */
+const STEPS = [
+  { n: "01", icon: <GraduationCap className="size-5" />, title: "Verify with campus email", body: "Sign in with your JC Bose UST Google account. One-time check — no paperwork." },
+  { n: "02", icon: <Route className="size-5" />, title: "Match on your corridor", body: "We surface only rides already travelling your route, in your direction." },
+  { n: "03", icon: <Wallet className="size-5" />, title: "Agree the fare", body: "A fair, distance-capped price. Counter-offer if you like — no surge, ever." },
+  { n: "04", icon: <Navigation className="size-5" />, title: "Track, chat, arrive", body: "Live GPS the whole way, in-app chat, one-tap SOS. Split at the pump." },
 ];
 
-const VEHICLES: GalleryItem[] = [
-  { tag: "4 seats", title: "Car pool", caption: "Split a full car four ways on the long campus run.", icon: <Car /> },
-  { tag: "1 pillion", title: "Bike pool", caption: "Beat the Mathura Road jam on two wheels.", icon: <Bike /> },
-  { tag: "Group", title: "Society runs", caption: "Recurring rides for the same colony, same schedule.", icon: <Users /> },
+/* Ride types — varied colored posters for the carousel */
+const RIDE_SLIDES: RideSlide[] = [
+  { tone: "navy", kind: "car", eyebrow: "4 seats", title: "Car pool", caption: "Split a full car four ways on the long campus run." },
+  { tone: "clay", kind: "scooter", eyebrow: "1 pillion", title: "Scooter pool", caption: "Nip through the Mathura Road jam on two wheels." },
+  { tone: "sage", kind: "bike", eyebrow: "1 pillion", title: "Bike pool", caption: "A quick lift to the gate — fuel split fairly." },
+  { tone: "sky", kind: "suv", eyebrow: "6 seats", title: "Society run", caption: "Recurring rides for the same colony, same schedule." },
+  { tone: "plum", kind: "car", eyebrow: "Weekends", title: "One-off trip", caption: "Heading home for the break? Fill the empty seats." },
+  { tone: "gold", kind: "suv", eyebrow: "Staff", title: "Faculty pool", caption: "Same department, same hours — ride in together." },
+];
+
+const PARALLAX_ITEMS: ParallaxItem[] = [
+  { tone: "navy", kind: "car", title: "Sector 15 → Campus", eyebrow: "8:00 AM" },
+  { tone: "clay", kind: "scooter", title: "NIT Faridabad → Gate 2", eyebrow: "9:15 AM" },
+  { tone: "sage", kind: "bike", title: "Ballabgarh → Campus", eyebrow: "8:30 AM" },
+  { tone: "sky", kind: "suv", title: "Old Faridabad → Campus", eyebrow: "7:45 AM" },
+  { tone: "plum", kind: "car", title: "Sector 21C → Library", eyebrow: "10:00 AM" },
+  { tone: "gold", kind: "suv", title: "Neelam Chowk → Campus", eyebrow: "8:10 AM" },
+  { tone: "navy", kind: "scooter", title: "Bata Chowk → Gate 1", eyebrow: "9:00 AM" },
+  { tone: "sage", kind: "car", title: "Sector 62 → Campus", eyebrow: "8:20 AM" },
+];
+
+const MARQUEE = [
+  "VERIFIED @jcboseust.ac.in",
+  "SPLIT THE FUEL",
+  "NO SURGE, EVER",
+  "LIVE-TRACKED TRIPS",
+  "ONE-TAP SOS",
+  "CORRIDOR MATCHING",
+  "STUDENTS & STAFF ONLY",
 ];
 
 const STATS = [
@@ -218,141 +185,170 @@ export default function Landing() {
       <LandingHeader />
 
       <main className="overflow-x-hidden bg-background text-foreground">
-        {/* ── HERO — name anchored to the corner, full-bleed map below ── */}
-        <section className="relative overflow-hidden">
-          {/* name block, pulled to the top-left corner */}
-          <div className="relative pt-24 pb-10 sm:pt-28">
-            <CursorGlow size={520} />
-            <Container size="7xl" className="relative z-10">
-              <MouseParallax intensity={16} className="max-w-5xl">
-                <motion.div
-                  initial={reduce ? undefined : { opacity: 0, y: 12 }}
-                  animate={reduce ? undefined : { opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1, duration: 0.5 }}
-                  className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 shadow-sm"
-                >
-                  <ShieldCheck className="size-3.5 text-accent" />
-                  <span className="font-sans text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    JC Bose University · YMCA Faridabad
-                  </span>
-                </motion.div>
+        {/* HERO — full-bleed editorial: TextRoll headline, flanking ride posters, marquee */}
+        <section className="relative overflow-hidden pt-24 sm:pt-28">
+          <CursorGlow size={520} />
 
-                <div className="mt-6">
-                  <HeroTitle />
-                </div>
-              </MouseParallax>
-
-              {/* compact supporting row, left-aligned under the name */}
-              <div className="mt-7 flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
-                <motion.p
-                  initial={reduce ? undefined : { opacity: 0, y: 16 }}
-                  animate={reduce ? undefined : { opacity: 1, y: 0 }}
-                  transition={{ delay: 0.95, duration: 0.6 }}
-                  className="max-w-xl text-lg leading-relaxed text-muted-foreground"
-                >
-                  The closed carpool network built only for JC Bose University students and
-                  staff — verified faces, live-tracked trips, fares split at the pump.
-                  <span className="font-semibold text-foreground"> No surge. No strangers.</span>
-                </motion.p>
-
-                <motion.div
-                  initial={reduce ? undefined : { opacity: 0, y: 16 }}
-                  animate={reduce ? undefined : { opacity: 1, y: 0 }}
-                  transition={{ delay: 1.05, duration: 0.6 }}
-                  className="flex shrink-0 flex-wrap items-center gap-3"
-                >
-                  <MagneticButton size="lg" onClick={() => navigate("/portal")} icon={<Car className="size-4" />}>
-                    Find a ride
-                  </MagneticButton>
-                  <MagneticButton size="lg" variant="secondary" onClick={() => navigate("/portal")}>
-                    Offer a ride <ArrowRight className="size-4" />
-                  </MagneticButton>
-                </motion.div>
+          {/* flanking posters (lg+) */}
+          <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 right-0 hidden lg:block">
+            <motion.div
+              initial={reduce ? undefined : { opacity: 0, y: 30 }}
+              animate={reduce ? undefined : { opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.8 }}
+              className="absolute left-[2.5vw] top-[44%] w-[15vw] max-w-[210px] -translate-y-1/2 -rotate-6"
+            >
+              <div className="h-[300px]">
+                <RidePoster tone="clay" kind="scooter" eyebrow="2 wheels" title="Scooter pool" />
               </div>
-
-              <motion.div
-                initial={reduce ? undefined : { opacity: 0 }}
-                animate={reduce ? undefined : { opacity: 1 }}
-                transition={{ delay: 1.15, duration: 0.6 }}
-                className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground"
-              >
-                {[
-                  { icon: <ShieldCheck className="size-4 text-success" />, t: "Verified campus ID" },
-                  { icon: <Navigation className="size-4 text-accent" />, t: "Live GPS + SOS" },
-                  { icon: <IndianRupee className="size-4 text-info" />, t: "No surge, no commission" },
-                ].map((c, i) => (
-                  <span key={i} className="inline-flex items-center gap-2">
-                    {c.icon}
-                    {c.t}
-                  </span>
-                ))}
-              </motion.div>
-
-              <motion.div
-                initial={reduce ? undefined : { opacity: 0, y: 16 }}
-                animate={reduce ? undefined : { opacity: 1, y: 0 }}
-                transition={{ delay: 1.25, duration: 0.6 }}
-                className="mt-8"
-              >
-                <HeroSearch />
-              </motion.div>
-            </Container>
+            </motion.div>
+            <motion.div
+              initial={reduce ? undefined : { opacity: 0, y: 30 }}
+              animate={reduce ? undefined : { opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.8 }}
+              className="absolute right-[2.5vw] top-[44%] w-[15vw] max-w-[210px] -translate-y-1/2 rotate-6"
+            >
+              <div className="h-[300px]">
+                <RidePoster tone="navy" kind="car" eyebrow="4 seats" title="Car pool" />
+              </div>
+            </motion.div>
           </div>
 
-          {/* full-bleed live map, edge to edge under the name */}
-          <motion.div
-            initial={reduce ? undefined : { opacity: 0, y: 24 }}
-            animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ delay: 0.55, duration: 0.8 }}
-            className="relative w-screen"
-          >
-            <LiveMap className="h-[62vh] min-h-[460px] w-full border-y border-border" />
-          </motion.div>
+          <Container size="6xl" className="relative z-10 flex flex-col items-center pb-14 text-center">
+            <motion.div
+              initial={reduce ? undefined : { opacity: 0, y: 12 }}
+              animate={reduce ? undefined : { opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.5 }}
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 shadow-sm"
+            >
+              <ShieldCheck className="size-3.5 text-accent" />
+              <span className="font-sans text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                JC Bose University · YMCA Faridabad
+              </span>
+            </motion.div>
+
+            <h1 className="mt-7 font-display text-[clamp(1.9rem,9vw,7rem)] font-extrabold uppercase leading-[0.92] tracking-[-0.03em] text-foreground">
+              <TextRoll as="span" center animateOnView className="block">
+                Share the ride.
+              </TextRoll>
+              <TextRoll as="span" center animateOnView className="mt-1 block text-accent">
+                Skip the wait.
+              </TextRoll>
+            </h1>
+
+            <motion.p
+              initial={reduce ? undefined : { opacity: 0, y: 16 }}
+              animate={reduce ? undefined : { opacity: 1, y: 0 }}
+              transition={{ delay: 0.7, duration: 0.6 }}
+              className="mt-7 max-w-xl text-lg leading-relaxed text-muted-foreground"
+            >
+              The closed carpool network built only for JC Bose University students and staff —
+              verified faces, live-tracked trips, fares split at the pump.
+              <span className="font-semibold text-foreground"> No surge. No strangers.</span>
+            </motion.p>
+
+            <motion.div
+              initial={reduce ? undefined : { opacity: 0, y: 16 }}
+              animate={reduce ? undefined : { opacity: 1, y: 0 }}
+              transition={{ delay: 0.8, duration: 0.6 }}
+              className="mt-8 flex flex-wrap items-center justify-center gap-3"
+            >
+              <MagneticButton size="lg" onClick={() => navigate("/portal")} icon={<Car className="size-4" />}>
+                Find a ride
+              </MagneticButton>
+              <MagneticButton size="lg" variant="secondary" onClick={() => navigate("/portal")}>
+                Offer a ride <ArrowRight className="size-4" />
+              </MagneticButton>
+            </motion.div>
+
+            <motion.div
+              initial={reduce ? undefined : { opacity: 0 }}
+              animate={reduce ? undefined : { opacity: 1 }}
+              transition={{ delay: 0.9, duration: 0.6 }}
+              className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground"
+            >
+              {[
+                { icon: <ShieldCheck className="size-4 text-success" />, t: "Verified campus ID" },
+                { icon: <Navigation className="size-4 text-accent" />, t: "Live GPS + SOS" },
+                { icon: <IndianRupee className="size-4 text-info" />, t: "No surge, no commission" },
+              ].map((c, i) => (
+                <span key={i} className="inline-flex items-center gap-2">
+                  {c.icon}
+                  {c.t}
+                </span>
+              ))}
+            </motion.div>
+
+            <motion.div
+              initial={reduce ? undefined : { opacity: 0, y: 16 }}
+              animate={reduce ? undefined : { opacity: 1, y: 0 }}
+              transition={{ delay: 1, duration: 0.6 }}
+              className="mt-9 w-full max-w-2xl"
+            >
+              <HeroSearch />
+            </motion.div>
+
+            {/* ride posters on mobile (flanking versions are lg-only) */}
+            <div className="mt-9 grid w-full max-w-md grid-cols-2 gap-3 lg:hidden">
+              <div className="h-44">
+                <RidePoster tone="clay" kind="scooter" eyebrow="2 wheels" title="Scooter" />
+              </div>
+              <div className="h-44">
+                <RidePoster tone="navy" kind="car" eyebrow="4 seats" title="Car pool" />
+              </div>
+            </div>
+          </Container>
+
+          {/* full-bleed marquee */}
+          <div className="w-full border-y border-border bg-navy py-3.5">
+            <Marquee
+              speed={34}
+              items={MARQUEE.map((m) => (
+                <span className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-white/90">
+                  {m}
+                </span>
+              ))}
+            />
+          </div>
         </section>
 
-        {/* ── SCROLL STATEMENT ─────────────────────────────── */}
-        <section className="py-24 sm:py-32">
-          <Container size="6xl" className="text-center">
-            <ScrollReveal
-              as="h2"
-              text="Same route. Same time. Share the ride."
-              accent={["Share", "the", "ride."]}
-              className="mx-auto max-w-4xl text-[clamp(2rem,6vw,4.5rem)] font-extrabold leading-[1.02] tracking-tight text-foreground"
-            />
+        {/* LIVE MAP — full-bleed campus band */}
+        <section className="relative w-full">
+          <LiveMap className="h-[56vh] min-h-[420px] w-full border-b border-border" />
+        </section>
+
+        {/* CROWD — the daily wait, full-bleed people walking */}
+        <section className="w-full overflow-hidden bg-[#F1ECE3]">
+          <Container size="6xl" className="pt-20 pb-6 text-center sm:pt-28">
+            <Eyebrow>The daily wait</Eyebrow>
+            <Reveal>
+              <h2 className="mx-auto mt-4 max-w-3xl font-display text-[clamp(2rem,5.5vw,4rem)] font-extrabold leading-[1.02] tracking-tight text-foreground">
+                Everyone&apos;s on the same road.
+                <span className="mt-1 block text-accent">Why ride it alone?</span>
+              </h2>
+            </Reveal>
             <Reveal delay={0.1}>
               <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
-                Hundreds of students leave the same colonies for the same gate every morning.
-                Ride Mitra simply puts them in the same car.
+                One rider per car means more cars at the gate, longer waits and a bigger fuel bill
+                for everyone. Pool the trip and the road clears — for you and the whole campus.
               </p>
             </Reveal>
-          </Container>
-        </section>
-
-        {/* ── TRAFFIC METAPHOR ─────────────────────────────── */}
-        <section className="bg-muted/40 py-8">
-          <TrafficHero
-            eyebrow="The daily wait"
-            title={
-              <>
-                Everyone&apos;s stuck in the same jam.
-                <span className="text-accent"> Why ride it alone?</span>
-              </>
-            }
-            subtitle="One rider per car means more cars at the gate, longer waits, and a bigger fuel bill for everyone. Pool the trip and the road clears — for you and the whole campus."
-            actions={
-              <>
+            <Reveal delay={0.16}>
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
                 <MagneticButton onClick={() => navigate("/portal")}>Start pooling</MagneticButton>
                 <VideoReveal src="/launch.mp4" poster="/launch-poster.jpg">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-[15px] font-semibold text-foreground transition-colors hover:border-accent">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2.5 text-[15px] font-semibold text-foreground transition-colors hover:border-accent">
                     <Play className="size-4 fill-current" /> Watch the film
                   </span>
                 </VideoReveal>
-              </>
-            }
-          />
+              </div>
+            </Reveal>
+          </Container>
+          <div className="relative h-[42vh] min-h-[300px] w-full">
+            <CrowdCanvas className="absolute inset-0" />
+          </div>
         </section>
 
-        {/* ── HOW IT WORKS (hover-expand) ──────────────────── */}
+        {/* HOW IT WORKS — clean numbered steps (varied, not monotone) */}
         <section id="how" className="py-20 sm:py-28">
           <Container size="7xl">
             <Reveal>
@@ -360,30 +356,61 @@ export default function Landing() {
                 align="center"
                 eyebrow="4 steps · 60 seconds"
                 title={<>Your first ride is minutes away.</>}
-                description="Hover a step to open it — on your phone, just tap."
-                className="mb-12"
+                description="No app-store detour — verify with your campus email and go."
+                className="mb-14"
               />
             </Reveal>
-            <HoverExpandGallery items={STEPS} defaultActive={0} />
+            <RevealGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {STEPS.map((s) => (
+                <RevealItem key={s.n}>
+                  <div className="group h-full overflow-hidden rounded-3xl border border-border bg-card p-6 transition-colors hover:border-accent">
+                    <span className="font-mono text-sm font-bold text-accent">{s.n}</span>
+                    <span className="mt-4 grid size-11 place-items-center rounded-2xl bg-navy text-white transition-colors group-hover:bg-accent group-hover:text-navy">
+                      {s.icon}
+                    </span>
+                    <h3 className="mt-4 font-display text-lg font-bold text-foreground">{s.title}</h3>
+                    <p className="mt-1.5 text-sm text-muted-foreground">{s.body}</p>
+                  </div>
+                </RevealItem>
+              ))}
+            </RevealGroup>
           </Container>
         </section>
 
-        {/* ── VEHICLE TYPES (hover-expand) ─────────────────── */}
-        <section className="bg-muted/40 py-20 sm:py-28">
+        {/* RIDE TYPES — full-bleed colored carousel */}
+        <section className="overflow-hidden bg-muted/40 py-20 sm:py-28">
           <Container size="7xl">
             <Reveal>
               <SectionHeading
                 align="center"
                 eyebrow="However you travel"
                 title="A pool for every kind of trip."
-                className="mb-12"
+                description="Car, scooter, bike or the weekend society run — drag to explore."
+                className="mb-14"
               />
             </Reveal>
-            <HoverExpandGallery items={VEHICLES} defaultActive={0} />
           </Container>
+          <Reveal>
+            <RideCarousel slides={RIDE_SLIDES} />
+          </Reveal>
         </section>
 
-        {/* ── TRUST / SAFETY BENTO ─────────────────────────── */}
+        {/* CAMPUS IN MOTION — full-bleed parallax of live corridors */}
+        <section className="w-full">
+          <Container size="7xl" className="pb-4 pt-20 text-center sm:pt-28">
+            <Reveal>
+              <SectionHeading
+                align="center"
+                eyebrow="Campus in motion"
+                title="Real corridors, filling up every morning."
+                description="A glimpse of the routes students already share to the JC Bose gate."
+              />
+            </Reveal>
+          </Container>
+          <ParallaxGallery items={PARALLAX_ITEMS} />
+        </section>
+
+        {/* TRUST / SAFETY BENTO */}
         <section id="safety" className="py-20 sm:py-28">
           <Container size="7xl">
             <Reveal>
@@ -466,7 +493,7 @@ export default function Landing() {
           </Container>
         </section>
 
-        {/* ── COMPARISON ───────────────────────────────────── */}
+        {/* COMPARISON */}
         <section id="compare" className="bg-muted/40 py-20 sm:py-28">
           <Container size="5xl">
             <Reveal>
@@ -508,7 +535,7 @@ export default function Landing() {
           </Container>
         </section>
 
-        {/* ── SEE IT IN MOTION (VideoReveal) ───────────────── */}
+        {/* SEE IT IN MOTION (VideoReveal) */}
         <section className="py-20 sm:py-28">
           <Container size="6xl">
             <Reveal>
@@ -538,7 +565,7 @@ export default function Landing() {
           </Container>
         </section>
 
-        {/* ── GET THE APP ──────────────────────────────────── */}
+        {/* GET THE APP */}
         <section id="get-app" className="py-20 sm:py-28">
           <Container size="6xl">
             <Panel inset="none" className="overflow-hidden border-accent/30">
@@ -582,7 +609,7 @@ export default function Landing() {
           </Container>
         </section>
 
-        {/* ── CLOSING CTA ──────────────────────────────────── */}
+        {/* CLOSING CTA */}
         <section className="pb-28 pt-4">
           <Container size="6xl">
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-light px-6 py-20 text-center text-white sm:py-24">
@@ -617,7 +644,7 @@ export default function Landing() {
           </Container>
         </section>
 
-        {/* ── FOOTER ───────────────────────────────────────── */}
+        {/* FOOTER */}
         <footer className="border-t border-border py-10">
           <Container size="7xl" className="flex flex-wrap items-center justify-between gap-6">
             <div className="flex items-center gap-2.5">

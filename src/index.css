@@ -331,6 +331,12 @@
   50% { box-shadow: 0 0 0 8px rgba(200,149,108,0); }
 }
 
+/* full-bleed ticker (Marquee): two duplicated rows slide by exactly one row */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
 /* ——— Scroll-Based Reveal Animations ——— */
 .reveal {
   opacity: 0;
