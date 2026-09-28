@@ -84,17 +84,21 @@ export function IntroFilm({
       </button>
 
       <style>{`
+        /* PC / landscape: show the WHOLE 16:9 film fit to the screen — never a
+           zoomed crop. On a non-16:9 window the extra space is the dark backdrop
+           (cinematic bars), so no stray white/zoom can ever appear. */
         .intro-film-video {
           position: absolute;
           inset: 0;
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          object-fit: contain;
           background: #070E1C;
           will-change: transform;
         }
-        /* Portrait phones: rotate the landscape film so it fills the whole
-           screen in landscape orientation (cover-crop, no letterbox bars). */
+        /* Portrait phones: rotate the landscape film 90deg and size it to the
+           viewport so it fills the whole portrait screen in landscape
+           orientation (cover-crop, no bars). */
         @media (orientation: portrait) {
           .intro-film-video {
             inset: auto;
@@ -102,6 +106,7 @@ export function IntroFilm({
             left: 50%;
             width: 100vh;
             height: 100vw;
+            object-fit: cover;
             transform: translate(-50%, -50%) rotate(90deg);
             transform-origin: center center;
           }
