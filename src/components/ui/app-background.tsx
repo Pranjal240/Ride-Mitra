@@ -24,13 +24,18 @@ export function AppBackground() {
           colorBase="#E7DECB"
           colorHigh="#C8956C"
           sceneBg="#E7DECB"
+          waveAmplitude={0.2}
+          waveSpeed={2.5}
+          waveFrequency={0.7}
+          waveWidth={4.0}
+          waveMaxHeight={0.25}
         />
       </div>
       {/* very light veil — the grid is meant to be visible; dense pages add their
           own frost via PageShell for text readability */}
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 h-screen w-screen bg-white/10"
+        className="pointer-events-none fixed inset-0 -z-10 h-screen w-screen bg-white/30"
       />
     </>
   );

@@ -204,11 +204,21 @@ export async function submitVerification(verification: {
   license_photo?: string;
   vehicle_type?: string;
   vehicle_number?: string;
+  vehicle_model?: string;
+  vehicle_color?: string;
+  vehicle_photo?: string;
   vehicle_docs?: string[];
+  id_card_photo?: string;
+  college_id?: string;
 }): Promise<DriverVerification> {
   const { data, error } = await supabase
     .from('driver_verification')
-    .upsert(verification, { onConflict: 'user_id' })
+    .upsert({
+      ...verification,
+      verification_status: 'pending',
+      submitted_at: new Date().toISOString(),
+      rejection_reason: null,
+    }, { onConflict: 'user_id' })
     .select()
     .single();
   if (error) throw error;
@@ -350,18 +360,19 @@ export async function resolveSOSAlert(alertId: string, adminId: string) {
   });
 }
 
-export async function updateVerificationStatus(verifId: string, status: 'verified' | 'rejected', adminId: string) {
+export async function updateVerificationStatus(verifId: string, status: 'verified' | 'rejected', adminId: string, rejectionReason?: string) {
   const { error } = await supabase.from('driver_verification').update({ 
     verification_status: status,
     verified_by: adminId,
-    verified_at: new Date().toISOString()
+    verified_at: new Date().toISOString(),
+    rejection_reason: status === 'rejected' ? (rejectionReason || 'No reason provided') : null,
   }).eq('id', verifId);
   if (error) throw error;
   await supabase.from('admin_logs').insert({
     admin_id: adminId,
     action: `verify_driver_${status}`,
     target_user_id: null,
-    details: { verification_id: verifId },
+    details: { verification_id: verifId, reason: rejectionReason },
   });
 }
 

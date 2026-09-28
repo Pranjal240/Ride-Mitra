@@ -250,7 +250,7 @@ export function PageShell({
       initial={reduce ? undefined : { opacity: 0 }}
       animate={reduce ? undefined : { opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className={cn("min-h-dvh bg-white/22 pb-24 pt-20 backdrop-blur-sm md:pb-16", className)}
+      className={cn("min-h-dvh bg-white/45 pb-24 pt-20 backdrop-blur-sm md:pb-16", className)}
     >
       {children}
     </motion.main>

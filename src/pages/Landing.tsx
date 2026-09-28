@@ -208,11 +208,11 @@ type TrustCard = {
   stats?: typeof STATS;
 };
 const TRUST_CARDS: TrustCard[] = [
-  { tone: "navy", icon: <ShieldCheck className="size-6" />, title: "Every face is verified", body: "Licence and college-ID checks for drivers, campus email for everyone — you always know exactly who you're riding with.", stats: STATS },
-  { tone: "sky", icon: <Navigation className="size-6" />, title: "Live GPS on every ride", body: "Watch the trip move in real time and auto-share your ETA with trusted contacts." },
-  { tone: "clay", icon: <Zap className="size-6" />, title: "One-tap SOS", body: "An emergency alert with your live location — always one tap away." },
-  { tone: "sage", icon: <MessageCircle className="size-6" />, title: "Chat & video support", body: "Coordinate pickup and reach live support without sharing your number." },
-  { tone: "plum", icon: <Clock className="size-6" />, title: "Fair, capped fares", body: "Distance-based price bands with room to bargain. No surge, no commission." },
+  { tone: "navy", icon: <ShieldCheck className="size-6" />, title: "Every face is verified", body: "Every driver goes through a two-step check: a valid driving licence and a university-issued college ID verified by campus administration. Riders sign in with their @jcboseust.ac.in email — so there are zero strangers on the platform. Your safety starts before you even book a ride.", stats: STATS },
+  { tone: "sky", icon: <Navigation className="size-6" />, title: "Live GPS on every ride", body: "From the moment you leave to the moment you arrive, your entire trip is tracked on a live map. Auto-share your ETA with emergency contacts, and both rider and driver can see the route in real time. If the car goes off-route, you'll know instantly." },
+  { tone: "clay", icon: <Zap className="size-6" />, title: "One-tap SOS", body: "Press the SOS button and your live location, ride details, and an emergency alert are instantly sent to campus security and your emergency contacts. It's always accessible — one tap, no menus, no delays. Available on every active ride." },
+  { tone: "sage", icon: <MessageCircle className="size-6" />, title: "Chat & video support", body: "Coordinate your pickup point, share landmarks, or reach live admin support — all inside the app without revealing your personal phone number. Messages are tied to the ride and monitored for safety, with admin moderation if needed." },
+  { tone: "plum", icon: <Clock className="size-6" />, title: "Fair, capped fares", body: "Fares are calculated on real fuel cost split between riders — no surge pricing, no platform commission, no hidden fees. A fair price band gives drivers and riders room to agree, while university-set caps prevent overcharging." },
 ];
 
 const TRUST_BG: Record<string, string> = {
@@ -269,7 +269,7 @@ function TrustExpand() {
             >
               <span
                 className="font-display text-lg font-bold leading-none tracking-tight opacity-90"
-                style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+                style={{ writingMode: "vertical-lr", transform: "rotate(180deg)" }}
               >
                 {c.title}
               </span>

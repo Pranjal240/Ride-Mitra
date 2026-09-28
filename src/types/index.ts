@@ -19,10 +19,17 @@ export interface DriverVerification {
   license_photo: string | null;
   vehicle_type: string | null;
   vehicle_number: string | null;
+  vehicle_model: string | null;
+  vehicle_color: string | null;
+  vehicle_photo: string | null;
   vehicle_docs: string[] | null;
+  id_card_photo: string | null;
+  college_id: string | null;
   verification_status: 'pending' | 'verified' | 'rejected';
+  rejection_reason: string | null;
   verified_by: string | null;
   verified_at: string | null;
+  submitted_at: string | null;
 }
 
 export interface GeoLocation {

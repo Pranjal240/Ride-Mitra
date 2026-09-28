@@ -375,7 +375,13 @@ function DriversTab({ admin, onChange }: { admin: string; onChange: () => void }
     load();
   }, []);
   const handle = async (id: string, status: "verified" | "rejected") => {
-    await updateVerificationStatus(id, status, admin);
+    let reason: string | undefined;
+    if (status === "rejected") {
+      const input = prompt("Reason for rejection (will be shown to the applicant):");
+      if (!input) return; // cancelled
+      reason = input;
+    }
+    await updateVerificationStatus(id, status, admin, reason);
     await load();
     onChange();
   };
@@ -385,27 +391,50 @@ function DriversTab({ admin, onChange }: { admin: string; onChange: () => void }
         <ShieldCheck className="size-4 text-accent" /> Pending verifications
       </h3>
       {loading ? empty("Loading…") : rows.length === 0 ? empty("All caught up — no pending requests.") : rows.map((v: any) => (
-        <div key={v.id} className="flex flex-wrap items-center gap-3 p-4">
-          <span className="grid size-11 place-items-center rounded-xl bg-gradient-to-br from-accent to-accent-strong font-display font-bold text-white">{v.user?.full_name?.[0] || "?"}</span>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-foreground">{v.user?.full_name || "Unknown"}</p>
-            <p className="text-xs text-muted-foreground">{v.user?.email}</p>
-            <p className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
-              <span>Licence · <b className="text-foreground">{v.license_number}</b></span>
-              {v.vehicle_type && <span>Vehicle · {v.vehicle_type} {v.vehicle_number}</span>}
-            </p>
+        <div key={v.id} className="p-4 space-y-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="grid size-11 place-items-center rounded-xl bg-gradient-to-br from-accent to-accent-strong font-display font-bold text-white">{v.user?.full_name?.[0] || "?"}</span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-foreground">{v.user?.full_name || "Unknown"}</p>
+              <p className="text-xs text-muted-foreground">{v.user?.email}</p>
+              <p className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                <span>Licence · <b className="text-foreground">{v.license_number}</b></span>
+                {v.vehicle_type && <span>Vehicle · {v.vehicle_type} {v.vehicle_number}</span>}
+                {v.vehicle_model && <span>Model · {v.vehicle_model}</span>}
+                {v.vehicle_color && <span>Color · {v.vehicle_color}</span>}
+                {v.college_id && <span>College ID · {v.college_id}</span>}
+              </p>
+            </div>
           </div>
+          {/* Document thumbnails */}
+          {(v.license_photo || v.vehicle_photo || v.id_card_photo) && (
+            <div className="flex flex-wrap gap-2">
+              {v.license_photo && (
+                <a href={v.license_photo} target="_blank" rel="noreferrer" className="group overflow-hidden rounded-xl border border-border">
+                  <img src={v.license_photo} alt="Licence" className="h-20 w-28 object-cover transition-transform group-hover:scale-105" />
+                  <p className="px-2 py-1 text-[10px] font-semibold text-muted-foreground">Licence</p>
+                </a>
+              )}
+              {v.vehicle_photo && (
+                <a href={v.vehicle_photo} target="_blank" rel="noreferrer" className="group overflow-hidden rounded-xl border border-border">
+                  <img src={v.vehicle_photo} alt="Vehicle" className="h-20 w-28 object-cover transition-transform group-hover:scale-105" />
+                  <p className="px-2 py-1 text-[10px] font-semibold text-muted-foreground">Vehicle</p>
+                </a>
+              )}
+              {v.id_card_photo && (
+                <a href={v.id_card_photo} target="_blank" rel="noreferrer" className="group overflow-hidden rounded-xl border border-border">
+                  <img src={v.id_card_photo} alt="ID Card" className="h-20 w-28 object-cover transition-transform group-hover:scale-105" />
+                  <p className="px-2 py-1 text-[10px] font-semibold text-muted-foreground">College ID</p>
+                </a>
+              )}
+            </div>
+          )}
           <div className="flex gap-2">
-            {v.license_photo && (
-              <a href={v.license_photo} target="_blank" rel="noreferrer" className={pill("info")}>
-                Docs
-              </a>
-            )}
             <button type="button" onClick={() => handle(v.id, "verified")} className={pill("success")}>
-              Verify
+              ✓ Verify
             </button>
             <button type="button" onClick={() => handle(v.id, "rejected")} className={pill("danger")}>
-              Reject
+              ✕ Reject
             </button>
           </div>
         </div>
