@@ -256,19 +256,22 @@ export default function Landing() {
   const year = useMemo(() => new Date().getFullYear(), []);
 
   return (
-    <SmoothScroll>
-      {showIntro && <IntroFilm onDone={endIntro} />}
-
-      {/* animated grid background — pinned to the viewport, cursor-reactive */}
+    <>
+      {/* animated grid background — OUTSIDE <SmoothScroll> so it stays fixed to
+          the viewport across the WHOLE page. Inside Lenis its transform turned
+          `fixed` into "fixed to the top", so it only showed behind the hero. */}
       <div aria-hidden className="pointer-events-none fixed left-0 top-0 -z-20 h-screen w-screen">
-        <WaveGridBackground className="h-full w-full" waveAmplitude={0.32} colorHigh="#c8956c" />
+        <WaveGridBackground className="h-full w-full" />
       </div>
-      {/* readability veil so text stays legible while empty areas show the grid */}
-      <div aria-hidden className="pointer-events-none fixed left-0 top-0 -z-10 h-screen w-screen bg-white/60" />
+      {/* readability veil — light, since the grid scene is already ivory */}
+      <div aria-hidden className="pointer-events-none fixed left-0 top-0 -z-10 h-screen w-screen bg-white/35" />
 
-      <LandingHeader />
+      <SmoothScroll>
+        {showIntro && <IntroFilm onDone={endIntro} />}
 
-      <main className="relative z-0 overflow-x-hidden text-foreground">
+        <LandingHeader />
+
+        <main className="relative z-0 overflow-x-hidden text-foreground">
         {/* ── HERO ── */}
         <section className="relative overflow-hidden pt-24 sm:pt-28">
           <CursorGlow size={420} />
@@ -477,8 +480,9 @@ export default function Landing() {
                 className="mb-12"
               />
             </Reveal>
+          </Container>
 
-            <div className="grid gap-4 lg:grid-cols-12">
+          <div className="mx-auto grid w-full max-w-[1500px] gap-4 px-4 sm:px-6 lg:grid-cols-12">
               <Reveal className="lg:col-span-5">
                 <div className="flex h-full flex-col justify-between overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-navy to-navy-light p-8 text-white">
                   <div>
@@ -532,8 +536,7 @@ export default function Landing() {
                   </RevealItem>
                 ))}
               </RevealGroup>
-            </div>
-          </Container>
+          </div>
         </section>
 
         {/* ── COMPARISON ── */}
@@ -747,7 +750,8 @@ export default function Landing() {
             </nav>
           </Container>
         </footer>
-      </main>
-    </SmoothScroll>
+        </main>
+      </SmoothScroll>
+    </>
   );
 }

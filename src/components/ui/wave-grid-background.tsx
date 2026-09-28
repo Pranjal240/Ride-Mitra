@@ -105,8 +105,12 @@ export interface WaveGridBackgroundProps {
   children?: React.ReactNode;
   className?: string;
   gridSize?: number;
+  /** Flat-cube tone. */
   colorBase?: string;
+  /** Wave-peak tone. */
   colorHigh?: string;
+  /** Scene / clear color behind the cubes (keep it on-brand light). */
+  sceneBg?: string;
   waveAmplitude?: number;
   waveSpeed?: number;
   waveFrequency?: number;
@@ -121,13 +125,14 @@ export function WaveGridBackground({
   children,
   className,
   gridSize = 40,
-  colorBase = "#ffffff",
-  colorHigh = "#c8956c",
-  waveAmplitude = 0.4,
+  colorBase = "#E7DFD0",
+  colorHigh = "#C8956C",
+  sceneBg = "#F5F2EC",
+  waveAmplitude = 0.5,
   waveSpeed = 6.0,
   waveFrequency = 1.2,
   waveWidth = 3.0,
-  waveMaxHeight = 0.4,
+  waveMaxHeight = 0.5,
   waveJitter = 0.2,
   autoAnimate = true,
   vignette = true,
