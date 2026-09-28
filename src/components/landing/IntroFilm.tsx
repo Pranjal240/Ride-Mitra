@@ -49,7 +49,7 @@ export function IntroFilm({
       const hard = window.setTimeout(finish, 22000);
       return () => window.clearTimeout(hard);
     }
-    const bail = window.setTimeout(finish, 4200);
+    const bail = window.setTimeout(finish, 6000);
     return () => window.clearTimeout(bail);
   }, [playing, finish]);
 
@@ -87,6 +87,10 @@ export function IntroFilm({
           muted
           playsInline
           preload="auto"
+          onCanPlay={(e) => {
+            // some browsers need a nudge after buffering before autoplay kicks in
+            (e.currentTarget as HTMLVideoElement).play().catch(() => {});
+          }}
           onPlaying={() => setPlaying(true)}
           onEnded={finish}
           onError={() => window.setTimeout(finish, 800)}

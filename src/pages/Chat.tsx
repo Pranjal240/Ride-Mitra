@@ -58,7 +58,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="bg-background" style={{ height: "calc(100dvh - 64px)" }}>
+    <div className="bg-white/40" style={{ height: "calc(100dvh - 64px)" }}>
       <div className="mx-auto flex h-full max-w-2xl flex-col">
         {/* header */}
         <div className="flex items-center gap-3 border-b border-border bg-background/85 px-4 py-3 backdrop-blur">

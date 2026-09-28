@@ -236,12 +236,14 @@ export function PageShell({
   className?: string;
 }) {
   const reduce = useReducedMotion();
+  // translucent (not bg-background) so the app-wide animated grid shows through
+  // the gaps; the extra frost keeps dense pages readable over the motion.
   return (
     <motion.main
       initial={reduce ? undefined : { opacity: 0 }}
       animate={reduce ? undefined : { opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className={cn("min-h-dvh bg-background pb-24 pt-20 md:pb-16", className)}
+      className={cn("min-h-dvh bg-white/45 pb-24 pt-20 md:pb-16", className)}
     >
       {children}
     </motion.main>

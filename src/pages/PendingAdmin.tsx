@@ -17,7 +17,7 @@ export default function PendingAdmin() {
   }
 
   return (
-    <div className="grid min-h-dvh place-items-center bg-background p-5">
+    <div className="grid min-h-dvh place-items-center p-5">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

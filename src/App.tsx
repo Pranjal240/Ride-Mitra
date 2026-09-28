@@ -9,6 +9,7 @@ import { CommandPalette, MobileBottomNav, CommandHint } from './components/commo
 import LiveAnnouncements from './components/common/LiveAnnouncements';
 import { ScrollProgress } from './components/common/Interactive3D';
 import AuthCallback from './components/auth/AuthCallback';
+import AppBackground from './components/ui/app-background';
 
 /* ---- Pages ---- */
 import Landing from './pages/Landing';
@@ -28,7 +29,6 @@ import Profile from './pages/Profile';
 import Verification from './pages/Verification';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
-import T from './lib/theme';
 import { cleanupPastRides } from './lib/api';
 import { dashboardPath } from './lib/roles';
 
@@ -70,7 +70,9 @@ export default function App() {
   useRealtimeNotifications(user?.id);
 
   return (
-    <div style={{ minHeight: '100vh', background: T.bg, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: 'transparent', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}>
+      {/* app-wide animated grid backdrop — behind every route */}
+      <AppBackground />
       <ScrollProgress />
       {user && <LiveAnnouncements />}
       {user && <Header />}

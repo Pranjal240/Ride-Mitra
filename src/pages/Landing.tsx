@@ -30,7 +30,6 @@ import { CrowdCanvas } from "@/components/ui/crowd-canvas";
 import { RidePoster } from "@/components/ui/ride-illustrations";
 import { RideCarousel, type RideSlide } from "@/components/ui/ride-carousel";
 import { ParallaxGallery, type ParallaxItem } from "@/components/ui/parallax-gallery";
-import { WaveGridBackground } from "@/components/ui/wave-grid-background";
 import { PopButton } from "@/components/ui/pop-button";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { MorphText } from "@/components/ui/morph-text";
@@ -54,13 +53,6 @@ import { cn } from "@/lib/utils";
 
 const APK_URL =
   "https://github.com/Pranjal240/Ride-Mitra/releases/latest/download/RideMitra.apk";
-
-/* radiant-white page backdrop */
-const PAGE_BG =
-  "radial-gradient(1100px 620px at 50% -8%, rgba(200,149,108,0.08), transparent 60%)," +
-  "radial-gradient(900px 520px at 100% 6%, rgba(27,43,75,0.05), transparent 55%)," +
-  "radial-gradient(820px 520px at 0% 26%, rgba(62,110,90,0.045), transparent 55%)," +
-  "#FFFFFF";
 
 /* ── 3D tilt-to-cursor wrapper (used by the steps timeline) ── */
 function TiltCard({ children, className }: { children: ReactNode; className?: string }) {
@@ -262,15 +254,8 @@ export default function Landing() {
 
   return (
     <>
-      {/* animated grid background — OUTSIDE <SmoothScroll> so it stays fixed to
-          the viewport across the WHOLE page. Inside Lenis its transform turned
-          `fixed` into "fixed to the top", so it only showed behind the hero. */}
-      <div aria-hidden className="pointer-events-none fixed left-0 top-0 -z-20 h-screen w-screen">
-        <WaveGridBackground className="h-full w-full" />
-      </div>
-      {/* readability veil — light, since the grid scene is already ivory */}
-      <div aria-hidden className="pointer-events-none fixed left-0 top-0 -z-10 h-screen w-screen bg-white/35" />
-
+      {/* The animated grid backdrop is now mounted app-wide in App.tsx
+          (<AppBackground />) so it lives behind every route, not just here. */}
       <SmoothScroll>
         {showIntro && <IntroFilm onDone={endIntro} />}
 

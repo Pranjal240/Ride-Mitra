@@ -15,7 +15,7 @@ export function LegalPage({
   sections: { t: string; body: string }[];
 }) {
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-white/40">
       <nav className="sticky top-0 z-10 border-b border-border bg-background/85 backdrop-blur">
         <Container size="6xl" className="flex items-center gap-3 py-4">
           <Link to="/" className="grid size-9 place-items-center rounded-xl bg-muted text-foreground hover:bg-muted2">

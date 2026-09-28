@@ -211,7 +211,7 @@ export default function RideSearch() {
 
   return (
     <main
-      className="flex flex-col bg-background md:flex-row md:overflow-hidden"
+      className="flex flex-col bg-white/40 md:flex-row md:overflow-hidden"
       style={{ minHeight: user ? "calc(100dvh - 64px)" : "100dvh", height: user ? "calc(100dvh - 64px)" : undefined }}
     >
       {/* sidebar */}

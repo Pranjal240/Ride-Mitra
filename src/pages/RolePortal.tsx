@@ -65,7 +65,7 @@ export default function RolePortal() {
   }, []);
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh">
       <header className="border-b border-border">
         <Container size="7xl" className="flex items-center justify-between py-4">
           <Link to="/" className="flex items-center gap-2.5">

@@ -208,8 +208,8 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Right — login card */}
-      <div className="flex items-center justify-center bg-background p-6 sm:p-10">
+      {/* Right — login card (translucent so the app-wide grid shows around it) */}
+      <div className="flex items-center justify-center bg-white/40 p-6 sm:p-10">
         <div className="w-full max-w-md">
           {/* mobile-only header */}
           <div className="mb-8 flex items-center justify-between lg:hidden">
