@@ -11,7 +11,7 @@
  */
 
 import { motion, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Button, type ButtonProps } from "./primitives";
@@ -117,10 +117,12 @@ export function MouseParallax({
 export function CursorGlow({
   className,
   color = "var(--rm-accent)",
+  splitColorRight,
   size = 460,
 }: {
   className?: string;
   color?: string;
+  splitColorRight?: string;
   size?: number;
 }) {
   const x = useMotionValue(-1000);
@@ -130,6 +132,7 @@ export function CursorGlow({
   const opacity = useMotionValue(0);
   const sOpacity = useSpring(opacity, { stiffness: 200, damping: 30 });
   const reduce = useReducedMotion();
+  const [activeColor, setActiveColor] = useState(color);
 
   if (reduce) return null;
 
@@ -138,15 +141,20 @@ export function CursorGlow({
       aria-hidden
       onMouseMove={(e) => {
         const r = e.currentTarget.getBoundingClientRect();
-        x.set(e.clientX - r.left);
+        const mouseX = e.clientX - r.left;
+        x.set(mouseX);
         y.set(e.clientY - r.top);
         opacity.set(1);
+        if (splitColorRight) {
+          const newColor = mouseX > r.width / 2 ? splitColorRight : color;
+          if (newColor !== activeColor) setActiveColor(newColor);
+        }
       }}
       onMouseLeave={() => opacity.set(0)}
       className={cn("pointer-events-auto absolute inset-0 z-0", className)}
     >
       <motion.div
-        className="absolute rounded-full blur-3xl"
+        className="absolute rounded-full blur-3xl transition-colors duration-500"
         style={{
           x: sx,
           y: sy,
@@ -155,7 +163,7 @@ export function CursorGlow({
           height: size,
           marginLeft: -size / 2,
           marginTop: -size / 2,
-          background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
+          background: `radial-gradient(circle, ${activeColor} 0%, transparent 70%)`,
         }}
       />
     </motion.div>

@@ -157,18 +157,20 @@ export default function Login() {
         <div className="pointer-events-none absolute -right-20 -top-20 size-80 rounded-full bg-white/5 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-16 left-10 size-64 rounded-full bg-accent/10 blur-3xl" />
         <div className="relative">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1.5 text-sm text-white/60 transition-colors hover:text-white"
-          >
-            <ArrowLeft className="size-4" /> Back to home
-          </Link>
+          <div className="flex flex-col items-start">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 text-sm text-white/60 transition-colors hover:text-white"
+            >
+              <ArrowLeft className="size-4" /> Back to home
+            </Link>
 
-          <div className="mt-9 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5">
-            <span className={cn("size-1.5 rounded-full", meta.dot)} />
-            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-white/80">
-              JC Bose UST · {meta.label} Portal
-            </span>
+            <div className="mt-9 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5">
+              <span className={cn("size-1.5 rounded-full", meta.dot)} />
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-white/80">
+                JC Bose UST · {meta.label} Portal
+              </span>
+            </div>
           </div>
 
           <AnimatePresence mode="wait">

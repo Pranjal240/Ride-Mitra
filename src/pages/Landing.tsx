@@ -268,7 +268,7 @@ function TrustExpand() {
               )}
             >
               <span
-                className="font-display text-lg font-bold leading-none tracking-tight opacity-90"
+                className="font-display text-2xl font-bold leading-none tracking-tight opacity-90"
                 style={{ writingMode: "vertical-lr", transform: "rotate(180deg)" }}
               >
                 {c.title}
@@ -349,7 +349,7 @@ export default function Landing() {
         <main className="relative z-0 overflow-x-hidden text-foreground">
         {/* ── HERO ── */}
         <section className="relative overflow-hidden pt-24 sm:pt-28">
-          <CursorGlow size={420} />
+          <CursorGlow size={420} color="var(--rm-accent)" splitColorRight="#2C4A7C" />
 
           {/* flanking posters (lg+) */}
           <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 right-0 hidden lg:block">
@@ -728,7 +728,7 @@ export default function Landing() {
         </section>
 
         {/* ── CLOSING CTA ── */}
-        <section className="pb-28 pt-4">
+        <section className="pb-12 pt-4">
           <Container size="6xl">
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-light px-6 py-20 text-center text-white sm:py-24">
               <RevealGroup className="relative z-10">
@@ -775,7 +775,7 @@ export default function Landing() {
               <Link to="/terms" className="transition-colors hover:text-accent">
                 Terms
               </Link>
-              <a href="mailto:hello@ridemitra.app" className="transition-colors hover:text-accent">
+              <a href="mailto:Pranjalmishra2409@gmail.com" className="transition-colors hover:text-accent">
                 Contact
               </a>
             </nav>

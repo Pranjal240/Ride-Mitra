@@ -123,7 +123,7 @@ export const Panel = forwardRef<HTMLDivElement, PanelProps>(function Panel(
       ref={ref}
       className={cn(
         "rounded-2xl border border-border bg-card text-card-foreground shadow-sm backdrop-blur-md",
-        hover && "transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
+        hover && "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1.5 hover:scale-[1.02] hover:shadow-2xl hover:border-accent/40 active:scale-[0.98]",
         pad,
         className,
       )}

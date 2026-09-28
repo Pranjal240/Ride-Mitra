@@ -22,12 +22,12 @@ import { cn } from "@/lib/utils";
 export type SocialItem = { icon: React.ReactNode; label: string; href: string };
 
 const DEFAULT: SocialItem[] = [
-  { icon: <FaInstagram />, label: "Instagram", href: "https://instagram.com" },
-  { icon: <FaXTwitter />, label: "X (Twitter)", href: "https://x.com" },
-  { icon: <FaLinkedinIn />, label: "LinkedIn", href: "https://linkedin.com" },
+  { icon: <FaInstagram />, label: "Instagram", href: "https://www.instagram.com/pranjal.__.mishra/" },
+  { icon: <FaXTwitter />, label: "X (Twitter)", href: "https://x.com/Pranjal_240" },
+  { icon: <FaLinkedinIn />, label: "LinkedIn", href: "https://www.linkedin.com/in/pranjal-mishra-3a7256291/" },
   { icon: <FaWhatsapp />, label: "WhatsApp", href: "https://wa.me/" },
-  { icon: <FaEnvelope />, label: "Email", href: "mailto:hello@ridemitra.app" },
-  { icon: <FaGithub />, label: "GitHub", href: "https://github.com/Pranjal240/Ride-Mitra" },
+  { icon: <FaEnvelope />, label: "Email", href: "mailto:Pranjalmishra2409@gmail.com" },
+  { icon: <FaGithub />, label: "GitHub", href: "https://github.com/Pranjal240" },
 ];
 
 export function SocialFlipButton({ items = DEFAULT, className }: { items?: SocialItem[]; className?: string }) {
