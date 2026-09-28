@@ -246,6 +246,19 @@ export default function Verification() {
         vehicle_photo: uploads[1] || verification?.vehicle_photo || undefined,
         id_card_photo: uploads[2] || verification?.id_card_photo || undefined,
       });
+
+      // Fire and forget AI verification if new license was uploaded
+      if (licenseFile) {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const base64 = (reader.result as string).split(",")[1];
+          await supabase.functions.invoke("verify-document", {
+            body: { doc_type: "driving_licence", doc_image_base64: base64, mime: licenseFile.type }
+          });
+        };
+        reader.readAsDataURL(licenseFile);
+      }
+
       setVerification(v);
       setStep(3);
     } catch (e) {

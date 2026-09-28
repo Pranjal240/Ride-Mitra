@@ -128,11 +128,11 @@ export function WaveGridBackground({
   colorBase = "#E7DFD0",
   colorHigh = "#C8956C",
   sceneBg = "#F5F2EC",
-  waveAmplitude = 0.5,
-  waveSpeed = 6.0,
+  waveAmplitude = 0.2,
+  waveSpeed = 2.5,
   waveFrequency = 1.2,
   waveWidth = 3.0,
-  waveMaxHeight = 0.5,
+  waveMaxHeight = 0.2,
   waveJitter = 0.2,
   autoAnimate = true,
   vignette = true,
@@ -292,7 +292,7 @@ export function WaveGridBackground({
       }
       if (placingRandom && propsRef.current.autoAnimate) {
         randomPointTimer += delta;
-        if (randomPointTimer >= 1.5) {
+        if (randomPointTimer >= 4.0) {
           addRandomPoint();
           randomPointTimer = 0;
         }

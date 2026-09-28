@@ -48,6 +48,7 @@ import {
 import { Sparkbars, toneTile } from "@/components/ui/dashboard";
 import { Reveal } from "@/components/ui/scroll-reveal";
 import { cn } from "@/lib/utils";
+import FolderPreview, { FolderVariant } from "@/components/ui/folder-preview";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
@@ -205,10 +206,10 @@ export default function ServiceDashboard() {
   };
 
   const quickActions = [
-    { icon: <Plus className="size-5" />, label: "Create ride", path: "/rides/create", tone: "success" as BadgeTone },
-    { icon: <Car className="size-5" />, label: "My rides", path: "/service", tone: "info" as BadgeTone },
-    { icon: <ShieldCheck className="size-5" />, label: "Verification", path: "/verification", tone: "warning" as BadgeTone },
-    { icon: <Home className="size-5" />, label: "Home", path: "/", tone: "accent" as BadgeTone },
+    { icon: <Plus className="size-5" />, label: "Create ride", path: "/rides/create", tone: "success" as BadgeTone, variant: "nandi" as FolderVariant },
+    { icon: <Car className="size-5" />, label: "My rides", path: "/service", tone: "info" as BadgeTone, variant: "devi" as FolderVariant },
+    { icon: <ShieldCheck className="size-5" />, label: "Verification", path: "/verification", tone: "warning" as BadgeTone, variant: "rudras" as FolderVariant },
+    { icon: <Home className="size-5" />, label: "Home", path: "/", tone: "accent" as BadgeTone, variant: "ardra" as FolderVariant },
   ];
 
   const statCards: { label: string; value: string; tone: BadgeTone; icon: React.ReactNode }[] = [
@@ -292,16 +293,22 @@ export default function ServiceDashboard() {
         )}
 
         {/* quick actions */}
-        <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="mt-8 mb-8 grid gap-6 grid-cols-2 lg:grid-cols-4 place-items-center">
           {quickActions.map((a) => (
-            <Link key={a.label} to={a.path}>
-              <Panel hover className="flex h-full flex-col items-center gap-3 text-center">
-                <span className={toneTile(a.tone, "size-12 [&>svg]:size-5")} aria-hidden>
-                  {a.icon}
-                </span>
-                <p className="font-display text-sm font-bold text-foreground">{a.label}</p>
-              </Panel>
-            </Link>
+            <div key={a.label} className="w-full flex justify-center">
+              <FolderPreview
+                variant={a.variant}
+                size="lg"
+                label={
+                  <div className="flex flex-col items-center gap-1 mt-2">
+                    <span className="font-display font-bold text-foreground text-sm flex items-center gap-2">
+                      {a.icon} {a.label}
+                    </span>
+                  </div>
+                }
+                onClick={() => navigate(a.path)}
+              />
+            </div>
           ))}
         </div>
 

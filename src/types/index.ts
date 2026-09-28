@@ -117,6 +117,7 @@ export interface Message {
   ride_id: string;
   sender_id: string;
   message: string;
+  attachment_url?: string;
   created_at: string;
   sender?: User;
 }

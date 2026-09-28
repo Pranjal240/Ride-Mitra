@@ -1,8 +1,9 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, ChangeEvent } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, MessageCircle, Send } from "lucide-react";
+import { ArrowLeft, MessageCircle, Send, Paperclip, X } from "lucide-react";
 import { format } from "date-fns";
+import { supabase } from "@/lib/supabase";
 
 import { useAuthStore } from "@/hooks/useStore";
 import { useRealtimeMessages } from "@/hooks/useRealtime";
@@ -18,8 +19,11 @@ export default function Chat() {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const newMsg = useRealtimeMessages(rideId || "");
 
@@ -44,14 +48,29 @@ export default function Chat() {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!user || !rideId || !text.trim()) return;
+    if (!user || !rideId) return;
+    if (!text.trim() && !file) return;
     setSending(true);
     try {
-      const msg = await sendMessage({ ride_id: rideId, sender_id: user.id, message: text.trim() });
+      let attachmentUrl;
+      if (file) {
+        setUploading(true);
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `chat/${rideId}/${Date.now()}.${ext}`;
+        const { error } = await supabase.storage.from("attachments").upload(path, file);
+        if (!error) {
+          const { data } = supabase.storage.from("attachments").getPublicUrl(path);
+          attachmentUrl = data.publicUrl;
+        }
+        setUploading(false);
+      }
+      const msg = await sendMessage({ ride_id: rideId, sender_id: user.id, message: text.trim(), attachment_url: attachmentUrl });
       setMessages((prev) => [...prev, msg]);
       setText("");
+      setFile(null);
     } catch (e) {
       console.error(e);
+      setUploading(false);
     } finally {
       setSending(false);
     }
@@ -105,7 +124,10 @@ export default function Chat() {
                       : "rounded-[16px_16px_16px_4px] border border-border bg-card text-foreground",
                   )}
                 >
-                  <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+                  {msg.attachment_url && (
+                    <img src={msg.attachment_url} alt="attachment" className="mb-2 max-h-48 rounded-lg object-cover" />
+                  )}
+                  {msg.message && <p className="whitespace-pre-wrap break-words">{msg.message}</p>}
                   <p className={cn("mt-1 text-right text-[10px]", isMe ? "text-white/70" : "text-muted-foreground")}>
                     {format(new Date(msg.created_at), "h:mm a")}
                   </p>
@@ -117,7 +139,40 @@ export default function Chat() {
         </div>
 
         {/* composer */}
+        {file && (
+          <div className="flex items-center gap-2 border-t border-border bg-muted/50 p-3">
+            <div className="relative overflow-hidden rounded-lg border border-border bg-background">
+              <img src={URL.createObjectURL(file)} alt="upload preview" className="h-16 w-16 object-cover" />
+              <button
+                type="button"
+                onClick={() => setFile(null)}
+                className="absolute right-1 top-1 grid size-5 place-items-center rounded-full bg-black/50 text-white hover:bg-black/70"
+              >
+                <X className="size-3" />
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground">Image attached</p>
+          </div>
+        )}
         <div className="flex items-center gap-2 border-t border-border bg-background/95 p-3 backdrop-blur">
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            className="hidden"
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              const f = e.target.files?.[0];
+              if (f) setFile(f);
+              e.target.value = "";
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="grid size-10 shrink-0 place-items-center rounded-xl bg-muted text-muted-foreground transition-colors hover:bg-accent-soft hover:text-accent-strong"
+          >
+            <Paperclip className="size-4" />
+          </button>
           <SmoothInput
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -131,8 +186,8 @@ export default function Chat() {
             wrapperClassName="flex-1"
             aria-label="Chat message"
           />
-          <Button size="md" onClick={handleSend} disabled={!text.trim() || sending} loading={sending} aria-label="Send" className="!px-3.5">
-            {!sending && <Send className="size-4" />}
+          <Button size="md" onClick={handleSend} disabled={(!text.trim() && !file) || sending || uploading} loading={sending || uploading} aria-label="Send" className="!px-3.5">
+            {!(sending || uploading) && <Send className="size-4" />}
           </Button>
         </div>
       </div>

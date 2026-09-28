@@ -285,7 +285,7 @@ function TrustExpand() {
               )}
             >
               <span
-                className="font-display text-2xl font-bold leading-none tracking-tight opacity-90"
+                className="font-display text-3xl font-bold leading-none tracking-tight opacity-90"
                 style={{ writingMode: "vertical-lr", transform: "rotate(180deg)" }}
               >
                 {c.title}

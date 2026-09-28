@@ -303,6 +303,7 @@ export async function sendMessage(msg: {
   ride_id: string;
   sender_id: string;
   message: string;
+  attachment_url?: string;
 }): Promise<Message> {
   const { data, error } = await supabase
     .from('messages')
@@ -503,18 +504,18 @@ export async function getSupportThreads() {
   if (error) return [];
   return data || [];
 }
-export async function replySupport(userId: string, adminId: string, message: string) {
+export async function replySupport(userId: string, adminId: string, message: string, attachment_url?: string) {
   const { error } = await supabase.from('support_messages').insert({
-    user_id: userId, admin_id: adminId, message, sender_type: 'admin', is_read: false,
+    user_id: userId, admin_id: adminId, message, sender_type: 'admin', is_read: false, attachment_url
   });
   if (error) throw error;
 }
 export async function markSupportRead(userId: string) {
   await supabase.from('support_messages').update({ is_read: true }).eq('user_id', userId).eq('is_read', false);
 }
-export async function sendSupportMessage(userId: string, message: string) {
+export async function sendSupportMessage(userId: string, message: string, attachment_url?: string) {
   const { error } = await supabase.from('support_messages').insert({
-    user_id: userId, message, sender_type: 'user', is_read: false,
+    user_id: userId, message, sender_type: 'user', is_read: false, attachment_url
   });
   if (error) throw error;
 }

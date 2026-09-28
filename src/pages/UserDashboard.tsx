@@ -49,6 +49,8 @@ import {
 } from "@/components/ui/primitives";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/scroll-reveal";
 import { cn } from "@/lib/utils";
+import FolderPreview, { FolderVariant } from "@/components/ui/folder-preview";
+import { StaggeredGrid } from "@/components/ui/staggered-grid";
 
 const TILE: Record<BadgeTone, string> = {
   neutral: "bg-muted text-foreground",
@@ -261,10 +263,10 @@ export default function UserDashboard() {
   ];
 
   const quickActions = [
-    { label: "Find a ride", desc: "Search your corridor", to: "/rides/search", tone: "info" as BadgeTone, icon: <Search className="size-5" /> },
-    { label: "Offer a ride", desc: "Share your trip", to: "/rides/create", tone: "success" as BadgeTone, icon: <Plus className="size-5" /> },
-    { label: "My bookings", desc: `${bookings.length} active`, to: "/bookings", tone: "warning" as BadgeTone, icon: <Calendar className="size-5" /> },
-    { label: "Messages", desc: "Chat with drivers", to: "/bookings", tone: "accent" as BadgeTone, icon: <MessageCircle className="size-5" /> },
+    { label: "Find a ride", desc: "Search your corridor", to: "/rides/search", tone: "info" as BadgeTone, icon: <Search className="size-5" />, variant: "hari" as FolderVariant },
+    { label: "Offer a ride", desc: "Share your trip", to: "/rides/create", tone: "success" as BadgeTone, icon: <Plus className="size-5" />, variant: "kubera" as FolderVariant },
+    { label: "My bookings", desc: `${bookings.length} active`, to: "/bookings", tone: "warning" as BadgeTone, icon: <Calendar className="size-5" />, variant: "ravi" as FolderVariant },
+    { label: "Messages", desc: "Chat with drivers", to: "/bookings", tone: "accent" as BadgeTone, icon: <MessageCircle className="size-5" />, variant: "shakti" as FolderVariant },
   ];
 
   const savingsSeries =
@@ -360,25 +362,23 @@ export default function UserDashboard() {
           ))}
         </RevealGroup>
 
-        {/* quick actions */}
-        <RevealGroup className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* quick actions using FolderPreview */}
+        <RevealGroup className="mt-8 mb-8 grid gap-6 grid-cols-2 lg:grid-cols-4 place-items-center">
           {quickActions.map((a) => (
-            <RevealItem key={a.label}>
-              <Panel
-                hover
-                as="button"
-                className="flex w-full cursor-pointer items-center gap-4 text-left"
+            <RevealItem key={a.label} className="w-full flex justify-center">
+              <FolderPreview
+                variant={a.variant}
+                size="lg"
+                label={
+                  <div className="flex flex-col items-center gap-1 mt-2">
+                    <span className="font-display font-bold text-foreground text-sm flex items-center gap-2">
+                      {a.icon} {a.label}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{a.desc}</span>
+                  </div>
+                }
                 onClick={() => navigate(a.to)}
-              >
-                <span className={cn("grid size-12 place-items-center rounded-2xl", TILE[a.tone])} aria-hidden>
-                  {a.icon}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-display font-bold text-foreground">{a.label}</h3>
-                  <p className="truncate text-sm text-muted-foreground">{a.desc}</p>
-                </div>
-                <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
-              </Panel>
+              />
             </RevealItem>
           ))}
         </RevealGroup>
@@ -607,27 +607,28 @@ export default function UserDashboard() {
           </Panel>
         </Reveal>
 
-        {/* platform features */}
-        <div className="mt-8">
-          <h2 className="mb-4 font-display text-2xl font-bold text-foreground">Why it's safe</h2>
-          <RevealGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { icon: <ShieldCheck className="size-5" />, title: "Verified only", desc: "Campus email + document check for every user.", tone: "success" as BadgeTone },
-              { icon: <Navigation className="size-5" />, title: "Live tracking", desc: "Real-time GPS on every ride, shared with contacts.", tone: "info" as BadgeTone },
-              { icon: <Globe className="size-5" />, title: "Campus routes", desc: "Tuned for the JC Bose gate → city corridors.", tone: "warning" as BadgeTone },
-              { icon: <Zap className="size-5" />, title: "Corridor match", desc: "Only rides travelling your direction show up.", tone: "accent" as BadgeTone },
-            ].map((f) => (
-              <RevealItem key={f.title}>
-                <Panel hover className="h-full">
-                  <span className={cn("grid size-11 place-items-center rounded-2xl", TILE[f.tone])} aria-hidden>
-                    {f.icon}
-                  </span>
-                  <h4 className="mt-3 font-display font-bold text-foreground">{f.title}</h4>
-                  <p className="mt-1 text-sm text-muted-foreground">{f.desc}</p>
-                </Panel>
-              </RevealItem>
-            ))}
-          </RevealGroup>
+        {/* platform features with StaggeredGrid */}
+        <div className="mt-12 w-full max-w-full overflow-hidden rounded-3xl bg-background border border-border">
+          <StaggeredGrid 
+            centerText="Safe"
+            images={[
+              "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=400&fit=crop",
+              "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=400&fit=crop",
+              "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=400&fit=crop",
+              "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=400&fit=crop",
+              "https://images.unsplash.com/photo-1506869640319-fea1a275303c?w=400&h=400&fit=crop"
+            ]}
+            bentoItems={[
+              { id: 1, title: "Verified only", subtitle: "Trust", description: "Campus email + document check for every user.", icon: <ShieldCheck className="size-5" /> },
+              { id: 2, title: "Live tracking", subtitle: "Safety", description: "Real-time GPS on every ride, shared with contacts.", icon: <Navigation className="size-5" /> },
+              { id: 3, title: "Campus routes", subtitle: "Focus", description: "Tuned for the JC Bose gate → city corridors.", icon: <Globe className="size-5" /> },
+              { id: 4, title: "Corridor match", subtitle: "Efficiency", description: "Only rides travelling your direction show up.", icon: <Zap className="size-5" /> }
+            ]}
+            credits={{
+              madeBy: { text: "Ride Mitra", href: "#" },
+              moreDemos: { text: "Learn More", href: "#" }
+            }}
+          />
         </div>
       </Container>
 
