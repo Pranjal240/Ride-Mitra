@@ -87,42 +87,40 @@ function TiltCard({ children, className }: { children: ReactNode; className?: st
       collapse/open morphism — the active card grows, the rest shrink). Fills
       the page edge-to-edge. Used for both the ride types and the corridors. ── */
 function HoverExpandRides({ slides, tall }: { slides: RideSlide[]; tall?: boolean }) {
-  const reduce = useReducedMotion();
   const [active, setActive] = useState(0);
   return (
     <div
-      className="mx-auto flex w-full max-w-none gap-2.5 px-4 sm:px-6 lg:gap-3.5 lg:px-10"
+      className={cn(
+        "mx-auto flex w-full max-w-none flex-col gap-2.5 px-4 sm:px-6 lg:flex-row lg:gap-3.5 lg:px-10",
+        tall ? "h-[36rem] sm:h-[40rem] lg:h-[24rem] xl:h-[30rem]" : "h-[32rem] sm:h-[36rem] lg:h-[22rem] xl:h-[27rem]"
+      )}
       onMouseLeave={() => setActive(-1)}
     >
-      {slides.map((s, i) => (
-        <motion.div
-          key={i}
-          role="button"
-          tabIndex={0}
-          onMouseEnter={() => setActive(i)}
-          onFocus={() => setActive(i)}
-          onClick={() => setActive(i)}
-          animate={reduce ? undefined : { flexGrow: active === i ? 3.2 : 1 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className={cn(
-            "min-w-0 flex-1 basis-0 cursor-pointer outline-none",
-            tall ? "h-[24rem] sm:h-[30rem]" : "h-[22rem] sm:h-[27rem]",
-          )}
-          style={{ flexGrow: active === i ? 3.2 : 1 }}
-        >
-          <RidePoster
-            tone={s.tone}
-            kind={s.kind}
-            eyebrow={s.eyebrow}
-            title={s.title}
-            caption={active === i ? s.caption : undefined}
+      {slides.map((s, i) => {
+        const isActive = active === i;
+        return (
+          <div
+            key={i}
+            role="button"
+            tabIndex={0}
+            onMouseEnter={() => setActive(i)}
+            onFocus={() => setActive(i)}
+            onClick={() => setActive(i)}
             className={cn(
-              "transition-shadow duration-500",
-              active === i ? "shadow-2xl ring-1 ring-black/5" : "shadow-md",
+              "group relative min-w-0 min-h-0 cursor-pointer overflow-hidden rounded-[1.75rem] outline-none transition-[flex-grow,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+              isActive ? "flex-[3.2] shadow-2xl ring-1 ring-black/5" : "flex-1 shadow-md",
             )}
-          />
-        </motion.div>
-      ))}
+          >
+            <RidePoster
+              tone={s.tone}
+              kind={s.kind}
+              eyebrow={s.eyebrow}
+              title={s.title}
+              caption={isActive ? s.caption : undefined}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -233,31 +231,22 @@ function TrustExpand() {
   const [active, setActive] = useState(0);
   return (
     <div
-      className="mx-auto flex w-full max-w-none flex-col gap-3 px-4 sm:px-6 lg:h-[28rem] lg:flex-row lg:gap-3.5 lg:px-10"
+      className="mx-auto flex w-full max-w-none flex-col gap-3 px-4 sm:px-6 h-[46rem] sm:h-[42rem] lg:h-[28rem] lg:flex-row lg:gap-3.5 lg:px-10"
       onMouseLeave={() => setActive(0)}
     >
       {TRUST_CARDS.map((c, i) => {
         const isActive = active === i;
         return (
-          <motion.div
+          <div
             key={c.title}
             role="button"
             tabIndex={0}
             onMouseEnter={() => setActive(i)}
             onFocus={() => setActive(i)}
             onClick={() => setActive(i)}
-            layout
-            animate={
-              reduce
-                ? undefined
-                : {
-                    flexGrow: isActive ? 3 : 1,
-                  }
-            }
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className={cn(
-              "group relative min-w-0 flex-1 basis-0 cursor-pointer overflow-hidden rounded-[1.75rem] p-6 outline-none transition-[box-shadow,height,flex-grow] duration-500 lg:min-h-0 lg:p-7",
-              isActive ? "shadow-2xl h-auto" : "shadow-md h-[4.5rem] lg:h-auto",
+              "group relative min-w-0 min-h-0 cursor-pointer overflow-hidden rounded-[1.75rem] p-5 outline-none transition-[flex-grow,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] lg:p-7",
+              isActive ? "flex-[4] shadow-2xl" : "flex-1 shadow-md",
               TRUST_BG[c.tone],
             )}
           >
@@ -272,7 +261,7 @@ function TrustExpand() {
               </motion.span>
               
               {/* Mobile title (always visible, next to icon) */}
-              <span className={cn("font-display text-lg font-bold leading-none tracking-tight lg:hidden", isActive && "opacity-0")}>
+              <span className={cn("font-display text-lg font-bold leading-none tracking-tight lg:hidden transition-opacity duration-300", isActive && "opacity-0")}>
                 {c.title}
               </span>
             </div>
@@ -295,28 +284,28 @@ function TrustExpand() {
             {/* expanded: full copy + stats — shown when active */}
             <div
               className={cn(
-                "transition-all duration-300",
-                isActive ? "opacity-100 translate-y-0 max-lg:mt-4" : "opacity-0 translate-y-4 max-lg:hidden lg:hidden",
+                "transition-all duration-300 overflow-hidden",
+                isActive ? "opacity-100 translate-y-0 max-lg:mt-3" : "opacity-0 translate-y-4 max-lg:hidden lg:hidden",
               )}
             >
               <h3 className="hidden font-display text-2xl font-bold leading-tight lg:block lg:mt-5">{c.title}</h3>
               <h3 className="font-display text-2xl font-bold leading-tight lg:hidden">{c.title}</h3>
               <p className="mt-2 max-w-md text-sm leading-relaxed opacity-85 lg:mt-3">{c.body}</p>
               {c.stats && (
-                <div className="mt-5 grid max-w-md grid-cols-2 gap-4 lg:mt-7 lg:gap-5">
+                <div className="mt-4 grid max-w-md grid-cols-2 gap-3 lg:mt-7 lg:gap-5">
                   {c.stats.map((s) => (
                     <div key={s.label}>
                       <div className="font-mono text-xl font-semibold text-accent sm:text-2xl lg:text-3xl">
                         <AnimatedNumber value={s.num} prefix={s.prefix} suffix={s.suffix} />
                       </div>
-                      <div className="mt-1 text-xs font-semibold lg:text-sm">{s.label}</div>
+                      <div className="mt-0.5 text-xs font-semibold lg:text-sm">{s.label}</div>
                       <div className="text-[10px] opacity-60 lg:text-xs">{s.note}</div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-          </motion.div>
+          </div>
         );
       })}
     </div>
@@ -339,23 +328,14 @@ function MobileHeroCarousel() {
       initial={reduce ? undefined : { opacity: 0, y: 20 }}
       animate={reduce ? undefined : { opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.9 }}
-      className="relative mx-auto mt-14 flex w-full max-w-[220px] justify-center lg:hidden"
+      className="relative mx-auto mt-14 grid w-full max-w-md grid-cols-2 gap-3 lg:hidden px-4"
     >
-      <Swiper
-        effect="cards"
-        grabCursor={true}
-        loop={true}
-        autoplay={{ delay: 2500, disableOnInteraction: false }}
-        modules={[EffectCards, Autoplay]}
-        className="h-[310px] w-full"
-      >
-        <SwiperSlide className="rounded-[1.75rem]">
-          <RidePoster tone="clay" kind="scooter" eyebrow="2 wheels" title="Scooter pool" />
-        </SwiperSlide>
-        <SwiperSlide className="rounded-[1.75rem]">
-          <RidePoster tone="navy" kind="car" eyebrow="4 seats" title="Car pool" />
-        </SwiperSlide>
-      </Swiper>
+      <div className="h-[220px]">
+        <RidePoster tone="clay" kind="scooter" eyebrow="2 wheels" title="Scooter pool" />
+      </div>
+      <div className="h-[220px]">
+        <RidePoster tone="navy" kind="car" eyebrow="4 seats" title="Car pool" />
+      </div>
     </motion.div>
   );
 }
@@ -766,7 +746,7 @@ export default function Landing() {
         </section>
 
         {/* ── CLOSING CTA ── */}
-        <section className="pb-12 pt-4">
+        <section className="pb-4 pt-4">
           <Container size="6xl">
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-light px-6 py-20 text-center text-white sm:py-24">
               <RevealGroup className="relative z-10">

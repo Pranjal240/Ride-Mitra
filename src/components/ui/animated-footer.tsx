@@ -51,12 +51,12 @@ export function AnimatedFooter({
       />
 
       {/* content row */}
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-wrap items-start justify-between gap-8 px-6 pt-16">
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-wrap items-start justify-between gap-8 px-6 pt-10">
         {children}
       </div>
 
       {/* giant reveal wordmark */}
-      <div className="relative z-10 flex w-full items-end justify-center overflow-hidden px-4 pb-8 pt-6">
+      <div className="relative z-10 flex w-full items-end justify-center overflow-hidden px-4 pb-4 pt-2">
         <h2
           aria-label={word}
           className="flex select-none font-display font-extrabold leading-[0.82] tracking-tight text-white/95"
@@ -69,7 +69,7 @@ export function AnimatedFooter({
                 className="inline-block"
                 initial={reduce ? undefined : { y: "110%" }}
                 whileInView={reduce ? undefined : { y: 0 }}
-                viewport={{ once: true, margin: "-10% 0px" }}
+                viewport={{ once: true }}
                 transition={{ duration: 0.8, delay: i * 0.045, ease: [0.22, 1, 0.36, 1] }}
               >
                 {ch === " " ? " " : ch}
