@@ -35,6 +35,7 @@ import { PopButton } from "@/components/ui/pop-button";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { MorphText } from "@/components/ui/morph-text";
 import { AnimatedFooter } from "@/components/ui/animated-footer";
+import { SocialFlipButton } from "@/components/ui/social-flip-button";
 import {
   Badge,
   Button,
@@ -751,17 +752,20 @@ export default function Landing() {
             </span>
             <span className="ml-3 text-sm text-white/55">© {year} · Made for JC Bose UST</span>
           </div>
-          <nav className="flex gap-6 text-sm text-white/70">
-            <Link to="/privacy" className="transition-colors hover:text-accent">
-              Privacy
-            </Link>
-            <Link to="/terms" className="transition-colors hover:text-accent">
-              Terms
-            </Link>
-            <a href="mailto:hello@ridemitra.app" className="transition-colors hover:text-accent">
-              Contact
-            </a>
-          </nav>
+          <div className="flex flex-col items-start gap-4 sm:items-end">
+            <SocialFlipButton />
+            <nav className="flex gap-6 text-sm text-white/70">
+              <Link to="/privacy" className="transition-colors hover:text-accent">
+                Privacy
+              </Link>
+              <Link to="/terms" className="transition-colors hover:text-accent">
+                Terms
+              </Link>
+              <a href="mailto:hello@ridemitra.app" className="transition-colors hover:text-accent">
+                Contact
+              </a>
+            </nav>
+          </div>
         </AnimatedFooter>
         </main>
       </SmoothScroll>
