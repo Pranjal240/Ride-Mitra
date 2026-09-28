@@ -45,14 +45,17 @@ export type ButtonVariant =
 export type ButtonSize = "sm" | "md" | "lg";
 
 const VARIANTS: Record<ButtonVariant, string> = {
+  // primary/accent carry the tactile 3D "pop" press (stacked shadow) so every
+  // primary CTA across the app matches the PopButton language.
   primary:
-    "bg-primary text-primary-foreground hover:bg-navy-light shadow-sm hover:shadow-md",
+    "bg-primary text-primary-foreground hover:bg-navy-light shadow-[0_4px_0_0_#0F1A33] hover:-translate-y-0.5 hover:shadow-[0_6px_0_0_#0F1A33] active:translate-y-1 active:shadow-none",
   accent:
-    "bg-accent text-accent-foreground hover:bg-accent-strong shadow-sm hover:shadow-md",
+    "bg-accent text-accent-foreground hover:bg-accent-strong shadow-[0_4px_0_0_#8A5A2B] hover:-translate-y-0.5 hover:shadow-[0_6px_0_0_#8A5A2B] active:translate-y-1 active:shadow-none",
   secondary:
-    "bg-transparent text-foreground border border-border hover:border-accent hover:text-accent",
-  ghost: "bg-transparent text-foreground hover:bg-muted",
-  danger: "bg-danger text-white hover:brightness-95 shadow-sm",
+    "bg-transparent text-foreground border border-border hover:border-accent hover:text-accent active:scale-[0.97]",
+  ghost: "bg-transparent text-foreground hover:bg-muted active:scale-[0.97]",
+  danger:
+    "bg-danger text-white hover:brightness-95 shadow-[0_4px_0_0_#8f2f2a] hover:-translate-y-0.5 active:translate-y-1 active:shadow-none",
 };
 
 const SIZES: Record<ButtonSize, string> = {
@@ -69,7 +72,7 @@ export function buttonVariants({
     "inline-flex items-center justify-center rounded-full font-sans font-semibold",
     "transition-all duration-200 outline-none whitespace-nowrap select-none",
     "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-    "active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50",
+    "disabled:pointer-events-none disabled:opacity-50",
     VARIANTS[variant],
     SIZES[size],
   );
@@ -247,7 +250,7 @@ export function PageShell({
       initial={reduce ? undefined : { opacity: 0 }}
       animate={reduce ? undefined : { opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className={cn("min-h-dvh bg-white/45 pb-24 pt-20 md:pb-16", className)}
+      className={cn("min-h-dvh bg-white/22 pb-24 pt-20 md:pb-16", className)}
     >
       {children}
     </motion.main>

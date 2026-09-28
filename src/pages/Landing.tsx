@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { motion, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
+import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
 import {
   ArrowRight,
   Car,
@@ -181,15 +181,6 @@ const RIDE_SLIDES: RideSlide[] = [
   { tone: "gold", kind: "suv", eyebrow: "Staff", title: "Faculty pool", caption: "Same department, same hours — ride in together." },
 ];
 
-const CORRIDOR_SLIDES: RideSlide[] = [
-  { tone: "navy", kind: "car", eyebrow: "8:00 AM", title: "Sector 15 → Campus", caption: "Four riders already share this morning run." },
-  { tone: "clay", kind: "scooter", eyebrow: "9:15 AM", title: "NIT Faridabad → Gate 2", caption: "Beat the Mathura Road jam on two wheels." },
-  { tone: "sage", kind: "bike", eyebrow: "8:30 AM", title: "Ballabgarh → Campus", caption: "A quick, fuel-split lift to the gate." },
-  { tone: "sky", kind: "suv", eyebrow: "7:45 AM", title: "Old Faridabad → Campus", caption: "The early society run fills up fast." },
-  { tone: "plum", kind: "car", eyebrow: "10:00 AM", title: "Sector 21C → Library", caption: "Late start? There's still a pool for you." },
-  { tone: "gold", kind: "suv", eyebrow: "8:10 AM", title: "Neelam Chowk → Campus", caption: "Faculty and staff ride in together." },
-];
-
 const MARQUEE = [
   "VERIFIED @jcboseust.ac.in",
   "SPLIT THE FUEL",
@@ -207,20 +198,99 @@ const STATS = [
   { num: 1, prefix: "", suffix: "", label: "Campus, closed", note: "@jcboseust.ac.in" },
 ];
 
-/* Trust pillars — varied tones, animated (rebuilt) */
-const TRUST = [
-  { tone: "sky" as const, icon: <Navigation className="size-6" />, title: "Live GPS on every ride", body: "Watch the trip move in real time and auto-share your ETA with trusted contacts." },
-  { tone: "clay" as const, icon: <Zap className="size-6" />, title: "One-tap SOS", body: "An emergency alert with your live location — always one tap away." },
-  { tone: "sage" as const, icon: <MessageCircle className="size-6" />, title: "Chat & video support", body: "Coordinate pickup and reach live support without sharing your number." },
-  { tone: "plum" as const, icon: <Clock className="size-6" />, title: "Fair, capped fares", body: "Distance-based price bands with room to bargain. No surge, no commission." },
+/* Trust pillars — hover-expand cards (collapse/open morphism). The verified
+   card carries the stats and opens widest by default. */
+type TrustCard = {
+  tone: string;
+  icon: ReactNode;
+  title: string;
+  body: string;
+  stats?: typeof STATS;
+};
+const TRUST_CARDS: TrustCard[] = [
+  { tone: "navy", icon: <ShieldCheck className="size-6" />, title: "Every face is verified", body: "Licence and college-ID checks for drivers, campus email for everyone — you always know exactly who you're riding with.", stats: STATS },
+  { tone: "sky", icon: <Navigation className="size-6" />, title: "Live GPS on every ride", body: "Watch the trip move in real time and auto-share your ETA with trusted contacts." },
+  { tone: "clay", icon: <Zap className="size-6" />, title: "One-tap SOS", body: "An emergency alert with your live location — always one tap away." },
+  { tone: "sage", icon: <MessageCircle className="size-6" />, title: "Chat & video support", body: "Coordinate pickup and reach live support without sharing your number." },
+  { tone: "plum", icon: <Clock className="size-6" />, title: "Fair, capped fares", body: "Distance-based price bands with room to bargain. No surge, no commission." },
 ];
 
 const TRUST_BG: Record<string, string> = {
+  navy: "bg-gradient-to-br from-navy to-navy-light text-white",
   sky: "bg-[#2C4A7C] text-white",
   clay: "bg-[#C8956C] text-[#2A1A0E]",
   sage: "bg-[#3E6E5A] text-white",
   plum: "bg-[#5B4B6E] text-white",
 };
+
+/* ── Trust hover-expand row (Skiper HoverExpand morphism) ── */
+function TrustExpand() {
+  const reduce = useReducedMotion();
+  const [active, setActive] = useState(0);
+  return (
+    <div
+      className="mx-auto flex w-full max-w-none flex-col gap-3 px-4 sm:px-6 lg:h-[28rem] lg:flex-row lg:gap-3.5 lg:px-10"
+      onMouseLeave={() => setActive(0)}
+    >
+      {TRUST_CARDS.map((c, i) => {
+        const isActive = active === i;
+        return (
+          <motion.div
+            key={c.title}
+            role="button"
+            tabIndex={0}
+            onMouseEnter={() => setActive(i)}
+            onFocus={() => setActive(i)}
+            onClick={() => setActive(i)}
+            animate={reduce ? undefined : { flexGrow: isActive ? 3 : 1 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            style={{ flexGrow: isActive ? 3 : 1 }}
+            className={cn(
+              "group relative min-w-0 flex-1 basis-0 cursor-pointer overflow-hidden rounded-[1.75rem] p-7 outline-none transition-shadow duration-500",
+              isActive ? "shadow-2xl" : "shadow-md",
+              TRUST_BG[c.tone],
+            )}
+          >
+            <motion.span
+              aria-hidden
+              animate={reduce ? undefined : { y: isActive ? [0, -5, 0] : 0 }}
+              transition={{ duration: 3.4, repeat: isActive ? Infinity : 0, ease: "easeInOut" }}
+              className="inline-grid size-12 shrink-0 place-items-center rounded-2xl bg-white/15 backdrop-blur [&>svg]:size-6"
+            >
+              {c.icon}
+            </motion.span>
+            <h3 className="mt-5 font-display text-xl font-bold leading-tight">{c.title}</h3>
+            <AnimatePresence initial={false}>
+              {isActive && (
+                <motion.div
+                  initial={reduce ? undefined : { opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={reduce ? undefined : { opacity: 0 }}
+                  transition={{ duration: 0.35, delay: 0.1 }}
+                >
+                  <p className="mt-3 max-w-md text-sm leading-relaxed opacity-85">{c.body}</p>
+                  {c.stats && (
+                    <div className="mt-7 grid max-w-md grid-cols-2 gap-5">
+                      {c.stats.map((s) => (
+                        <div key={s.label}>
+                          <div className="font-mono text-2xl font-semibold text-accent sm:text-3xl">
+                            <AnimatedNumber value={s.num} prefix={s.prefix} suffix={s.suffix} />
+                          </div>
+                          <div className="mt-1 text-sm font-semibold">{s.label}</div>
+                          <div className="text-xs opacity-60">{s.note}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
 
 const COMPARE: [string, boolean, boolean][] = [
   ["Verified students & staff only", true, false],
@@ -237,19 +307,16 @@ export default function Landing() {
   const [showIntro, setShowIntro] = useState(() => {
     try {
       if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return false;
-      return !sessionStorage.getItem("rm_intro_v2");
+      if (sessionStorage.getItem("rm_intro_v2")) return false;
+      // Mark it the MOMENT we decide to show it, so navigating back to "/" (or any
+      // remount) never replays the film — it plays only on the true first load.
+      sessionStorage.setItem("rm_intro_v2", "1");
+      return true;
     } catch {
       return false;
     }
   });
-  const endIntro = () => {
-    setShowIntro(false);
-    try {
-      sessionStorage.setItem("rm_intro_v2", "1");
-    } catch {
-      /* ignore */
-    }
-  };
+  const endIntro = () => setShowIntro(false);
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -458,23 +525,6 @@ export default function Landing() {
           </Reveal>
         </section>
 
-        {/* ── CAMPUS IN MOTION — hover-expand corridors (collapse/open morphism) ── */}
-        <section className="w-full overflow-hidden py-4">
-          <Container size="7xl" className="pb-10 pt-4 text-center">
-            <Reveal>
-              <SectionHeading
-                align="center"
-                eyebrow="Campus in motion"
-                title="Real corridors, filling up every morning."
-                description="Hover a corridor to open it — a glimpse of the routes students already share to the JC Bose gate."
-              />
-            </Reveal>
-          </Container>
-          <Reveal>
-            <HoverExpandRides slides={CORRIDOR_SLIDES} tall />
-          </Reveal>
-        </section>
-
         {/* ── TRUST — rebuilt: big navy statement + animated colored pillars ── */}
         <section id="safety" className="py-20 sm:py-28">
           <Container size="7xl">
@@ -489,61 +539,9 @@ export default function Landing() {
             </Reveal>
           </Container>
 
-          <div className="mx-auto grid w-full max-w-none gap-4 px-4 sm:px-6 lg:grid-cols-12 lg:gap-5 lg:px-10">
-              <Reveal className="lg:col-span-5">
-                <div className="flex h-full flex-col justify-between overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-navy to-navy-light p-8 text-white">
-                  <div>
-                    <Badge tone="accent" icon={<ShieldCheck />}>
-                      Verified community
-                    </Badge>
-                    <h3 className="mt-5 font-display text-2xl font-bold leading-tight sm:text-3xl">
-                      Every face is a verified JC Bose UST student or staff member.
-                    </h3>
-                    <p className="mt-3 max-w-md text-white/70">
-                      Licence and college-ID checks for drivers, campus email for everyone. You always
-                      know exactly who you&apos;re riding with.
-                    </p>
-                  </div>
-                  <div className="mt-8 grid grid-cols-2 gap-6">
-                    {STATS.map((s) => (
-                      <div key={s.label}>
-                        <div className="font-mono text-2xl font-semibold text-accent sm:text-3xl">
-                          <AnimatedNumber value={s.num} prefix={s.prefix} suffix={s.suffix} />
-                        </div>
-                        <div className="mt-1 text-sm font-semibold text-white">{s.label}</div>
-                        <div className="text-xs text-white/55">{s.note}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Reveal>
-
-              <RevealGroup className="grid gap-4 sm:grid-cols-2 lg:col-span-7">
-                {TRUST.map((t) => (
-                  <RevealItem key={t.title}>
-                    <motion.div
-                      whileHover={reduce ? undefined : { y: -6 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                      className={cn(
-                        "flex h-full flex-col overflow-hidden rounded-[1.5rem] p-6",
-                        TRUST_BG[t.tone],
-                      )}
-                    >
-                      <motion.span
-                        aria-hidden
-                        animate={reduce ? undefined : { y: [0, -5, 0] }}
-                        transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut" }}
-                        className="inline-grid size-12 place-items-center rounded-2xl bg-white/15 backdrop-blur"
-                      >
-                        {t.icon}
-                      </motion.span>
-                      <h4 className="mt-4 font-display text-lg font-bold">{t.title}</h4>
-                      <p className="mt-1.5 text-sm opacity-80">{t.body}</p>
-                    </motion.div>
-                  </RevealItem>
-                ))}
-              </RevealGroup>
-          </div>
+          <Reveal>
+            <TrustExpand />
+          </Reveal>
         </section>
 
         {/* ── COMPARISON ── */}

@@ -22,13 +22,20 @@ export function AppBackground() {
         aria-hidden
         className="pointer-events-none fixed inset-0 -z-20 h-screen w-screen"
       >
-        <WaveGridBackground className="h-full w-full" />
+        {/* deeper warm tones so the cubes actually read against the ivory page
+            (ivory-on-ivory was near-invisible), cursor-reactive across the app */}
+        <WaveGridBackground
+          className="h-full w-full"
+          colorBase="#D9CCB4"
+          colorHigh="#C8956C"
+          sceneBg="#EFE7D7"
+        />
       </div>
-      {/* base readability veil — kept light so the grid stays clearly alive
-          across the whole UI (dense pages add their own frost via PageShell) */}
+      {/* base readability veil — light so the grid stays clearly alive across the
+          whole UI (dense pages add their own frost via PageShell) */}
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 h-screen w-screen bg-white/35"
+        className="pointer-events-none fixed inset-0 -z-10 h-screen w-screen bg-white/15"
       />
     </>
   );

@@ -4,7 +4,8 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Building2, CarFront, Check, UserRound } from "lucide-react";
 
 import Logo from "@/components/common/Logo";
-import { Container, Eyebrow, buttonVariants, type BadgeTone } from "@/components/ui/primitives";
+import { Container, Eyebrow, type BadgeTone } from "@/components/ui/primitives";
+import { PopButton } from "@/components/ui/pop-button";
 import { RevealGroup, RevealItem } from "@/components/ui/scroll-reveal";
 import { cn } from "@/lib/utils";
 
@@ -102,22 +103,21 @@ export default function RolePortal() {
         <RevealGroup className="mt-14 grid gap-5 md:grid-cols-3" stagger={0.1}>
           {ROLES.map((role) => (
             <RevealItem key={role.key}>
-              <motion.button
-                type="button"
-                onClick={() => navigate(`/login?role=${role.key}`)}
+              <motion.div
                 whileHover={reduce ? undefined : { y: -6 }}
-                whileTap={{ scale: 0.99 }}
-                className="group flex h-full w-full flex-col rounded-3xl border border-border bg-card p-7 text-left shadow-sm transition-shadow duration-300 hover:border-accent/50 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="group flex h-full w-full flex-col rounded-3xl border border-border bg-card p-7 text-left shadow-sm transition-all duration-300 hover:border-accent/50 hover:shadow-xl"
               >
-                <span
+                <motion.span
+                  aria-hidden
+                  animate={reduce ? undefined : { y: [0, -5, 0] }}
+                  transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut" }}
                   className={cn(
                     "inline-grid size-14 place-items-center rounded-2xl [&>svg]:size-7",
                     TILE[role.tone],
                   )}
-                  aria-hidden
                 >
                   {role.icon}
-                </span>
+                </motion.span>
                 <span className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                   {role.tag}
                 </span>
@@ -131,16 +131,16 @@ export default function RolePortal() {
                     </li>
                   ))}
                 </ul>
-                <span
-                  className={cn(
-                    buttonVariants({ variant: "primary", size: "md" }),
-                    "mt-7 w-full",
-                  )}
+                <PopButton
+                  variant="primary"
+                  size="md"
+                  className="mt-7 w-full"
+                  onClick={() => navigate(`/login?role=${role.key}`)}
                 >
                   Continue as {role.title}
                   <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-                </span>
-              </motion.button>
+                </PopButton>
+              </motion.div>
             </RevealItem>
           ))}
         </RevealGroup>

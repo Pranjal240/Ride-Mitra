@@ -167,7 +167,7 @@ export function WaveGridBackground({
     let size = getSize();
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(colorBase).multiplyScalar(0.5);
+    scene.background = new THREE.Color(colorBase).multiplyScalar(0.82);
 
     const alphaRange = Math.PI * 0.03;
     const betaRange = Math.PI * 0.05;
@@ -410,7 +410,7 @@ export function WaveGridBackground({
       trailUniforms.uMaxHeight.value = p.waveMaxHeight;
       colorUniforms.uColorBase.value.set(p.colorBase);
       colorUniforms.uColorHigh.value.set(p.colorHigh);
-      scene.background = new THREE.Color(p.colorBase).multiplyScalar(0.5);
+      scene.background = new THREE.Color(p.colorBase).multiplyScalar(0.82);
       updateTrail(delta);
       lerpedMouse.x += (mouse.x - lerpedMouse.x) * 0.04;
       lerpedMouse.y += (mouse.y - lerpedMouse.y) * 0.04;
