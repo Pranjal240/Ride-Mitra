@@ -835,7 +835,7 @@ export default function Landing() {
         </section>
 
         {/* ── CLOSING CTA ── */}
-        <section className="pb-4 pt-4">
+        <section className="pt-4">
           <Container size="6xl">
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-light px-6 py-20 text-center text-white sm:py-24">
               <RevealGroup className="relative z-10">
