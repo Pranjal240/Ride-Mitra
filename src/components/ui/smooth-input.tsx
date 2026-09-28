@@ -34,9 +34,10 @@ import { cn } from "@/lib/utils";
 const FIXED_SPRING = { stiffness: 500, damping: 30, mass: 0.5 } as const;
 
 const inputWrapperClassName = cn(
-  "bg-muted2 has-[:focus-visible]:outline-muted3 relative w-full rounded-2xl px-4 py-3.5",
-  "border border-border transition-colors",
-  "has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2",
+  "bg-muted2 relative w-full rounded-2xl px-4 py-3.5",
+  "border border-border transition-[border-color,box-shadow] duration-200",
+  // soft focus ring (no hard offset rectangle) — accessible + smooth
+  "has-[:focus-visible]:border-accent has-[:focus-visible]:shadow-[0_0_0_3px_rgba(200,149,108,0.22)]",
 );
 
 const inputClassName =

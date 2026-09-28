@@ -84,8 +84,9 @@ export function LiveMap({ className }: { className?: string }) {
         style={{ width: "100%", height: "100%", background: "transparent" }}
       >
         <TileLayer
-          url="https://{s}.basemap.cartocdn.com/light_all/{z}/{x}/{y}.png"
-          attribution="&copy; OpenStreetMap &copy; CARTO"
+          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution="&copy; OpenStreetMap contributors"
+          crossOrigin="anonymous"
         />
         <Marker position={center as [number, number]} icon={status === "live" ? meIcon : pickupIcon} />
         <FlyTo target={center} zoom={zoom} />

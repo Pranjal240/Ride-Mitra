@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Car, Check, ShieldCheck, Smile } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, CarFront, Check, UserRound } from "lucide-react";
 
 import Logo from "@/components/common/Logo";
 import { Container, Eyebrow, buttonVariants, type BadgeTone } from "@/components/ui/primitives";
@@ -26,7 +26,7 @@ const ROLES: Role[] = [
     desc: "Find safe, affordable rides with verified members heading your way.",
     perks: ["Search & book rides", "Live tracking + SOS", "Split fares fairly"],
     tone: "info",
-    icon: <Smile />,
+    icon: <UserRound />,
   },
   {
     key: "driver",
@@ -35,7 +35,7 @@ const ROLES: Role[] = [
     desc: "Offer seats on trips you're already making. Cover fuel, meet peers.",
     perks: ["Post rides in seconds", "Verified ride requests", "Fair, capped fares"],
     tone: "accent",
-    icon: <Car />,
+    icon: <CarFront />,
   },
   {
     key: "admin",
@@ -44,7 +44,7 @@ const ROLES: Role[] = [
     desc: "Manage verifications, SOS alerts and community reports.",
     perks: ["Member verification", "SOS command center", "Community reports"],
     tone: "success",
-    icon: <ShieldCheck />,
+    icon: <Building2 />,
   },
 ];
 

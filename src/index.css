@@ -73,20 +73,20 @@
 
 /* ── Palette: LIGHT (default) ── */
 :root {
-  --rm-bg:            #F7F5F1;
+  --rm-bg:            #FFFFFF;
   --rm-fg:            #17223B;
   --rm-primary:       #1B2B4B;
   --rm-primary-fg:    #FFFFFF;
-  --rm-muted:         #ECE7DE;
-  --rm-muted-2:       #E7E0D4;
+  --rm-muted:         #F4F1EB;
+  --rm-muted-2:       #EFEBE3;
   --rm-muted-3:       #C8956C;
   --rm-muted-fg:      #5A5F52;
   --rm-card:          #FFFFFF;
   --rm-card-fg:       #17223B;
   --rm-popover:       #FFFFFF;
   --rm-popover-fg:    #17223B;
-  --rm-border:        #E3DCCF;
-  --rm-input:         #E7E0D4;
+  --rm-border:        #ECE7DC;
+  --rm-input:         #EFEBE3;
   --rm-ring:          #C8956C;
   --rm-accent:        #C8956C;
   --rm-accent-strong: #A67A50;
@@ -865,9 +865,9 @@ input:focus, textarea:focus, select:focus {
   background: radial-gradient(circle, rgba(200,149,108,0.5) 0%, transparent 65%);
 }
 
-/* Light editorial map — subtle warm tint on the CARTO light tiles */
+/* Light editorial map — soften OSM tiles toward the ivory palette */
 .leaflet-container img.leaflet-tile {
-  filter: saturate(0.92) brightness(1.02) contrast(0.98);
+  filter: grayscale(0.32) saturate(0.82) brightness(1.06) contrast(0.94);
 }
 .leaflet-container { background: var(--rm-muted) !important; outline: none; }
 .leaflet-control-attribution { display: none !important; }

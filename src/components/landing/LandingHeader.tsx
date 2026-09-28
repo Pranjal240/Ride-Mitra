@@ -1,13 +1,17 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Menu, Smartphone, X } from "lucide-react";
+import { ArrowRight, Download, Menu, Smartphone, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import Logo from "@/components/common/Logo";
 import { buttonVariants } from "@/components/ui/primitives";
+import { TextRoll } from "@/components/ui/text-roll";
 import { cn } from "@/lib/utils";
+
+const APK_URL =
+  "https://github.com/Pranjal240/Ride-Mitra/releases/latest/download/RideMitra.apk";
 
 const NAV = [
   { href: "#how", label: "How it works" },
@@ -50,14 +54,24 @@ export function LandingHeader() {
             <a
               key={n.href}
               href={n.href}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
             >
-              {n.label}
+              <TextRoll className="text-sm">{n.label}</TextRoll>
             </a>
           ))}
         </nav>
 
         <div className="flex items-center gap-2">
+          <a
+            href={APK_URL}
+            download
+            className={cn(
+              buttonVariants({ variant: "accent", size: "sm" }),
+              "hidden sm:inline-flex",
+            )}
+          >
+            <Download className="size-3.5" /> Download app
+          </a>
           <button
             onClick={() => navigate("/portal")}
             className={cn(buttonVariants({ variant: "primary", size: "sm" }), "hidden sm:inline-flex")}
@@ -88,17 +102,25 @@ export function LandingHeader() {
                   key={n.href}
                   href={n.href}
                   onClick={() => setOpen(false)}
-                  className="rounded-xl px-3 py-3 text-base font-medium text-foreground hover:bg-muted"
+                  className="rounded-xl px-3 py-3 text-base font-semibold text-foreground hover:bg-muted"
                 >
                   {n.label}
                 </a>
               ))}
+              <a
+                href={APK_URL}
+                download
+                onClick={() => setOpen(false)}
+                className={cn(buttonVariants({ variant: "accent", size: "md" }), "mt-2 w-full")}
+              >
+                <Download className="size-4" /> Download the app
+              </a>
               <button
                 onClick={() => {
                   setOpen(false);
                   navigate("/portal");
                 }}
-                className={cn(buttonVariants({ variant: "primary", size: "md" }), "mt-2 w-full")}
+                className={cn(buttonVariants({ variant: "primary", size: "md" }), "mt-1 w-full")}
               >
                 <Smartphone className="size-4" /> Sign in
               </button>

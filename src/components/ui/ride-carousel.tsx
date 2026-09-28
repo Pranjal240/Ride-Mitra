@@ -65,7 +65,19 @@ export function RideCarousel({
             return (
               <div
                 key={index}
-                className="relative flex min-w-0 shrink-0 grow-0 basis-[78%] items-center justify-center px-2 sm:basis-[52%] md:basis-[36%] lg:basis-[27%] xl:basis-[23%]"
+                onClick={() => scrollTo(index)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    scrollTo(index);
+                  }
+                }}
+                className={cn(
+                  "relative flex min-w-0 shrink-0 grow-0 basis-[78%] items-center justify-center px-2 sm:basis-[52%] md:basis-[36%] lg:basis-[27%] xl:basis-[23%]",
+                  active ? "cursor-default" : "cursor-pointer",
+                )}
               >
                 <motion.div
                   initial={false}
