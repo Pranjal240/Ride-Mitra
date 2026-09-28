@@ -90,7 +90,7 @@ export default function LiveTracking() {
 
   if (loading)
     return (
-      <div className="grid min-h-dvh place-items-center bg-background">
+      <div className="grid min-h-dvh place-items-center">
         <div className="flex flex-col items-center gap-2">
           <Spinner className="size-7" />
           <p className="text-sm text-muted-foreground">Loading ride…</p>
@@ -99,7 +99,7 @@ export default function LiveTracking() {
     );
 
   return (
-    <div className="flex h-dvh flex-col bg-background">
+    <div className="flex h-dvh flex-col bg-white/30 backdrop-blur-sm">
       {/* header */}
       <div className="flex items-center justify-between border-b border-border bg-background/90 px-4 py-2.5 backdrop-blur">
         <button type="button" onClick={() => navigate(-1)} className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground">
@@ -144,7 +144,7 @@ export default function LiveTracking() {
         initial={{ y: 40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="flex-[3] overflow-y-auto border-t border-border bg-card"
+        className="flex-[3] overflow-y-auto border-t border-border bg-card backdrop-blur-md"
       >
         <div className="mx-auto max-w-2xl p-4">
           <div className="mb-4 flex items-center gap-3">

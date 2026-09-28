@@ -224,7 +224,7 @@ export default function Login() {
             </Link>
           </div>
 
-          <div className="rounded-[1.75rem] border border-border bg-card p-8 shadow-lg sm:p-10">
+          <div className="rounded-[1.75rem] border border-border bg-card p-8 shadow-lg backdrop-blur-lg sm:p-10">
             <div className="hidden lg:block">
               <Logo size={48} />
             </div>

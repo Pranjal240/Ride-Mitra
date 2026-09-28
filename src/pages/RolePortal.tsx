@@ -105,7 +105,7 @@ export default function RolePortal() {
             <RevealItem key={role.key}>
               <motion.div
                 whileHover={reduce ? undefined : { y: -6 }}
-                className="group flex h-full w-full flex-col rounded-3xl border border-border bg-card p-7 text-left shadow-sm transition-all duration-300 hover:border-accent/50 hover:shadow-xl"
+                className="group flex h-full w-full flex-col rounded-3xl border border-border bg-card p-7 text-left shadow-sm backdrop-blur-md transition-all duration-300 hover:border-accent/50 hover:shadow-xl"
               >
                 <motion.span
                   aria-hidden

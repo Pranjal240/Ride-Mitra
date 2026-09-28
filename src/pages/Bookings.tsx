@@ -80,7 +80,7 @@ export default function Bookings() {
         <p className="mt-1 text-muted-foreground">Track and manage your ride bookings.</p>
 
         {/* tabs */}
-        <div className="mt-6 flex gap-1 rounded-2xl border border-border bg-card p-1">
+        <div className="mt-6 flex gap-1 rounded-2xl border border-border bg-card p-1 backdrop-blur-md">
           {tabs.map((t) => (
             <button
               key={t.key}

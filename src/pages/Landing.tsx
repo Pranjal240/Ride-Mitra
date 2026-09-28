@@ -134,7 +134,7 @@ function HeroSearch() {
         e.preventDefault();
         navigate("/rides");
       }}
-      className="flex w-full max-w-2xl flex-col gap-2.5 rounded-3xl border border-border bg-card p-2.5 text-left shadow-md sm:flex-row sm:items-center"
+      className="flex w-full max-w-2xl flex-col gap-2.5 rounded-3xl border border-border bg-card p-2.5 text-left shadow-md backdrop-blur-md sm:flex-row sm:items-center"
     >
       <div className="sm:flex-1">
         <Field
@@ -492,7 +492,7 @@ export default function Landing() {
           <div className="relative h-[62vh] min-h-[480px] w-full">
             <CrowdCanvas className="absolute inset-0" />
             {/* top fade so the heading reads over the crowd */}
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-3/4 bg-gradient-to-b from-white via-white/85 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-3/4 bg-gradient-to-b from-white/80 via-white/60 to-transparent" />
             <div className="absolute inset-x-0 top-0 px-6 pt-16 text-center sm:pt-20">
               <Eyebrow>The daily wait</Eyebrow>
               <Reveal>
@@ -634,7 +634,7 @@ export default function Landing() {
                 {STEPS.map((s) => (
                   <RevealItem key={s.n}>
                     <TiltCard className="group h-full [transform-style:preserve-3d]">
-                      <div className="relative h-full overflow-hidden rounded-3xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-xl">
+                      <div className="relative h-full overflow-hidden rounded-3xl border border-border bg-card p-7 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-xl">
                         {/* giant watermark number */}
                         <span className="pointer-events-none absolute -right-3 -top-6 select-none font-display text-[7rem] font-extrabold leading-none text-muted/60 transition-colors duration-300 group-hover:text-accent-soft">
                           {s.n}
@@ -717,7 +717,7 @@ export default function Landing() {
                   </div>
                 </div>
                 <div className="justify-self-center text-center">
-                  <a href={APK_URL} download className="inline-block rounded-3xl border border-border bg-card p-4 shadow-md transition-transform hover:scale-105">
+                  <a href={APK_URL} download className="inline-block rounded-3xl border border-border bg-card p-4 shadow-md backdrop-blur-md transition-transform hover:scale-105">
                     <QRCodeSVG value={APK_URL} size={148} fgColor="#1B2B4B" bgColor="#FFFFFF" level="M" />
                   </a>
                   <div className="mt-3 text-sm font-medium text-muted-foreground">Scan to install</div>

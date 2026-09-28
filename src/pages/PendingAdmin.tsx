@@ -21,7 +21,7 @@ export default function PendingAdmin() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md rounded-3xl border border-border bg-card p-9 text-center shadow-md"
+        className="w-full max-w-md rounded-3xl border border-border bg-card p-9 text-center shadow-md backdrop-blur-lg"
       >
         <span className="mx-auto grid size-20 place-items-center rounded-3xl bg-warning-soft text-warning">
           <ShieldAlert className="size-9" />

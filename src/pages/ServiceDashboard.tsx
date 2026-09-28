@@ -540,7 +540,7 @@ export default function ServiceDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-6 right-6 z-50 flex h-[min(480px,calc(100vh-120px))] w-[min(360px,calc(100vw-48px))] flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-xl"
+            className="fixed bottom-6 right-6 z-50 flex h-[min(480px,calc(100vh-120px))] w-[min(360px,calc(100vw-48px))] flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-xl backdrop-blur-lg"
           >
             <div className="flex items-center justify-between bg-gradient-to-br from-navy to-navy-light px-5 py-4 text-white">
               <span className="flex items-center gap-2 font-semibold">

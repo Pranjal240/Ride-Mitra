@@ -73,20 +73,20 @@
 
 /* ── Palette: LIGHT (default) ── */
 :root {
-  --rm-bg:            #FFFFFF;
+  --rm-bg:            rgba(255, 255, 255, 0.35);
   --rm-fg:            #17223B;
   --rm-primary:       #1B2B4B;
   --rm-primary-fg:    #FFFFFF;
-  --rm-muted:         #F4F1EB;
-  --rm-muted-2:       #EFEBE3;
+  --rm-muted:         rgba(244, 241, 235, 0.65);
+  --rm-muted-2:       rgba(239, 235, 227, 0.65);
   --rm-muted-3:       #C8956C;
   --rm-muted-fg:      #5A5F52;
-  --rm-card:          #FFFFFF;
+  --rm-card:          rgba(255, 255, 255, 0.55);
   --rm-card-fg:       #17223B;
-  --rm-popover:       #FFFFFF;
+  --rm-popover:       rgba(255, 255, 255, 0.92);
   --rm-popover-fg:    #17223B;
-  --rm-border:        #ECE7DC;
-  --rm-input:         #EFEBE3;
+  --rm-border:        rgba(236, 231, 220, 0.7);
+  --rm-input:         rgba(239, 235, 227, 0.7);
   --rm-ring:          #C8956C;
   --rm-accent:        #C8956C;
   --rm-accent-strong: #A67A50;
