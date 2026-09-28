@@ -51,18 +51,8 @@ export function AnimatedFooter({
       />
 
       {/* content row */}
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-wrap items-start justify-between gap-8 px-6 pt-10">
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-wrap items-start justify-between gap-8 px-6 py-10">
         {children}
-      </div>
-
-      {/* giant wordmark */}
-      <div className="relative z-10 flex w-full items-end justify-center overflow-hidden px-4 pb-4 pt-2">
-        <h2
-          className="flex select-none font-display font-extrabold leading-[0.82] tracking-tight text-white/95"
-          style={{ fontSize: "clamp(3rem, 15vw, 13rem)" }}
-        >
-          {word}
-        </h2>
       </div>
     </footer>
   );
