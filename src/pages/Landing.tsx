@@ -91,8 +91,8 @@ function HoverExpandRides({ slides, tall }: { slides: RideSlide[]; tall?: boolea
   return (
     <div
       className={cn(
-        "mx-auto flex w-full max-w-none flex-col gap-2.5 px-4 sm:px-6 lg:flex-row lg:gap-3.5 lg:px-10",
-        tall ? "h-[36rem] sm:h-[40rem] lg:h-[24rem] xl:h-[30rem]" : "h-[32rem] sm:h-[36rem] lg:h-[22rem] xl:h-[27rem]"
+        "mx-auto flex w-full max-w-none flex-col gap-2.5 px-4 sm:px-6 lg:flex-row lg:gap-3.5 lg:px-10 h-auto",
+        tall ? "lg:h-[24rem] xl:h-[30rem]" : "lg:h-[22rem] xl:h-[27rem]"
       )}
       onMouseLeave={() => setActive(-1)}
     >
@@ -107,8 +107,8 @@ function HoverExpandRides({ slides, tall }: { slides: RideSlide[]; tall?: boolea
             onFocus={() => setActive(i)}
             onClick={() => setActive(i)}
             className={cn(
-              "group relative min-w-0 min-h-0 cursor-pointer overflow-hidden rounded-[1.75rem] outline-none transition-[flex-grow,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
-              isActive ? "flex-[3.2] shadow-2xl ring-1 ring-black/5" : "flex-1 shadow-md",
+              "group relative min-w-0 cursor-pointer overflow-hidden rounded-[1.75rem] outline-none transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+              isActive ? "h-[20rem] lg:h-auto lg:flex-[3.2] shadow-2xl ring-1 ring-black/5" : "h-[4.5rem] lg:h-auto lg:flex-1 shadow-md",
             )}
           >
             <RidePoster
@@ -231,7 +231,7 @@ function TrustExpand() {
   const [active, setActive] = useState(0);
   return (
     <div
-      className="mx-auto flex w-full max-w-none flex-col gap-3 px-4 sm:px-6 h-[46rem] sm:h-[42rem] lg:h-[28rem] lg:flex-row lg:gap-3.5 lg:px-10"
+      className="mx-auto flex w-full max-w-none flex-col gap-3 px-4 sm:px-6 h-auto lg:h-[28rem] lg:flex-row lg:gap-3.5 lg:px-10"
       onMouseLeave={() => setActive(0)}
     >
       {TRUST_CARDS.map((c, i) => {
@@ -245,8 +245,8 @@ function TrustExpand() {
             onFocus={() => setActive(i)}
             onClick={() => setActive(i)}
             className={cn(
-              "group relative min-w-0 min-h-0 cursor-pointer overflow-hidden rounded-[1.75rem] p-5 outline-none transition-[flex-grow,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] lg:p-7",
-              isActive ? "flex-[4] shadow-2xl" : "flex-1 shadow-md",
+              "group relative min-w-0 cursor-pointer overflow-hidden rounded-[1.75rem] p-5 outline-none transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] lg:p-7",
+              isActive ? "h-[30rem] lg:h-auto lg:flex-[4] shadow-2xl" : "h-[4.5rem] lg:h-auto lg:flex-1 shadow-md",
               TRUST_BG[c.tone],
             )}
           >

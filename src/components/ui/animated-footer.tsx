@@ -55,27 +55,13 @@ export function AnimatedFooter({
         {children}
       </div>
 
-      {/* giant reveal wordmark */}
+      {/* giant wordmark */}
       <div className="relative z-10 flex w-full items-end justify-center overflow-hidden px-4 pb-4 pt-2">
         <h2
-          aria-label={word}
           className="flex select-none font-display font-extrabold leading-[0.82] tracking-tight text-white/95"
           style={{ fontSize: "clamp(3rem, 15vw, 13rem)" }}
         >
-          {[...word].map((ch, i) => (
-            <span key={i} className="overflow-hidden">
-              <motion.span
-                aria-hidden
-                className="inline-block"
-                initial={reduce ? undefined : { y: "110%" }}
-                whileInView={reduce ? undefined : { y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: i * 0.045, ease: [0.22, 1, 0.36, 1] }}
-              >
-                {ch === " " ? " " : ch}
-              </motion.span>
-            </span>
-          ))}
+          {word}
         </h2>
       </div>
     </footer>
