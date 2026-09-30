@@ -47,7 +47,7 @@ export function VideoPlayerShell({
     : { duration: 0.9, type: "spring" as const, stiffness: 100, damping: 20 };
 
   return (
-    <div className="fixed inset-0 z-[2147483000] flex items-center justify-center p-4 md:p-8">
+    <div className="fixed inset-0 z-[2147483000] flex items-center justify-center p-0 md:p-8">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -79,9 +79,9 @@ export function VideoPlayerShell({
               }
         }
         transition={openTransition}
-        className="relative aspect-video w-full max-w-6xl overflow-hidden rounded-2xl shadow-xl"
+        className="relative w-full h-[100dvh] md:h-auto md:aspect-video md:max-w-6xl overflow-hidden rounded-none md:rounded-2xl shadow-xl bg-black"
       >
-        <MediaController style={{ width: "100%", height: "100%", borderRadius: 16 }}>
+        <MediaController style={{ width: "100%", height: "100%" }} className="md:[border-radius:16px]">
           <video
             src={src}
             poster={poster}
