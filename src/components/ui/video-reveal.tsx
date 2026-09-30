@@ -79,16 +79,16 @@ export function VideoPlayerShell({
               }
         }
         transition={openTransition}
-        className="relative w-full h-[100dvh] md:h-auto md:aspect-video md:max-w-6xl overflow-hidden rounded-none md:rounded-2xl shadow-xl bg-black"
+        className="relative w-full max-h-[90dvh] md:max-h-none md:aspect-video md:max-w-6xl overflow-hidden rounded-none md:rounded-2xl shadow-xl bg-black"
       >
-        <MediaController style={{ width: "100%", height: "100%" }} className="md:[border-radius:16px]">
+        <MediaController className="aspect-video w-full md:[border-radius:16px]">
           <video
             src={src}
             poster={poster}
             autoPlay
             playsInline
             slot="media"
-            className="size-full object-contain bg-black"
+            className="h-full w-full object-contain bg-black"
           />
           <button
             type="button"
