@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useReducedMotion } from "framer-motion";
 import {
@@ -32,6 +32,7 @@ import {
   type UserStats,
 } from "@/lib/api";
 import { updateProfile } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
 import type { Ride, Booking } from "@/types";
 import SOSModal from "@/components/common/SOSModal";
 import LiveMap from "@/components/landing/LiveMap";
@@ -195,31 +196,46 @@ export default function UserDashboard() {
     getSavedRoutes(user.id).then(setSaved).catch(() => {});
   }, [user]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const [r, b] = await Promise.all([
-          getRides({ status: "active" }),
-          user ? getBookings(user.id) : [],
-        ]);
-        const now = new Date();
-        setRides(r.filter((ride: Ride) => new Date(ride.departure_time) > now).slice(0, 6));
-        setAllBookings(b);
-        setBookings(
-          b
-            .filter((booking: Booking) => {
-              const ride = (booking as unknown as { ride?: Ride }).ride;
-              return !ride || new Date(ride.departure_time) > now;
-            })
-            .slice(0, 3),
-        );
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const loadData = useCallback(async () => {
+    if (!user) return;
+    try {
+      const [r, b] = await Promise.all([
+        getRides({ status: "active" }),
+        getBookings(user.id),
+      ]);
+      const now = new Date();
+      setRides(r.filter((ride: Ride) => new Date(ride.departure_time) > now).slice(0, 6));
+      setAllBookings(b);
+      setBookings(
+        b
+          .filter((booking: Booking) => {
+            const ride = (booking as unknown as { ride?: Ride }).ride;
+            return !ride || new Date(ride.departure_time) > now;
+          })
+          .slice(0, 3),
+      );
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Realtime: auto-refresh when bookings or notifications change
+  useEffect(() => {
+    if (!user) return;
+    const ch1 = supabase.channel('user-bookings')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings', filter: `rider_id=eq.${user.id}` }, () => loadData())
+      .subscribe();
+    const ch2 = supabase.channel('user-notifs')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => loadData())
+      .subscribe();
+    return () => { supabase.removeChannel(ch1); supabase.removeChannel(ch2); };
+  }, [user, loadData]);
 
   const hour = time.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";

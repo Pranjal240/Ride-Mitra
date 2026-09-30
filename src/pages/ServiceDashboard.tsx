@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
@@ -73,43 +73,56 @@ export default function ServiceDashboard() {
   const [activeRoute, setActiveRoute] = useState<[number, number][]>([]);
   const [activeMarkers, setActiveMarkers] = useState<MapMarker[]>([]);
 
-  useEffect(() => {
-    async function load() {
-      if (!user) return;
-      try {
-        const [ridesData, verif, bookings] = await Promise.all([
-          getRides({ status: "active" }),
-          getVerification(user.id),
-          getDriverBookingRequests(user.id),
-        ]);
-        const myRides = ridesData.filter((r) => r.driver_id === user.id);
-        setRides(myRides);
-        setVerification(verif);
-        setBookingRequests(bookings);
+  const loadDashboard = useCallback(async () => {
+    if (!user) return;
+    try {
+      const [ridesData, verif, bookings] = await Promise.all([
+        getRides({ status: "active" }),
+        getVerification(user.id),
+        getDriverBookingRequests(user.id),
+      ]);
+      const myRides = ridesData.filter((r) => r.driver_id === user.id);
+      setRides(myRides);
+      setVerification(verif);
+      setBookingRequests(bookings);
 
-        if (myRides.length > 0) {
-          const firstRide = myRides[0];
-          if (firstRide.from_location && firstRide.to_location) {
-            try {
-              const routeInfo = await calculateRoute(firstRide.from_location, firstRide.to_location);
-              if (routeInfo.geometry) setActiveRoute(routeInfo.geometry);
-              setActiveMarkers([
-                { id: "start", position: [firstRide.from_location.lat, firstRide.from_location.lng], type: "pickup", popup: "Start" },
-                { id: "end", position: [firstRide.to_location.lat, firstRide.to_location.lng], type: "drop", popup: "End" },
-              ]);
-            } catch (e) {
-              console.warn("Failed to load map route", e);
-            }
+      if (myRides.length > 0) {
+        const firstRide = myRides[0];
+        if (firstRide.from_location && firstRide.to_location) {
+          try {
+            const routeInfo = await calculateRoute(firstRide.from_location, firstRide.to_location);
+            if (routeInfo.geometry) setActiveRoute(routeInfo.geometry);
+            setActiveMarkers([
+              { id: "start", position: [firstRide.from_location.lat, firstRide.from_location.lng], type: "pickup", popup: "Start" },
+              { id: "end", position: [firstRide.to_location.lat, firstRide.to_location.lng], type: "drop", popup: "End" },
+            ]);
+          } catch (e) {
+            console.warn("Failed to load map route", e);
           }
         }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
       }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
-    load();
   }, [user]);
+
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
+
+  // Realtime: auto-refresh on booking requests & verification status changes
+  useEffect(() => {
+    if (!user) return;
+    const ch1 = supabase.channel('service-bookings')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => loadDashboard())
+      .subscribe();
+    const ch2 = supabase.channel('service-verif')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'driver_verification', filter: `user_id=eq.${user.id}` }, () => loadDashboard())
+      .subscribe();
+    return () => { supabase.removeChannel(ch1); supabase.removeChannel(ch2); };
+  }, [user, loadDashboard]);
 
   useEffect(() => {
     if (!user || !chatOpen) return;
