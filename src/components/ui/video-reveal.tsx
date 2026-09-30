@@ -88,7 +88,7 @@ export function VideoPlayerShell({
             autoPlay
             playsInline
             slot="media"
-            className="size-full object-cover"
+            className="size-full object-contain bg-black"
           />
           <button
             type="button"
