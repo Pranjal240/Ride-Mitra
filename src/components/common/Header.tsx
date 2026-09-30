@@ -67,6 +67,7 @@ export default function Header() {
       ? [
           { label: "Dashboard", path: "/admin", icon: <Home className="size-[18px]" /> },
           { label: "Verification", path: "/verification", icon: <ShieldCheck className="size-[18px]" /> },
+          { label: "Rides", path: "/rides/search", icon: <Search className="size-[18px]" /> },
         ]
       : user.user_type === "driver"
         ? [

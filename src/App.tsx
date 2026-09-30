@@ -107,7 +107,7 @@ export default function App() {
           <Route path="/service" element={<ProtectedRoute roles={['driver', 'both']}><AnimatedPage><ServiceDashboard /></AnimatedPage></ProtectedRoute>} />
           <Route path="/driver" element={<Navigate to="/service" replace />} />
           <Route path="/rides/create" element={<ProtectedRoute roles={['driver']}><AnimatedPage><CreateRide /></AnimatedPage></ProtectedRoute>} />
-          <Route path="/verification" element={<ProtectedRoute roles={['driver']}><AnimatedPage><Verification /></AnimatedPage></ProtectedRoute>} />
+          <Route path="/verification" element={<ProtectedRoute roles={['driver', 'admin']}><AnimatedPage><Verification /></AnimatedPage></ProtectedRoute>} />
 
           {/* Unified role folded into the User dashboard */}
           <Route path="/unified" element={<Navigate to="/user" replace />} />

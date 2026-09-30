@@ -53,6 +53,7 @@ import { Badge, Button, Container, PageShell, Panel, buttonVariants, type BadgeT
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/scroll-reveal";
 import { CountUp, ScoreRing, Sparkbars, toneTile } from "@/components/ui/dashboard";
 import { cn } from "@/lib/utils";
+import DataFolder from "@/components/ui/data-folder";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 type TabKey = "overview" | "users" | "drivers" | "rides" | "alerts" | "reports" | "support" | "announcements" | "audit";
@@ -192,7 +193,7 @@ export default function AdminPanel() {
         <div className="mt-5">
           <AnimatePresence mode="wait">
             <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-              {tab === "overview" && <OverviewTab loading={loading} data={analytics} />}
+              {tab === "overview" && <OverviewTab loading={loading} data={analytics} onSwitchTab={setTab} />}
               {tab === "users" && <UsersTab admin={user?.id || ""} onChange={refresh} />}
               {tab === "drivers" && <DriversTab admin={user?.id || ""} onChange={refresh} />}
               {tab === "rides" && <RidesTab admin={user?.id || ""} />}
@@ -229,7 +230,7 @@ function StatTile({ icon, label, value, tone, format: fmt }: { icon: ReactNode; 
   );
 }
 
-function OverviewTab({ loading, data }: { loading: boolean; data: AdminAnalytics | null }) {
+function OverviewTab({ loading, data, onSwitchTab }: { loading: boolean; data: AdminAnalytics | null; onSwitchTab?: (tab: TabKey) => void }) {
   if (loading || !data)
     return (
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
@@ -249,6 +250,58 @@ function OverviewTab({ loading, data }: { loading: boolean; data: AdminAnalytics
         <RevealItem><StatTile icon={<ShieldCheck />} label="Completed" value={k.completed_rides} tone="success" /></RevealItem>
         <RevealItem><StatTile icon={<IndianRupee />} label="Revenue" value={k.total_revenue} tone="accent" format={(n) => `₹${n.toFixed(0)}`} /></RevealItem>
         <RevealItem><StatTile icon={<ShieldCheck />} label="Pending KYC" value={k.pending_verifications} tone="warning" /></RevealItem>
+      </RevealGroup>
+
+      {/* Quick-access DataFolders — same style as User/Service dashboards */}
+      <RevealGroup className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <RevealItem>
+          <DataFolder
+            title="Verifications"
+            count={k.pending_verifications}
+            countLabel="pending"
+            tone={k.pending_verifications > 0 ? "gold" : "green"}
+            icon={<IdCard />}
+            items={k.pending_verifications > 0 ? [{ title: `${k.pending_verifications} pending review`, sub: "Click to manage" }] : []}
+            emptyLabel="All caught up!"
+            onClick={() => onSwitchTab?.("drivers")}
+          />
+        </RevealItem>
+        <RevealItem>
+          <DataFolder
+            title="SOS Alerts"
+            count={k.active_alerts}
+            countLabel="active"
+            tone={k.active_alerts > 0 ? "clay" : "green"}
+            icon={<Siren />}
+            items={k.active_alerts > 0 ? [{ title: `${k.active_alerts} active alerts`, sub: "Requires attention" }] : []}
+            emptyLabel="Everyone's safe"
+            onClick={() => onSwitchTab?.("alerts")}
+          />
+        </RevealItem>
+        <RevealItem>
+          <DataFolder
+            title="Reports"
+            count={k.open_reports}
+            countLabel="open"
+            tone={k.open_reports > 0 ? "clay" : "navy"}
+            icon={<Flag />}
+            items={k.open_reports > 0 ? [{ title: `${k.open_reports} open reports`, sub: "Review needed" }] : []}
+            emptyLabel="No open reports"
+            onClick={() => onSwitchTab?.("reports")}
+          />
+        </RevealItem>
+        <RevealItem>
+          <DataFolder
+            title="Support"
+            count={k.open_support}
+            countLabel="unread"
+            tone={k.open_support > 0 ? "sky" : "navy"}
+            icon={<MessageSquareText />}
+            items={k.open_support > 0 ? [{ title: `${k.open_support} unread messages`, sub: "Reply pending" }] : []}
+            emptyLabel="Inbox clear"
+            onClick={() => onSwitchTab?.("support")}
+          />
+        </RevealItem>
       </RevealGroup>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
