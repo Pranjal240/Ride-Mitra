@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, type ChangeEvent } from "react";
+import { Navigate } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   AlertTriangle,
@@ -183,6 +184,11 @@ export default function Verification() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState(0);
+
+  // If admin visits this page, redirect to admin panel's verify tab
+  if (user?.user_type === 'admin') {
+    return <Navigate to="/admin" replace />;
+  }
 
   // Form fields
   const [licenseNumber, setLicenseNumber] = useState("");

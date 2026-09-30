@@ -145,7 +145,7 @@ export default function AdminPanel() {
 
   return (
     <PageShell>
-      <Container size="full">
+      <Container size="full" className="overflow-hidden">
         <Reveal>
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-light p-7 text-white sm:p-9">
             <div className="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full bg-danger/15 blur-3xl" />
@@ -328,8 +328,8 @@ function OverviewTab({ loading, data, onSwitchTab }: { loading: boolean; data: A
         </Panel></Reveal>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Panel>
+      <div className="grid gap-4 lg:grid-cols-2 overflow-hidden">
+        <Panel className="overflow-hidden min-w-0">
           <h3 className="mb-3 flex items-center gap-2 font-display font-bold text-foreground">
             <Car className="size-4 text-accent" /> Top routes
           </h3>
@@ -338,18 +338,18 @@ function OverviewTab({ loading, data, onSwitchTab }: { loading: boolean; data: A
           ) : (
             <div className="space-y-2">
               {data.top_routes.map((r, i) => (
-                <div key={i} className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-3 py-2.5">
-                  <span className="grid size-6 place-items-center rounded-lg bg-accent-soft font-mono text-xs font-bold text-accent-strong">{i + 1}</span>
+                <div key={i} className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-3 py-2.5 min-w-0 overflow-hidden">
+                  <span className="grid size-6 shrink-0 place-items-center rounded-lg bg-accent-soft font-mono text-xs font-bold text-accent-strong">{i + 1}</span>
                   <span className="min-w-0 flex-1 truncate text-sm text-foreground">
                     {r.from_label} → {r.to_label}
                   </span>
-                  <span className="font-mono text-xs font-bold text-accent-strong">{r.ride_count}×</span>
+                  <span className="shrink-0 font-mono text-xs font-bold text-accent-strong">{r.ride_count}×</span>
                 </div>
               ))}
             </div>
           )}
         </Panel>
-        <Panel>
+        <Panel className="overflow-hidden min-w-0">
           <h3 className="mb-3 flex items-center gap-2 font-display font-bold text-foreground">
             <ListChecks className="size-4 text-accent" /> Queues
           </h3>
