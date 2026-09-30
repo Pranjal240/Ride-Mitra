@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Car,
@@ -16,6 +16,8 @@ import {
   Siren,
   TrendingUp,
   Users,
+  X,
+  ArrowLeft,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 
@@ -44,9 +46,11 @@ import {
   type AdminAnalytics,
   type Announcement,
 } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import { roleLabel } from "@/lib/roles";
 import { SmoothInput } from "@/components/ui/smooth-input";
 import { Badge, Button, Container, PageShell, Panel, buttonVariants, type BadgeTone } from "@/components/ui/primitives";
+import { Reveal, RevealGroup, RevealItem } from "@/components/ui/scroll-reveal";
 import { CountUp, ScoreRing, Sparkbars, toneTile } from "@/components/ui/dashboard";
 import { cn } from "@/lib/utils";
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -67,13 +71,44 @@ const TABS: { key: TabKey; label: string; icon: ReactNode }[] = [
 
 const empty = (m: string) => <p className="py-10 text-center text-sm text-muted-foreground">{m}</p>;
 
+/** Inline confirmation modal to replace ugly prompt()/confirm() */
+function ConfirmModal({ open, title, placeholder, onConfirm, onCancel, requireInput = false }: {
+  open: boolean; title: string; placeholder?: string;
+  onConfirm: (value: string) => void; onCancel: () => void; requireInput?: boolean;
+}) {
+  const [val, setVal] = useState("");
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={onCancel}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="font-display text-lg font-bold text-foreground">{title}</h3>
+        {(requireInput || placeholder) && (
+          <textarea
+            value={val} onChange={(e) => setVal(e.target.value)} placeholder={placeholder}
+            rows={3} autoFocus
+            className="mt-3 w-full rounded-xl border border-border bg-muted2 px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/60 focus:border-accent"
+          />
+        )}
+        <div className="mt-4 flex justify-end gap-2">
+          <Button variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
+          <Button variant="danger" size="sm" onClick={() => { onConfirm(val); setVal(""); }} disabled={requireInput && !val.trim()}>Confirm</Button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function AdminPanel() {
   const { user } = useAuthStore();
   const [tab, setTab] = useState<TabKey>("overview");
   const [analytics, setAnalytics] = useState<AdminAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     setLoading(true);
     try {
       const a = await getAdminAnalytics();
@@ -81,10 +116,23 @@ export default function AdminPanel() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
   useEffect(() => {
     refresh();
-  }, []);
+  }, [refresh]);
+
+  // Realtime subscriptions for live badge counts
+  useEffect(() => {
+    const channels = [
+      supabase.channel('admin-sos').on('postgres_changes', { event: '*', schema: 'public', table: 'sos_alerts' }, () => refresh()),
+      supabase.channel('admin-support').on('postgres_changes', { event: '*', schema: 'public', table: 'support_messages' }, () => refresh()),
+      supabase.channel('admin-reports').on('postgres_changes', { event: '*', schema: 'public', table: 'ride_reports' }, () => refresh()),
+      supabase.channel('admin-verif').on('postgres_changes', { event: '*', schema: 'public', table: 'driver_verification' }, () => refresh()),
+    ];
+    channels.forEach((ch) => ch.subscribe());
+    return () => { channels.forEach((ch) => supabase.removeChannel(ch)); };
+  }, [refresh]);
 
   const badgeFor = (key: TabKey) => {
     if (!analytics) return 0;
@@ -97,40 +145,48 @@ export default function AdminPanel() {
   return (
     <PageShell>
       <Container size="full">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-light p-7 text-white sm:p-9">
-          <div className="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full bg-danger/15 blur-3xl" />
-          <div className="relative">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5">
-              <span className="size-1.5 rounded-full bg-danger" />
-              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-white/80">Admin console · JC Bose UST</span>
+        <Reveal>
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-light p-7 text-white sm:p-9">
+            <div className="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full bg-danger/15 blur-3xl" />
+            <div className="relative">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5">
+                <span className="size-1.5 rounded-full bg-danger animate-pulse" />
+                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-white/80">Admin console · JC Bose UST</span>
+              </div>
+              <h1 className="mt-4 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">
+                Command <span className="text-accent">center.</span>
+              </h1>
+              <p className="mt-2 text-sm text-white/60">Live safety monitoring, verification, and platform operations.</p>
             </div>
-            <h1 className="mt-4 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">
-              Command <span className="text-accent">center.</span>
-            </h1>
-            <p className="mt-2 text-sm text-white/60">Live safety monitoring, verification, and platform operations.</p>
           </div>
-        </div>
+        </Reveal>
 
-        {/* tabs */}
-        <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
-          {TABS.map((t) => {
-            const count = badgeFor(t.key);
-            return (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => setTab(t.key)}
-                className={cn(
-                  "inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
-                  tab === t.key ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {t.icon}
-                {t.label}
-                {count > 0 && <span className="rounded-full bg-danger px-1.5 text-[10px] font-bold text-white">{count}</span>}
-              </button>
-            );
-          })}
+        {/* tabs — horizontally scrollable with fade mask on edges */}
+        <div className="relative mt-5">
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-4 bg-gradient-to-r from-background to-transparent md:hidden" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-4 bg-gradient-to-l from-background to-transparent md:hidden" />
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {TABS.map((t) => {
+              const count = badgeFor(t.key);
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setTab(t.key)}
+                  className={cn(
+                    "inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-all duration-200",
+                    tab === t.key
+                      ? "border-primary bg-primary text-primary-foreground shadow-md"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-accent/40",
+                  )}
+                >
+                  {t.icon}
+                  <span className="hidden sm:inline">{t.label}</span>
+                  {count > 0 && <span className="rounded-full bg-danger px-1.5 text-[10px] font-bold text-white animate-pulse">{count}</span>}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="mt-5">
@@ -186,24 +242,24 @@ function OverviewTab({ loading, data }: { loading: boolean; data: AdminAnalytics
   const completeRate = k.total_bookings === 0 ? 0 : Math.round((k.paid_bookings / k.total_bookings) * 100);
   return (
     <div className="space-y-4">
-      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
-        <StatTile icon={<Users />} label="Total users" value={k.total_users} tone="info" />
-        <StatTile icon={<IdCard />} label="Service providers" value={k.drivers} tone="success" />
-        <StatTile icon={<Car />} label="Active rides" value={k.active_rides} tone="accent" />
-        <StatTile icon={<ShieldCheck />} label="Completed" value={k.completed_rides} tone="success" />
-        <StatTile icon={<IndianRupee />} label="Revenue" value={k.total_revenue} tone="accent" format={(n) => `₹${n.toFixed(0)}`} />
-        <StatTile icon={<ShieldCheck />} label="Pending KYC" value={k.pending_verifications} tone="warning" />
-      </div>
+      <RevealGroup className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
+        <RevealItem><StatTile icon={<Users />} label="Total users" value={k.total_users} tone="info" /></RevealItem>
+        <RevealItem><StatTile icon={<IdCard />} label="Service providers" value={k.drivers} tone="success" /></RevealItem>
+        <RevealItem><StatTile icon={<Car />} label="Active rides" value={k.active_rides} tone="accent" /></RevealItem>
+        <RevealItem><StatTile icon={<ShieldCheck />} label="Completed" value={k.completed_rides} tone="success" /></RevealItem>
+        <RevealItem><StatTile icon={<IndianRupee />} label="Revenue" value={k.total_revenue} tone="accent" format={(n) => `₹${n.toFixed(0)}`} /></RevealItem>
+        <RevealItem><StatTile icon={<ShieldCheck />} label="Pending KYC" value={k.pending_verifications} tone="warning" /></RevealItem>
+      </RevealGroup>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
-        <Panel>
+        <Reveal><Panel>
           <div className="mb-1 flex items-center justify-between">
             <h3 className="font-display font-bold text-foreground">Platform activity · last 14 days</h3>
             <span className="text-xs text-muted-foreground">Bookings / day</span>
           </div>
           <Sparkbars values={data.series.map((s) => s.bookings)} className="mt-4" />
-        </Panel>
-        <Panel className="flex flex-col items-center">
+        </Panel></Reveal>
+        <Reveal delay={0.1}><Panel className="flex flex-col items-center">
           <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Booking completion</h3>
           <ScoreRing value={completeRate} size={140} />
           <div className="mt-4 grid w-full grid-cols-2 gap-3">
@@ -216,7 +272,7 @@ function OverviewTab({ loading, data }: { loading: boolean; data: AdminAnalytics
               <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Reviews</div>
             </div>
           </div>
-        </Panel>
+        </Panel></Reveal>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -281,6 +337,7 @@ function UsersTab({ admin, onChange }: { admin: string; onChange: () => void }) 
   const [banned, setBanned] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBanned, setShowBanned] = useState(false);
+  const [modalTarget, setModalTarget] = useState<{ id: string; action: 'ban' | 'unban' } | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -296,16 +353,16 @@ function UsersTab({ admin, onChange }: { admin: string; onChange: () => void }) 
   }, [q]);
 
   const bannedIds = useMemo(() => new Set(banned.map((b) => b.user_id)), [banned]);
-  const handleBan = async (id: string) => {
-    const reason = prompt("Reason for ban?");
-    if (!reason) return;
-    await banUser(id, reason, admin);
-    await load();
-    onChange();
-  };
-  const handleUnban = async (id: string) => {
-    if (!confirm("Unban this user?")) return;
-    await unbanUser(id, admin);
+  const handleBan = (id: string) => setModalTarget({ id, action: 'ban' });
+  const handleUnban = (id: string) => setModalTarget({ id, action: 'unban' });
+  const confirmAction = async (val: string) => {
+    if (!modalTarget) return;
+    if (modalTarget.action === 'ban') {
+      await banUser(modalTarget.id, val, admin);
+    } else {
+      await unbanUser(modalTarget.id, admin);
+    }
+    setModalTarget(null);
     await load();
     onChange();
   };
@@ -313,6 +370,14 @@ function UsersTab({ admin, onChange }: { admin: string; onChange: () => void }) 
 
   return (
     <div className="space-y-4">
+      <ConfirmModal
+        open={!!modalTarget}
+        title={modalTarget?.action === 'ban' ? 'Ban this user' : 'Unban this user?'}
+        placeholder={modalTarget?.action === 'ban' ? 'Reason for ban…' : undefined}
+        requireInput={modalTarget?.action === 'ban'}
+        onConfirm={confirmAction}
+        onCancel={() => setModalTarget(null)}
+      />
       <Panel className="flex flex-wrap items-center gap-3">
         <div className="min-w-[220px] flex-1">
           <SmoothInput value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, email, phone…" wrapperClassName="py-2.5" aria-label="Search users" />
@@ -331,7 +396,7 @@ function UsersTab({ admin, onChange }: { admin: string; onChange: () => void }) 
         {loading ? empty("Loading…") : list.length === 0 ? empty("No users found.") : list.map((u: any) => {
           const isBanned = bannedIds.has(u.id);
           return (
-            <div key={u.id} className="flex items-center gap-3 p-4">
+            <motion.div key={u.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3 p-4">
               <span
                 className="grid size-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-accent to-accent-strong bg-cover bg-center font-display font-bold text-white"
                 style={u.profile_photo ? { backgroundImage: `url(${u.profile_photo})` } : undefined}
@@ -339,8 +404,8 @@ function UsersTab({ admin, onChange }: { admin: string; onChange: () => void }) 
                 {!u.profile_photo && (u.full_name?.[0] || u.email?.[0] || "?").toUpperCase()}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-2 truncate text-sm font-semibold text-foreground">
-                  {u.full_name || "(no name)"}
+                <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-foreground">
+                  <span className="truncate">{u.full_name || "(no name)"}</span>
                   {isBanned && <Badge tone="danger">Banned</Badge>}
                   {u.user_type && <Badge tone="neutral">{roleLabel(u.user_type)}</Badge>}
                 </p>
@@ -362,7 +427,7 @@ function UsersTab({ admin, onChange }: { admin: string; onChange: () => void }) 
                   Ban
                 </button>
               )}
-            </div>
+            </motion.div>
           );
         })}
       </Panel>
