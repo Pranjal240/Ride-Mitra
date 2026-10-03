@@ -1,9 +1,5 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Autoplay, EffectCards } from "swiper/modules";
-import { Swiper, SwiperSlide } from "swiper/react";
-import "swiper/css/effect-cards";
-import "swiper/css";
 import useEmblaCarousel from "embla-carousel-react";
 import EmblaAutoplay from "embla-carousel-autoplay";
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
@@ -127,18 +123,23 @@ function HoverExpandRides({ slides, tall }: { slides: RideSlide[]; tall?: boolea
         })}
       </div>
 
-      {/* Mobile Swiper Cards (Skiper 48 style) */}
-      <div className="flex w-full items-center justify-center overflow-hidden py-4 lg:hidden">
-        <Swiper
-          effect="cards"
-          grabCursor={true}
-          loop={true}
-          autoplay={{ delay: 2500, disableOnInteraction: false }}
-          modules={[EffectCards, Autoplay]}
-          className="h-[380px] w-[260px] sm:w-[320px]"
+      {/* Mobile — predictable horizontal snap scroller.
+          The old Swiper "cards" effect with loop+autoplay competed with the
+          user's swipe gesture, so cards appeared in random order. A native
+          CSS snap scroller moves ONE slide per swipe, in order, every time. */}
+      <div className="w-full lg:hidden">
+        <div
+          data-lenis-prevent
+          className="flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain px-6 py-4 scroll-smooth touch-pan-x [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          style={{ scrollPaddingInline: "1.5rem" }}
         >
           {slides.map((s, i) => (
-            <SwiperSlide key={i} className="rounded-[1.75rem]">
+            <div
+              key={i}
+              className="relative shrink-0 snap-center overflow-hidden rounded-[1.75rem] shadow-md"
+              style={{ width: "min(78vw, 320px)", height: tall ? "26rem" : "22rem" }}
+              aria-label={`${s.title} — card ${i + 1} of ${slides.length}`}
+            >
               <RidePoster
                 tone={s.tone}
                 kind={s.kind}
@@ -146,9 +147,19 @@ function HoverExpandRides({ slides, tall }: { slides: RideSlide[]; tall?: boolea
                 title={s.title}
                 caption={s.caption}
               />
-            </SwiperSlide>
+            </div>
           ))}
-        </Swiper>
+        </div>
+        {/* step dots so the user sees sequence + position */}
+        <div className="mt-2 flex items-center justify-center gap-1.5">
+          {slides.map((_, i) => (
+            <span
+              key={i}
+              className="size-1.5 rounded-full bg-foreground/25"
+              aria-hidden
+            />
+          ))}
+        </div>
       </div>
     </>
   );
@@ -258,9 +269,13 @@ const TRUST_BG: Record<string, string> = {
 function TrustExpand() {
   const reduce = useReducedMotion();
   const [active, setActive] = useState(0);
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: "center" }, [
-    EmblaAutoplay({ delay: 3000, stopOnInteraction: true }),
-  ]);
+  // Trust-cards mobile carousel. loop:true + stopOnInteraction so the user's
+  // swipe cleanly takes over the autoplay; align:"start" keeps the active
+  // card pinned to the left so neighbours are previewed in order.
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    { loop: true, align: "start", containScroll: "trimSnaps", skipSnaps: false },
+    [EmblaAutoplay({ delay: 3800, stopOnInteraction: true, stopOnMouseEnter: true })],
+  );
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
@@ -644,7 +659,7 @@ export default function Landing() {
                 align="center"
                 eyebrow="However you travel"
                 title="A pool for every kind of trip."
-                description="Car, scooter, bike or the weekend society run — hover a card to open it."
+                description="Car, scooter, bike or the weekend society run — hover a card on desktop, swipe on mobile."
                 className="mb-12"
               />
             </Reveal>

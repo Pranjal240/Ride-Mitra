@@ -19,6 +19,23 @@
     <link rel="stylesheet" href="https://apis.mappls.com/advancedmaps/api/MAPPLS_REST_KEY/map_sdk_plugins?v=3.0&libraries=search,places" />
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <title>Ride Mitra - Campus Carpooling</title>
+    <script>
+      // Canonical-domain guard: if we somehow landed on a Vercel preview /
+      // production URL (ride-mitra*.vercel.app) despite the vercel.json
+      // 308 redirect — e.g. during an OAuth callback flash where Supabase
+      // sent us back to the project Site URL — hop to ridemitra.site
+      // immediately, preserving path, query AND hash (the OAuth hash
+      // fragment carries the access_token). Runs before React mounts so
+      // the vercel URL never gets a chance to render.
+      (function () {
+        try {
+          var h = location.hostname;
+          if (/\.vercel\.app$/i.test(h)) {
+            location.replace("https://ridemitra.site" + location.pathname + location.search + location.hash);
+          }
+        } catch (e) { /* no-op */ }
+      })();
+    </script>
     <style>
       :root { color-scheme: light; }
       /* html is the light fallback behind the app-wide animated grid; body MUST

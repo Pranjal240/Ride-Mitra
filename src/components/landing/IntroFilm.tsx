@@ -121,8 +121,17 @@ export function IntroFilm({
           // First frame decoded — start playback immediately. Waiting for
           // canplaythrough stalled the whole page on slower connections
           // because the browser blocks while buffering the full file.
-          (e.currentTarget as HTMLVideoElement).play().catch(() => {});
+          const el = e.currentTarget as HTMLVideoElement;
+          // Snappier intro: 1.35x makes it feel punchy on low-end devices
+          // where the raw frame rate is below the source's.
+          el.playbackRate = 1.35;
+          el.play().catch(() => {});
           setReady(true);
+        }}
+        onPlay={(e) => {
+          // In case the browser resets playbackRate on autoplay resume
+          // (iOS Safari does this), re-apply.
+          (e.currentTarget as HTMLVideoElement).playbackRate = 1.35;
         }}
         onPlaying={() => setReady(true)}
         onStalled={() => {
