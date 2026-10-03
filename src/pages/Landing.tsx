@@ -1,5 +1,10 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { EffectCoverflow, Pagination } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import "swiper/css/effect-coverflow";
+import "swiper/css/pagination";
 import useEmblaCarousel from "embla-carousel-react";
 import EmblaAutoplay from "embla-carousel-autoplay";
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
@@ -7,6 +12,8 @@ import {
   ArrowRight,
   Car,
   Check,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Download,
   GraduationCap,
@@ -123,22 +130,37 @@ function HoverExpandRides({ slides, tall }: { slides: RideSlide[]; tall?: boolea
         })}
       </div>
 
-      {/* Mobile — predictable horizontal snap scroller.
-          The old Swiper "cards" effect with loop+autoplay competed with the
-          user's swipe gesture, so cards appeared in random order. A native
-          CSS snap scroller moves ONE slide per swipe, in order, every time. */}
-      <div className="w-full lg:hidden">
-        <div
-          data-lenis-prevent
-          className="flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain px-6 py-4 scroll-smooth touch-pan-x [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          style={{ scrollPaddingInline: "1.5rem" }}
+      {/* Mobile — balanced coverflow carousel: ACTIVE card centered and
+          enlarged, the two neighbours visible on EITHER side, tilted back
+          in 3D. Clean sequence, no one-sided fan. Mobile only — desktop
+          keeps the HoverExpand accordion above. */}
+      <div
+        className="flex w-full items-center justify-center overflow-visible py-6 lg:hidden"
+        data-lenis-prevent
+      >
+        <Swiper
+          effect="coverflow"
+          grabCursor
+          loop
+          centeredSlides
+          slidesPerView="auto"
+          spaceBetween={-30}
+          coverflowEffect={{
+            rotate: 24,
+            stretch: 0,
+            depth: 180,
+            modifier: 1,
+            slideShadows: false,
+          }}
+          pagination={{ clickable: true, dynamicBullets: false }}
+          modules={[EffectCoverflow, Pagination]}
+          className={cn("skiper48 !overflow-visible", tall ? "h-[26rem]" : "h-[22rem]")}
         >
           {slides.map((s, i) => (
-            <div
+            <SwiperSlide
               key={i}
-              className="relative shrink-0 snap-center overflow-hidden rounded-[1.75rem] shadow-md"
-              style={{ width: "min(78vw, 320px)", height: tall ? "26rem" : "22rem" }}
-              aria-label={`${s.title} — card ${i + 1} of ${slides.length}`}
+              className="!flex overflow-hidden rounded-[1.75rem] shadow-xl"
+              style={{ width: "min(66vw, 280px)" }}
             >
               <RidePoster
                 tone={s.tone}
@@ -147,19 +169,9 @@ function HoverExpandRides({ slides, tall }: { slides: RideSlide[]; tall?: boolea
                 title={s.title}
                 caption={s.caption}
               />
-            </div>
+            </SwiperSlide>
           ))}
-        </div>
-        {/* step dots so the user sees sequence + position */}
-        <div className="mt-2 flex items-center justify-center gap-1.5">
-          {slides.map((_, i) => (
-            <span
-              key={i}
-              className="size-1.5 rounded-full bg-foreground/25"
-              aria-hidden
-            />
-          ))}
-        </div>
+        </Swiper>
       </div>
     </>
   );
@@ -363,53 +375,98 @@ function TrustExpand() {
         })}
       </div>
 
-      {/* Mobile Embla Carousel (Skiper 54 style) */}
-      <div className="overflow-hidden lg:hidden py-4 w-full" ref={emblaRef}>
-        <div className="flex w-full items-center">
-          {TRUST_CARDS.map((c, i) => {
-            const isActive = current === i;
-            return (
-              <div
-                key={c.title}
-                className="relative min-w-0 flex-[0_0_88%] pl-4 sm:flex-[0_0_65%]"
-              >
-                <motion.div
-                  initial={false}
-                  animate={{
-                    clipPath: !isActive ? "inset(8% 0 8% 0 round 1.75rem)" : "inset(0 0 0 0 round 1.75rem)",
-                    opacity: !isActive ? 0.6 : 1,
-                  }}
-                  transition={{ duration: 0.5 }}
-                  className={cn(
-                    "h-[32rem] overflow-hidden rounded-[1.75rem] p-6 shadow-md transition-[box-shadow] flex flex-col",
-                    isActive && "shadow-2xl",
-                    TRUST_BG[c.tone]
-                  )}
+      {/* Mobile — Skiper 54 style: Embla carousel where the active card
+          opens up (clipPath inset → 0) and the others pinch in horizontally.
+          Prev/Next controls + clickable pagination dots underneath, so the
+          user can advance deterministically. Mobile only — desktop uses the
+          HoverExpand row above. */}
+      <div className="relative lg:hidden">
+        <div className="overflow-hidden w-full" ref={emblaRef} data-lenis-prevent>
+          <div className="flex w-full items-stretch gap-4 px-6">
+            {TRUST_CARDS.map((c, i) => {
+              const isActive = current === i;
+              return (
+                <div
+                  key={c.title}
+                  className="relative min-w-0 flex-[0_0_82%] sm:flex-[0_0_62%]"
                 >
-                  <div className="flex items-center gap-4">
-                    <span className="inline-grid size-12 shrink-0 place-items-center rounded-2xl bg-white/15 backdrop-blur [&>svg]:size-6">
-                      {c.icon}
-                    </span>
-                  </div>
-                  <h3 className="mt-6 font-display text-3xl font-bold leading-tight">{c.title}</h3>
-                  <p className="mt-4 max-w-md text-base leading-relaxed opacity-85">{c.body}</p>
-                  {c.stats && (
-                    <div className="mt-auto pt-4 grid grid-cols-2 gap-4">
-                      {c.stats.map((s) => (
-                        <div key={s.label}>
-                          <div className="font-mono text-2xl font-semibold text-accent">
-                            <AnimatedNumber value={s.num} prefix={s.prefix} suffix={s.suffix} />
-                          </div>
-                          <div className="mt-1 text-sm font-semibold">{s.label}</div>
-                          <div className="text-[11px] opacity-60">{s.note}</div>
-                        </div>
-                      ))}
+                  <motion.div
+                    initial={false}
+                    animate={{
+                      clipPath: isActive
+                        ? "inset(0 0 0 0 round 1.75rem)"
+                        : "inset(10% 0 10% 0 round 1.75rem)",
+                      opacity: isActive ? 1 : 0.75,
+                    }}
+                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    className={cn(
+                      "flex h-[30rem] flex-col overflow-hidden rounded-[1.75rem] p-6 shadow-md transition-[box-shadow]",
+                      isActive && "shadow-2xl",
+                      TRUST_BG[c.tone],
+                    )}
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="inline-grid size-12 shrink-0 place-items-center rounded-2xl bg-white/15 backdrop-blur [&>svg]:size-6">
+                        {c.icon}
+                      </span>
                     </div>
-                  )}
-                </motion.div>
-              </div>
-            );
-          })}
+                    <h3 className="mt-6 font-display text-3xl font-bold leading-tight">{c.title}</h3>
+                    <p className="mt-4 max-w-md text-base leading-relaxed opacity-85">{c.body}</p>
+                    {c.stats && (
+                      <div className="mt-auto grid grid-cols-2 gap-4 pt-4">
+                        {c.stats.map((s) => (
+                          <div key={s.label}>
+                            <div className="font-mono text-2xl font-semibold text-accent">
+                              <AnimatedNumber value={s.num} prefix={s.prefix} suffix={s.suffix} />
+                            </div>
+                            <div className="mt-1 text-sm font-semibold">{s.label}</div>
+                            <div className="text-[11px] opacity-60">{s.note}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Prev / Next */}
+        <div className="mt-4 flex items-center justify-between px-6">
+          <button
+            type="button"
+            onClick={() => emblaApi?.scrollPrev()}
+            aria-label="Previous card"
+            className="grid size-10 place-items-center rounded-full bg-navy/10 text-navy transition-colors hover:bg-navy hover:text-white"
+          >
+            <ChevronLeft className="size-5" />
+          </button>
+
+          {/* Pagination dots */}
+          <div className="flex items-center justify-center gap-2">
+            {TRUST_CARDS.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`Go to card ${i + 1}`}
+                onClick={() => emblaApi?.scrollTo(i)}
+                className={cn(
+                  "h-2 cursor-pointer rounded-full transition-all",
+                  current === i ? "w-6 bg-navy" : "w-2 bg-navy/25",
+                )}
+              />
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => emblaApi?.scrollNext()}
+            aria-label="Next card"
+            className="grid size-10 place-items-center rounded-full bg-navy/10 text-navy transition-colors hover:bg-navy hover:text-white"
+          >
+            <ChevronRight className="size-5" />
+          </button>
         </div>
       </div>
     </>

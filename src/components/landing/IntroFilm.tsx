@@ -38,38 +38,41 @@ export function IntroFilm({
 }) {
   const [ready, setReady] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [needsTap, setNeedsTap] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const retryCountRef = useRef(0);
+  const leavingRef = useRef(false);
 
   const finish = useCallback(() => {
-    if (leaving) return; // prevent double-fire
+    if (leavingRef.current) return; // prevent double-fire
+    leavingRef.current = true;
     setLeaving(true);
     window.setTimeout(onDone, 420);
-  }, [onDone, leaving]);
+  }, [onDone]);
 
-  /** Attempt to play the video with retry logic for mobile browsers */
+  /** Attempt to play the video with resilient retry — never gives up on
+   *  stalls or transient pauses, only surrenders if the browser truly
+   *  blocks autoplay (then shows a Tap-to-play prompt). */
   const tryPlay = useCallback(() => {
     const v = videoRef.current;
-    if (!v) return;
-    const playPromise = v.play();
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          setReady(true);
-        })
-        .catch(() => {
-          // Mobile browsers often block autoplay on first attempt — retry
-          // up to 3 times with a small delay
-          if (retryCountRef.current < 3) {
-            retryCountRef.current += 1;
-            window.setTimeout(tryPlay, 300);
-          } else {
-            // After 3 retries, skip the intro entirely
-            finish();
-          }
-        });
+    if (!v || leavingRef.current) return;
+    v.playbackRate = 1.35;
+    const p = v.play();
+    if (p && typeof p.then === "function") {
+      p.then(() => {
+        setReady(true);
+        setNeedsTap(false);
+      }).catch((err: unknown) => {
+        // NotAllowedError = autoplay policy blocked us — needs a user gesture.
+        // Everything else (AbortError, network) just means try again shortly.
+        const name = (err as { name?: string })?.name;
+        if (name === "NotAllowedError") {
+          setNeedsTap(true);
+        } else {
+          window.setTimeout(() => tryPlay(), 350);
+        }
+      });
     }
-  }, [finish]);
+  }, []);
 
   // lock body scroll while the film owns the screen
   useEffect(() => {
@@ -82,20 +85,33 @@ export function IntroFilm({
 
   // Kick off playback once mounted
   useEffect(() => {
-    // Small delay lets the browser settle after mount, improving autoplay
-    // reliability on mobile Chrome/Safari
     const t = window.setTimeout(tryPlay, 80);
     return () => window.clearTimeout(t);
   }, [tryPlay]);
 
+  // If the browser pauses us mid-way (tab backgrounded, visibility throttle,
+  // or Chrome's power saver), resume as soon as the page is visible again.
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === "visible") tryPlay();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, [tryPlay]);
+
+  // Hard bail only if the video completely fails to buffer within 10s
+  // (not on transient stalls). Then also a 24s cap once playing so a stuck
+  // decoder can't pin the intro overlay to the screen forever.
   useEffect(() => {
     if (ready) {
       const hard = window.setTimeout(finish, 24000);
       return () => window.clearTimeout(hard);
     }
-    // Increased bail timeout for slower mobile connections — gives the video
-    // more time to buffer before we skip
-    const bail = window.setTimeout(finish, 8000);
+    const bail = window.setTimeout(() => {
+      const v = videoRef.current;
+      // Only bail if the browser hasn't even reached HAVE_CURRENT_DATA.
+      if (!v || v.readyState < 2) finish();
+    }, 10000);
     return () => window.clearTimeout(bail);
   }, [ready, finish]);
 
@@ -114,9 +130,14 @@ export function IntroFilm({
         muted
         playsInline
         webkit-playsinline="true"
-        preload="metadata"
+        preload="auto"
         disablePictureInPicture
         disableRemotePlayback
+        onLoadedMetadata={(e) => {
+          // Set rate as soon as the duration is known — before play() —
+          // so even the first paint uses 1.35x cadence.
+          (e.currentTarget as HTMLVideoElement).playbackRate = 1.35;
+        }}
         onLoadedData={(e) => {
           // First frame decoded — start playback immediately. Waiting for
           // canplaythrough stalled the whole page on slower connections
@@ -132,18 +153,38 @@ export function IntroFilm({
           // In case the browser resets playbackRate on autoplay resume
           // (iOS Safari does this), re-apply.
           (e.currentTarget as HTMLVideoElement).playbackRate = 1.35;
+          setReady(true);
+          setNeedsTap(false);
         }}
         onPlaying={() => setReady(true)}
-        onStalled={() => {
-          // If playback stalls (slow network / low-end device), bail quickly
-          // rather than freeze the page under a dark overlay.
-          window.setTimeout(finish, 1200);
+        onPause={() => {
+          // Chrome's power saver / tab-visibility throttling pauses the
+          // video mid-play. Resume immediately unless we're intentionally
+          // tearing down the intro.
+          if (!leavingRef.current) tryPlay();
         }}
         onEnded={finish}
         onError={() => window.setTimeout(finish, 400)}
         className="intro-film-video"
         style={{ opacity: ready ? 1 : 0, transition: "opacity 0.35s ease" }}
       />
+
+      {/* Autoplay-blocked fallback: user tap required (iOS low-power mode,
+          data-saver, some mobile browsers). Shown only when play() rejects
+          with NotAllowedError. */}
+      {needsTap && !leaving && (
+        <button
+          type="button"
+          onClick={tryPlay}
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-navy/40 text-white backdrop-blur-sm"
+          aria-label="Tap to play intro"
+        >
+          <span className="grid size-20 place-items-center rounded-full border-2 border-white/70 bg-white/15">
+            <svg viewBox="0 0 24 24" className="size-9 fill-current"><path d="M8 5v14l11-7z" /></svg>
+          </span>
+          <span className="mt-4 text-sm font-semibold uppercase tracking-[0.18em]">Tap to play</span>
+        </button>
+      )}
 
       <button
         onClick={finish}
