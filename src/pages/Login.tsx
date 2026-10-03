@@ -5,6 +5,7 @@ import { ArrowLeft, Check, FlaskConical, Mail, MapPin, Phone, ShieldCheck } from
 
 import { useAuthStore } from "@/hooks/useStore";
 import { supabase } from "@/lib/supabase";
+import { getSiteOrigin } from "@/lib/auth";
 import { dashboardPath } from "@/lib/roles";
 import type { User } from "@/types";
 import Logo from "@/components/common/Logo";
@@ -119,7 +120,7 @@ export default function Login() {
     localStorage.setItem("selectedRole", role);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${getSiteOrigin()}/auth/callback` },
     });
     if (error) {
       alert(error.message);

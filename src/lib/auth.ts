@@ -3,11 +3,21 @@ import type { User } from '../types';
 
 const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || '').split(',').map((e: string) => e.trim());
 
+/** Canonical site origin — always resolves to the custom domain in production,
+ *  falls back to window.location.origin for local dev. */
+export function getSiteOrigin(): string {
+  const env = import.meta.env.VITE_SITE_URL;
+  if (env) return env.replace(/\/$/, ''); // strip trailing slash
+  // In production (vercel deploy), always use the custom domain
+  if (import.meta.env.PROD) return 'https://ridemitra.site';
+  return window.location.origin;
+}
+
 export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
+      redirectTo: `${getSiteOrigin()}/auth/callback`,
     },
   });
   if (error) throw error;

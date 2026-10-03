@@ -434,11 +434,19 @@ export default function Landing() {
   const reduce = useReducedMotion();
   const [showIntro, setShowIntro] = useState(() => {
     try {
+      // Explicit opt-in to re-play from a link, e.g. the user hitting "watch
+      // intro" or sharing /?intro=1.
+      const force = new URLSearchParams(window.location.search).get("intro");
+      if (force === "0") return false;
+      if (force === "1") return true;
       if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return false;
-      if (sessionStorage.getItem("rm_intro_v2")) return false;
-      // Mark it the MOMENT we decide to show it, so navigating back to "/" (or any
-      // remount) never replays the film — it plays only on the true first load.
-      sessionStorage.setItem("rm_intro_v2", "1");
+      // localStorage (not sessionStorage) so the film never auto-replays on
+      // reload / login / new tab / logout — it plays once on the device, then
+      // stays dismissed until the user clears site data or opens /?intro=1.
+      if (localStorage.getItem("rm_intro_seen") === "1") return false;
+      // Mark it the MOMENT we decide to show it, so navigating back to "/"
+      // never replays the film — it plays only on the true first visit.
+      localStorage.setItem("rm_intro_seen", "1");
       return true;
     } catch {
       return false;
@@ -834,8 +842,9 @@ export default function Landing() {
           </Container>
         </section>
 
-        {/* ── CLOSING CTA ── */}
-        <section className="relative overflow-hidden bg-navy pt-20 pb-10 text-center text-white sm:pt-24">
+        {/* ── CLOSING CTA ── (same bg-navy as footer, no bottom padding so
+             it blends straight into the footer below — reads as one block) */}
+        <section className="relative overflow-hidden bg-navy pt-20 pb-14 text-center text-white sm:pt-24 sm:pb-16">
           <div className="mx-auto w-full max-w-6xl px-6">
             <RevealGroup className="relative z-10">
               <RevealItem>

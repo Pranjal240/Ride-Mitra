@@ -190,6 +190,10 @@
     -moz-osx-font-smoothing: grayscale;
     /* light fallback behind the app-wide animated grid (see AppBackground) */
     background: #F1EADD;
+    /* Stop the mobile overscroll bounce from exposing the html background
+       below the navy footer (that looked like an "empty space at the bottom"
+       on phones). This also kills the chained-scroll bounce. */
+    overscroll-behavior-y: none;
   }
 
   body {
@@ -201,6 +205,7 @@
     color: var(--text);
     line-height: 1.6;
     overflow-x: hidden;
+    overscroll-behavior-y: none;
   }
 
   ::selection {

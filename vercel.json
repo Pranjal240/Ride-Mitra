@@ -1,4 +1,22 @@
 {
+  "redirects": [
+    {
+      "source": "/:path(.*)",
+      "has": [
+        { "type": "host", "value": "ride-mitra.vercel.app" }
+      ],
+      "destination": "https://ridemitra.site/:path",
+      "permanent": true
+    },
+    {
+      "source": "/:path(.*)",
+      "has": [
+        { "type": "host", "value": "ride-mitra-git-main.vercel.app" }
+      ],
+      "destination": "https://ridemitra.site/:path",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]

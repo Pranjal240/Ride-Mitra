@@ -12,8 +12,16 @@
  *
  * No loading screen: the film plays immediately over a dark backdrop (never a
  * white flash). PC/landscape → whole 16:9 film fit to screen (contain, never a
- * zoomed crop). Mobile/portrait → rotated 90deg + cover to fill the screen.
- * Muted + autoplay + playsInline, Skip always reachable, plays once per session.
+ * zoomed crop). Mobile/portrait → rotated 90deg + contain so the full frame is
+ * visible with letterbox bars that read as cinematic, not cropped.
+ *
+ * Dismissal persists in localStorage (device-level), so reload/login/new-tab
+ * never re-triggers the film. Only the explicit ?intro=1 URL flag re-plays it.
+ *
+ * Playback is tuned for low latency: metadata-only preload (not a blocking full
+ * download), play triggered on loadeddata (first frame) rather than
+ * canplaythrough — the film starts the moment the first frame is decoded
+ * instead of waiting for the entire file to buffer.
  */
 
 import { motion } from "framer-motion";
@@ -31,11 +39,37 @@ export function IntroFilm({
   const [ready, setReady] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const retryCountRef = useRef(0);
 
   const finish = useCallback(() => {
+    if (leaving) return; // prevent double-fire
     setLeaving(true);
     window.setTimeout(onDone, 420);
-  }, [onDone]);
+  }, [onDone, leaving]);
+
+  /** Attempt to play the video with retry logic for mobile browsers */
+  const tryPlay = useCallback(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const playPromise = v.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          setReady(true);
+        })
+        .catch(() => {
+          // Mobile browsers often block autoplay on first attempt — retry
+          // up to 3 times with a small delay
+          if (retryCountRef.current < 3) {
+            retryCountRef.current += 1;
+            window.setTimeout(tryPlay, 300);
+          } else {
+            // After 3 retries, skip the intro entirely
+            finish();
+          }
+        });
+    }
+  }, [finish]);
 
   // lock body scroll while the film owns the screen
   useEffect(() => {
@@ -46,16 +80,22 @@ export function IntroFilm({
     };
   }, []);
 
+  // Kick off playback once mounted
   useEffect(() => {
-    videoRef.current?.play().catch(() => {});
-  }, []);
+    // Small delay lets the browser settle after mount, improving autoplay
+    // reliability on mobile Chrome/Safari
+    const t = window.setTimeout(tryPlay, 80);
+    return () => window.clearTimeout(t);
+  }, [tryPlay]);
 
   useEffect(() => {
     if (ready) {
       const hard = window.setTimeout(finish, 24000);
       return () => window.clearTimeout(hard);
     }
-    const bail = window.setTimeout(finish, 6000);
+    // Increased bail timeout for slower mobile connections — gives the video
+    // more time to buffer before we skip
+    const bail = window.setTimeout(finish, 8000);
     return () => window.clearTimeout(bail);
   }, [ready, finish]);
 
@@ -69,17 +109,29 @@ export function IntroFilm({
       <video
         ref={videoRef}
         src={src}
+        poster="/launch-poster.jpg"
         autoPlay
         muted
         playsInline
-        preload="auto"
-        onCanPlay={(e) => {
+        webkit-playsinline="true"
+        preload="metadata"
+        disablePictureInPicture
+        disableRemotePlayback
+        onLoadedData={(e) => {
+          // First frame decoded — start playback immediately. Waiting for
+          // canplaythrough stalled the whole page on slower connections
+          // because the browser blocks while buffering the full file.
           (e.currentTarget as HTMLVideoElement).play().catch(() => {});
           setReady(true);
         }}
         onPlaying={() => setReady(true)}
+        onStalled={() => {
+          // If playback stalls (slow network / low-end device), bail quickly
+          // rather than freeze the page under a dark overlay.
+          window.setTimeout(finish, 1200);
+        }}
         onEnded={finish}
-        onError={() => window.setTimeout(finish, 600)}
+        onError={() => window.setTimeout(finish, 400)}
         className="intro-film-video"
         style={{ opacity: ready ? 1 : 0, transition: "opacity 0.35s ease" }}
       />
@@ -102,10 +154,10 @@ export function IntroFilm({
           height: 100%;
           object-fit: contain;
           background: #070E1C;
-          will-change: transform;
         }
-        /* Portrait phones: rotate the landscape film 90deg and size it to the
-           viewport so it fills the whole portrait screen (cover-crop, no bars). */
+        /* Portrait phones: rotate the landscape film 90deg into portrait
+           orientation and use CONTAIN so the full frame stays visible — any
+           leftover space is the dark backdrop (reads cinematic, not cropped). */
         @media (orientation: portrait) {
           .intro-film-video {
             inset: auto;
@@ -113,7 +165,7 @@ export function IntroFilm({
             left: 50%;
             width: 100vh;
             height: 100vw;
-            object-fit: cover;
+            object-fit: contain;
             transform: translate(-50%, -50%) rotate(90deg);
             transform-origin: center center;
           }
