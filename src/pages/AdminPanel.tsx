@@ -10,6 +10,7 @@ import {
   ListChecks,
   Megaphone,
   MessageSquareText,
+  Paperclip,
   Search,
   Send,
   ShieldCheck,
@@ -554,6 +555,9 @@ function DriversTab({ admin, onChange }: { admin: string; onChange: () => void }
               )}
             </div>
           )}
+          {/* AI extraction (Gemini 2.0 Flash) — shown alongside the manual
+              review so admin can double-check what the model read. */}
+          <AiExtractionPanel data={v.ocr_extracted_data} status={v.ocr_status} />
           <div className="flex gap-2">
             <button type="button" onClick={() => handle(v.id, "verified")} className={pill("success")}>
               ✓ Verify
@@ -714,6 +718,9 @@ function SupportTab({ admin }: { admin: string }) {
   const [rows, setRows] = useState<any[]>([]);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [reply, setReply] = useState("");
+  const [replyFile, setReplyFile] = useState<File | null>(null);
+  const [sendingReply, setSendingReply] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const load = async () => {
     setLoading(true);
@@ -722,6 +729,14 @@ function SupportTab({ admin }: { admin: string }) {
   };
   useEffect(() => {
     load();
+  }, []);
+  // Live refresh when a user replies.
+  useEffect(() => {
+    const ch = supabase
+      .channel("admin-support")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_messages" }, () => load())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
   }, []);
   const grouped = useMemo(() => {
     const map = new Map<string, { user: any; messages: any[]; unread: number }>();
@@ -735,11 +750,34 @@ function SupportTab({ admin }: { admin: string }) {
     return Array.from(map.values()).sort((a, b) => b.unread - a.unread || new Date(b.messages[0].created_at).getTime() - new Date(a.messages[0].created_at).getTime());
   }, [rows]);
   const send = async () => {
-    if (!reply.trim() || !selectedUser) return;
-    await replySupport(selectedUser.id, admin, reply.trim());
-    await markSupportRead(selectedUser.id);
-    setReply("");
-    await load();
+    if (!selectedUser) return;
+    if (!reply.trim() && !replyFile) return;
+    setSendingReply(true);
+    try {
+      let attachment_url: string | undefined;
+      if (replyFile) {
+        const ext = replyFile.name.split(".").pop() || "bin";
+        const path = `support/${selectedUser.id}/admin-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("attachments")
+          .upload(path, replyFile, { contentType: replyFile.type });
+        if (!upErr) {
+          attachment_url = supabase.storage.from("attachments").getPublicUrl(path).data.publicUrl;
+        }
+      }
+      await replySupport(
+        selectedUser.id,
+        admin,
+        reply.trim() || (replyFile ? `📎 ${replyFile.name}` : ""),
+        attachment_url,
+      );
+      await markSupportRead(selectedUser.id);
+      setReply("");
+      setReplyFile(null);
+      await load();
+    } finally {
+      setSendingReply(false);
+    }
   };
   const openThread = async (u: any) => {
     setSelectedUser(u);
@@ -794,17 +832,60 @@ function SupportTab({ admin }: { admin: string }) {
                       m.sender_type === "admin" ? "self-end bg-primary text-primary-foreground" : "self-start border border-border bg-muted text-foreground",
                     )}
                   >
-                    <p>{m.message}</p>
+                    {m.attachment_url && (
+                      /\.(png|jpg|jpeg|gif|webp)$/i.test(m.attachment_url) ? (
+                        <a href={m.attachment_url} target="_blank" rel="noreferrer">
+                          <img src={m.attachment_url} alt="attachment" className="mb-1.5 max-h-44 rounded-lg object-cover" />
+                        </a>
+                      ) : (
+                        <a href={m.attachment_url} target="_blank" rel="noreferrer" className="mb-1.5 flex items-center gap-1.5 rounded-lg bg-black/15 px-2 py-1 text-xs underline">
+                          <Paperclip className="size-3" /> Open attachment
+                        </a>
+                      )
+                    )}
+                    {m.message && <p className="whitespace-pre-wrap break-words">{m.message}</p>}
                     <p className={cn("mt-1 text-[10px]", m.sender_type === "admin" ? "text-white/60" : "text-muted-foreground")}>
                       {m.sender_type} · {formatDistanceToNow(new Date(m.created_at), { addSuffix: true })}
                     </p>
                   </div>
                 ))}
             </div>
+            {replyFile && (
+              <div className="flex items-center gap-2 border-t border-border bg-muted/40 px-3 py-2">
+                {/^image\//.test(replyFile.type) ? (
+                  <img src={URL.createObjectURL(replyFile)} alt="preview" className="size-10 rounded-lg object-cover" />
+                ) : (
+                  <span className="grid size-10 place-items-center rounded-lg bg-muted"><Paperclip className="size-4" /></span>
+                )}
+                <span className="truncate text-xs text-muted-foreground">{replyFile.name}</span>
+                <button type="button" onClick={() => setReplyFile(null)} aria-label="Remove attachment" className="ml-auto text-muted-foreground hover:text-danger">
+                  ×
+                </button>
+              </div>
+            )}
             <div className="flex items-center gap-2 border-t border-border p-3">
-              <SmoothInput value={reply} onChange={(e) => setReply(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Type a reply…" wrapperClassName="flex-1" aria-label="Reply" />
-              <Button size="md" onClick={send} className="!px-3.5" icon={<Send className="size-4" />}>
-                Send
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,application/pdf"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) setReplyFile(f);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="Attach file"
+                className="grid size-10 shrink-0 place-items-center rounded-xl bg-muted text-muted-foreground transition-colors hover:bg-accent-soft hover:text-accent-strong"
+              >
+                <Paperclip className="size-4" />
+              </button>
+              <SmoothInput value={reply} onChange={(e) => setReply(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Type a reply or attach a file…" wrapperClassName="flex-1" aria-label="Reply" />
+              <Button size="md" onClick={send} disabled={(!reply.trim() && !replyFile) || sendingReply} loading={sendingReply} className="!px-3.5">
+                {!sendingReply && <Send className="size-4" />}
               </Button>
             </div>
           </>
@@ -943,5 +1024,61 @@ function AuditTab() {
         </div>
       )}
     </Panel>
+  );
+}
+
+/* ── AI extraction panel for admin verification review ───── */
+function AiExtractionPanel({ data, status }: { data: any; status?: string | null }) {
+  if (!data || typeof data !== "object") return null;
+  const ex = data.extracted || {};
+  const sig = data.authenticity_signals || {};
+  const pct = typeof data.confidence === "number" ? Math.round(data.confidence * 100) : null;
+  const tone: BadgeTone =
+    status === "verified" || data.status === "verified" ? "success"
+    : status === "rejected" || data.status === "rejected" ? "danger"
+    : "warning";
+  const row = (label: string, v?: string | null) => v ? (
+    <div className="flex items-start justify-between gap-3 py-1 text-xs">
+      <span className="uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className="truncate text-right font-mono font-semibold text-foreground">{v}</span>
+    </div>
+  ) : null;
+  return (
+    <details className="mt-2 rounded-xl border border-accent/40 bg-accent-soft/30 p-3">
+      <summary className="flex cursor-pointer items-center justify-between gap-2 text-sm font-semibold text-foreground">
+        <span className="flex items-center gap-2">
+          <ShieldCheck className="size-4 text-accent-strong" />
+          AI extraction (Gemini) <Badge tone={tone}>{(data.status || status || "needs_review").toString().replace("_"," ")}</Badge>
+        </span>
+        {pct !== null && <span className="font-mono text-xs text-muted-foreground">{pct}% confidence</span>}
+      </summary>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-lg border border-border bg-card p-2">
+          {row("Name", ex.name)}
+          {row("Licence #", ex.number)}
+          {row("DOB", ex.date_of_birth)}
+          {row("Expiry", ex.expiry_date)}
+          {row("Vehicle", ex.vehicle_number)}
+        </div>
+        <div className="rounded-lg border border-border bg-card p-2 space-y-1">
+          <div className="flex flex-wrap gap-1.5">
+            <Badge tone={sig.has_govt_hologram ? "success" : "neutral"}>
+              {sig.has_govt_hologram ? "✓ Hologram" : "No hologram"}
+            </Badge>
+            <Badge tone={sig.tampering_detected ? "danger" : "success"}>
+              {sig.tampering_detected ? "⚠ Tampering" : "✓ Clean"}
+            </Badge>
+            <Badge tone={sig.font_consistent ? "success" : "warning"}>
+              {sig.font_consistent ? "✓ Fonts" : "Font issue"}
+            </Badge>
+          </div>
+          {Array.isArray(data.issues) && data.issues.length > 0 && (
+            <ul className="mt-2 list-disc space-y-0.5 pl-4 text-[11px] text-foreground">
+              {data.issues.slice(0,3).map((it: string, i: number) => <li key={i}>{it}</li>)}
+            </ul>
+          )}
+        </div>
+      </div>
+    </details>
   );
 }

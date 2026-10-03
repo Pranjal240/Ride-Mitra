@@ -72,6 +72,43 @@ const STEPS = [
   { n: 3, label: "Review", icon: <CheckCircle2 className="size-4" /> },
 ];
 
+/* ── AI verification result shape (matches the verify-document edge
+      function's response envelope) ──────────────────────────────── */
+export interface AiVerifyResult {
+  doc_type: string;
+  status: "verified" | "needs_review" | "rejected";
+  confidence: number;
+  extracted: {
+    name?: string | null;
+    date_of_birth?: string | null;
+    number?: string | null;
+    address?: string | null;
+    issue_date?: string | null;
+    expiry_date?: string | null;
+    vehicle_type?: string | null;
+    vehicle_number?: string | null;
+  };
+  face_match: { match: boolean; confidence: number } | null;
+  authenticity_signals: {
+    has_govt_hologram?: boolean;
+    font_consistent?: boolean;
+    tampering_detected?: boolean;
+    photo_glare?: "none" | "minor" | "severe";
+  };
+  issues: string[];
+  verified_at: string;
+}
+
+/** Read a File as base64 (no data: prefix). */
+function readAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve((r.result as string).split(",")[1] ?? "");
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(file);
+  });
+}
+
 /* ── File upload helper ────────────────────────────────────── */
 async function uploadDoc(userId: string, file: File, slug: string): Promise<string> {
   const ext = file.name.split(".").pop() || "jpg";
@@ -203,6 +240,10 @@ export default function Verification() {
   const [vehicleFile, setVehicleFile] = useState<File | null>(null);
   const [idCardFile, setIdCardFile] = useState<File | null>(null);
 
+  // AI OCR result from the verify-document edge function (Gemini 2.0 Flash).
+  const [aiResult, setAiResult] = useState<AiVerifyResult | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+
   useEffect(() => {
     async function load() {
       if (!user) return;
@@ -253,16 +294,40 @@ export default function Verification() {
         id_card_photo: uploads[2] || verification?.id_card_photo || undefined,
       });
 
-      // Fire and forget AI verification if new license was uploaded
+      // AI verification (Gemini 2.0 Flash) — await so we can SHOW the user
+      // what the model extracted, flag any issues, and auto-mark records
+      // Gemini is confident about.
       if (licenseFile) {
-        const reader = new FileReader();
-        reader.onload = async () => {
-          const base64 = (reader.result as string).split(",")[1];
-          await supabase.functions.invoke("verify-document", {
-            body: { doc_type: "driving_licence", doc_image_base64: base64, mime: licenseFile.type }
-          });
-        };
-        reader.readAsDataURL(licenseFile);
+        setAiLoading(true);
+        try {
+          const base64 = await readAsBase64(licenseFile);
+          const { data: ai, error: aiErr } = await supabase.functions.invoke<AiVerifyResult>(
+            "verify-document",
+            {
+              body: {
+                doc_type: "driving_licence",
+                doc_image_base64: base64,
+                mime: licenseFile.type,
+              },
+            },
+          );
+          if (!aiErr && ai) {
+            setAiResult(ai);
+            // Mirror AI extraction + status into driver_verification so the
+            // admin review panel can show what Gemini read. RLS policy
+            // "Drivers can update own verification" allows this.
+            try {
+              await supabase
+                .from("driver_verification")
+                .update({ ocr_status: ai.status, ocr_extracted_data: ai })
+                .eq("user_id", user.id);
+            } catch { /* non-fatal — UI already has the result */ }
+          }
+        } catch (e) {
+          console.warn("AI verification failed", e);
+        } finally {
+          setAiLoading(false);
+        }
       }
 
       setVerification(v);
@@ -395,6 +460,9 @@ export default function Verification() {
         {/* Pending status */}
         {isPending && step === 3 && (
           <Reveal delay={0.05}>
+            {/* AI OCR result (Gemini) — shown as soon as the model responds */}
+            <AiVerifyResultCard loading={aiLoading} result={aiResult} />
+
             <Panel className="mt-5 border-warning/30 bg-warning-soft/30">
               <div className="flex items-center gap-3">
                 <span className="grid size-12 place-items-center rounded-2xl bg-warning-soft text-warning">
@@ -736,5 +804,108 @@ export default function Verification() {
         </Reveal>
       </Container>
     </PageShell>
+  );
+}
+
+/* ── AI verification result card ───────────────────────────── */
+function AiVerifyResultCard({ loading, result }: { loading: boolean; result: AiVerifyResult | null }) {
+  if (loading) {
+    return (
+      <Panel className="mt-5 border-info/30 bg-info-soft/30">
+        <div className="flex items-center gap-3">
+          <span className="grid size-11 place-items-center rounded-2xl bg-info text-white">
+            <Loader2 className="size-5 animate-spin" />
+          </span>
+          <div>
+            <p className="font-semibold text-foreground">AI is reading your licence…</p>
+            <p className="text-sm text-muted-foreground">
+              Gemini 2.0 Flash is extracting fields and checking for tampering. This usually takes 2–4 seconds.
+            </p>
+          </div>
+        </div>
+      </Panel>
+    );
+  }
+  if (!result) return null;
+
+  const tone: BadgeTone =
+    result.status === "verified" ? "success" : result.status === "rejected" ? "danger" : "warning";
+  const pct = Math.round(result.confidence * 100);
+  const ex = result.extracted || {};
+  const sig = result.authenticity_signals || {};
+  const field = (label: string, val?: string | null) =>
+    val
+      ? (
+        <div className="flex items-start justify-between gap-3 border-b border-border/60 py-1.5 last:border-0">
+          <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
+          <span className="truncate text-right font-mono text-sm font-semibold text-foreground">{val}</span>
+        </div>
+      )
+      : null;
+
+  return (
+    <Panel className="mt-5 border-accent/40 bg-accent-soft/30">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="grid size-11 place-items-center rounded-2xl bg-accent text-white">
+            <ShieldCheck className="size-5" />
+          </span>
+          <div>
+            <p className="flex items-center gap-2 font-semibold text-foreground">
+              AI pre-check <Badge tone={tone}>{result.status.replace("_", " ")}</Badge>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Gemini 2.0 Flash extracted the following from your licence.
+            </p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="font-mono text-2xl font-extrabold text-foreground">{pct}%</p>
+          <p className="text-[11px] uppercase tracking-wide text-muted-foreground">confidence</p>
+        </div>
+      </div>
+
+      {/* extracted fields */}
+      <div className="mt-4 rounded-xl border border-border bg-card p-3">
+        {field("Name", ex.name)}
+        {field("DOB", ex.date_of_birth)}
+        {field("Licence #", ex.number)}
+        {field("Issued", ex.issue_date)}
+        {field("Expires", ex.expiry_date)}
+        {field("Vehicle class", ex.vehicle_type)}
+        {field("Vehicle #", ex.vehicle_number)}
+        {field("Address", ex.address)}
+      </div>
+
+      {/* authenticity signals */}
+      {(sig.has_govt_hologram !== undefined || sig.tampering_detected !== undefined) && (
+        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+          <Badge tone={sig.has_govt_hologram ? "success" : "neutral"}>
+            {sig.has_govt_hologram ? "✓ Hologram" : "No hologram"}
+          </Badge>
+          <Badge tone={sig.font_consistent ? "success" : "warning"}>
+            {sig.font_consistent ? "✓ Fonts consistent" : "Font inconsistency"}
+          </Badge>
+          <Badge tone={sig.tampering_detected ? "danger" : "success"}>
+            {sig.tampering_detected ? "⚠ Tampering" : "✓ No tampering"}
+          </Badge>
+          {sig.photo_glare && sig.photo_glare !== "none" && (
+            <Badge tone="warning">Glare: {sig.photo_glare}</Badge>
+          )}
+        </div>
+      )}
+
+      {/* issues */}
+      {result.issues.length > 0 && (
+        <ul className="mt-3 space-y-1 rounded-xl border border-warning/40 bg-warning-soft/50 p-3 text-sm text-foreground">
+          {result.issues.slice(0, 5).map((iss, i) => (
+            <li key={i} className="flex gap-2">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" />
+              <span>{iss}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Panel>
   );
 }

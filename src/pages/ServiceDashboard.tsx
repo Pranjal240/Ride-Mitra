@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
@@ -8,6 +8,7 @@ import {
   Clock,
   MapPin,
   MessageCircle,
+  Paperclip,
   Plus,
   Send,
   ShieldCheck,
@@ -51,7 +52,7 @@ import { PopButton } from "@/components/ui/pop-button";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
-type ChatMessage = { id?: string; message: string; sender_type: "user" | "admin" };
+type ChatMessage = { id?: string; message: string; sender_type: "user" | "admin"; attachment_url?: string | null };
 
 export default function ServiceDashboard() {
   const { user } = useAuthStore();
@@ -64,6 +65,8 @@ export default function ServiceDashboard() {
   const [sosLoading, setSosLoading] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMsg, setChatMsg] = useState("");
+  const [chatFile, setChatFile] = useState<File | null>(null);
+  const chatFileInputRef = useRef<HTMLInputElement>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [sendingChat, setSendingChat] = useState(false);
   const [bookingRequests, setBookingRequests] = useState<Booking[]>([]);
@@ -210,11 +213,32 @@ export default function ServiceDashboard() {
   };
 
   const sendChatMessage = async () => {
-    if (!chatMsg.trim() || !user) return;
+    if (!user) return;
+    if (!chatMsg.trim() && !chatFile) return;
     setSendingChat(true);
-    await supabase.from("support_messages").insert({ user_id: user.id, message: chatMsg.trim(), sender_type: "user" });
-    setChatMsg("");
-    setSendingChat(false);
+    try {
+      let attachment_url: string | undefined;
+      if (chatFile) {
+        const ext = chatFile.name.split(".").pop() || "bin";
+        const path = `support/${user.id}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("attachments")
+          .upload(path, chatFile, { contentType: chatFile.type });
+        if (!upErr) {
+          attachment_url = supabase.storage.from("attachments").getPublicUrl(path).data.publicUrl;
+        }
+      }
+      await supabase.from("support_messages").insert({
+        user_id: user.id,
+        message: chatMsg.trim() || (chatFile ? `📎 ${chatFile.name}` : ""),
+        sender_type: "user",
+        attachment_url,
+      });
+      setChatMsg("");
+      setChatFile(null);
+    } finally {
+      setSendingChat(false);
+    }
   };
 
   const scrollToId = (id: string) =>
@@ -623,30 +647,74 @@ export default function ServiceDashboard() {
                       m.sender_type === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground",
                     )}
                   >
-                    {m.message}
+                    {m.attachment_url && (
+                      /\.(png|jpg|jpeg|gif|webp)$/i.test(m.attachment_url) ? (
+                        <a href={m.attachment_url} target="_blank" rel="noreferrer">
+                          <img src={m.attachment_url} alt="attachment" className="mb-1.5 max-h-40 rounded-lg object-cover" />
+                        </a>
+                      ) : (
+                        <a href={m.attachment_url} target="_blank" rel="noreferrer" className="mb-1.5 flex items-center gap-1.5 rounded-lg bg-black/15 px-2 py-1 text-xs underline">
+                          <Paperclip className="size-3" /> Open attachment
+                        </a>
+                      )
+                    )}
+                    {m.message && <p className="whitespace-pre-wrap break-words">{m.message}</p>}
                   </div>
                 </div>
               ))}
             </div>
+            {chatFile && (
+              <div className="flex items-center gap-2 border-t border-border bg-muted/40 px-3 py-2">
+                {/^image\//.test(chatFile.type) ? (
+                  <img src={URL.createObjectURL(chatFile)} alt="preview" className="size-10 rounded-lg object-cover" />
+                ) : (
+                  <span className="grid size-10 place-items-center rounded-lg bg-muted"><Paperclip className="size-4" /></span>
+                )}
+                <span className="truncate text-xs text-muted-foreground">{chatFile.name}</span>
+                <button type="button" onClick={() => setChatFile(null)} aria-label="Remove attachment" className="ml-auto text-muted-foreground hover:text-danger">
+                  <X className="size-4" />
+                </button>
+              </div>
+            )}
             <div className="flex items-center gap-2 border-t border-border p-3">
+              <input
+                ref={chatFileInputRef}
+                type="file"
+                accept="image/*,application/pdf"
+                className="hidden"
+                onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                  const f = e.target.files?.[0];
+                  if (f) setChatFile(f);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => chatFileInputRef.current?.click()}
+                aria-label="Attach file"
+                className="grid size-9 shrink-0 place-items-center rounded-xl bg-muted text-muted-foreground transition-colors hover:bg-accent-soft hover:text-accent-strong"
+              >
+                <Paperclip className="size-4" />
+              </button>
               <SmoothInput
                 value={chatMsg}
                 onChange={(e) => setChatMsg(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") sendChatMessage();
                 }}
-                placeholder="Type a message…"
+                placeholder="Type a message or attach a file…"
                 wrapperClassName="flex-1 py-2.5"
                 aria-label="Support message"
               />
               <Button
                 size="sm"
                 onClick={sendChatMessage}
-                disabled={sendingChat || !chatMsg.trim()}
+                disabled={sendingChat || (!chatMsg.trim() && !chatFile)}
+                loading={sendingChat}
                 aria-label="Send message"
                 className="!px-3"
               >
-                <Send className="size-4" />
+                {!sendingChat && <Send className="size-4" />}
               </Button>
             </div>
           </motion.div>
