@@ -1,9 +1,9 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { EffectCoverflow, Pagination } from "swiper/modules";
+import { EffectCards, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
-import "swiper/css/effect-coverflow";
+import "swiper/css/effect-cards";
 import "swiper/css/pagination";
 import useEmblaCarousel from "embla-carousel-react";
 import EmblaAutoplay from "embla-carousel-autoplay";
@@ -130,38 +130,26 @@ function HoverExpandRides({ slides, tall }: { slides: RideSlide[]; tall?: boolea
         })}
       </div>
 
-      {/* Mobile — balanced coverflow carousel: ACTIVE card centered and
-          enlarged, the two neighbours visible on EITHER side, tilted back
-          in 3D. Clean sequence, no one-sided fan. Mobile only — desktop
-          keeps the HoverExpand accordion above. */}
+      {/* Mobile — Skiper 48 Carousel_002 style: Swiper cards effect. Deck of
+          cards fanned behind the active one, pager dots underneath. The
+          .Carousal_002 class name + 50px padding-bottom + clickable
+          pagination follow the pasted reference verbatim. Mobile only —
+          desktop keeps the HoverExpand accordion above. */}
       <div
-        className="flex w-full items-center justify-center overflow-visible py-6 lg:hidden"
+        className="flex w-full items-center justify-center overflow-visible py-4 lg:hidden"
         data-lenis-prevent
       >
         <Swiper
-          effect="coverflow"
+          effect="cards"
           grabCursor
           loop
-          centeredSlides
-          slidesPerView="auto"
-          spaceBetween={-30}
-          coverflowEffect={{
-            rotate: 24,
-            stretch: 0,
-            depth: 180,
-            modifier: 1,
-            slideShadows: false,
-          }}
-          pagination={{ clickable: true, dynamicBullets: false }}
-          modules={[EffectCoverflow, Pagination]}
-          className={cn("skiper48 !overflow-visible", tall ? "h-[26rem]" : "h-[22rem]")}
+          spaceBetween={40}
+          pagination={{ clickable: true }}
+          modules={[EffectCards, Pagination]}
+          className={cn("Carousal_002", tall ? "h-[400px] w-[280px]" : "h-[380px] w-[260px]")}
         >
           {slides.map((s, i) => (
-            <SwiperSlide
-              key={i}
-              className="!flex overflow-hidden rounded-[1.75rem] shadow-xl"
-              style={{ width: "min(66vw, 280px)" }}
-            >
+            <SwiperSlide key={i} className="overflow-hidden rounded-3xl">
               <RidePoster
                 tone={s.tone}
                 kind={s.kind}

@@ -196,25 +196,21 @@
     overscroll-behavior-y: none;
   }
 
-  /* Mobile vehicle coverflow carousel — balanced stack with pager dots
-     below. The !overflow-visible on the Swiper lets neighbour cards peek
-     out past the active one; dots sit in their own band at the bottom. */
-  .skiper48 { padding-bottom: 44px !important; }
-  .skiper48 .swiper-pagination {
+  /* Skiper 48 Carousel_002 — mobile vehicles card deck. Padding-bottom
+     is reserved for the pager dots (verbatim from the reference). */
+  .Carousal_002 { padding-bottom: 50px !important; }
+  .Carousal_002 .swiper-pagination {
     bottom: 0 !important;
     display: flex; align-items: center; justify-content: center;
     gap: 6px;
   }
-  .skiper48 .swiper-pagination-bullet {
+  .Carousal_002 .swiper-pagination-bullet {
     width: 8px; height: 8px; background: var(--rm-navy); opacity: .25;
     transition: all .3s ease; margin: 0 !important;
   }
-  .skiper48 .swiper-pagination-bullet-active {
+  .Carousal_002 .swiper-pagination-bullet-active {
     opacity: 1; width: 22px; border-radius: 999px;
   }
-  .skiper48 .swiper-slide { transition: opacity .4s ease; }
-  .skiper48 .swiper-slide-active { opacity: 1; }
-  .skiper48 .swiper-slide:not(.swiper-slide-active) { opacity: 0.6; }
 
   body {
     font-family: var(--font-b);
